@@ -42,6 +42,11 @@ describe('LoginComponent', () => {
   }
 
   it('starts with an invalid form', () => {
+    const logo = fixture.nativeElement.querySelector('.login-logo') as HTMLImageElement;
+    expect(logo.getAttribute('src')).toBe('/assets/appcore-logo.png');
+    expect(fixture.nativeElement.querySelector('#login-title')?.textContent).toContain(
+      'App Core Admin',
+    );
     expect(component.loginForm.invalid).toBe(true);
     expect(submitButton().disabled).toBe(true);
   });

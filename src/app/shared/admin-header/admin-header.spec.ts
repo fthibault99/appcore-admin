@@ -29,6 +29,11 @@ describe('AdminHeaderComponent', () => {
       'Barcodes',
       'OpenAI',
     ]);
+    const brand = fixture.nativeElement.querySelector('.brand') as HTMLAnchorElement;
+    expect(brand.textContent?.trim()).toBe('App Core Admin');
+    expect((brand.querySelector('img') as HTMLImageElement).getAttribute('src')).toBe(
+      '/assets/appcore-logo.png',
+    );
 
     (fixture.nativeElement.querySelector('.logout') as HTMLButtonElement | null)?.click();
     expect(authentication.logout).toHaveBeenCalledTimes(1);

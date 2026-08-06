@@ -16,8 +16,17 @@
   text-decoration: none;
 }
 .brand {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 0.65rem;
   font-size: 1.05rem;
   font-weight: 750;
+}
+.brand img {
+  width: 2.625rem;
+  height: 2.625rem;
+  object-fit: contain;
 }
 nav {
   display: flex;
