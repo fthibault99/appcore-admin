@@ -5,10 +5,11 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AdminAnalyticsService } from '../../core/analytics/admin-analytics.service';
 import { AnalyticsEventDetail } from '../../core/analytics/analytics-event.models';
+import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
 
 @Component({
   selector: 'app-analytics-event-detail',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, AdminHeaderComponent],
   templateUrl: './analytics-event-detail.html',
   styleUrl: './analytics-event-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

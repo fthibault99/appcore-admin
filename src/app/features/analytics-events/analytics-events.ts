@@ -8,7 +8,7 @@ import {
   ValidationErrors,
   ValidatorFn,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AdminAnalyticsService } from '../../core/analytics/admin-analytics.service';
 import {
@@ -16,7 +16,7 @@ import {
   AnalyticsEventSummary,
   PageResponse,
 } from '../../core/analytics/analytics-event.models';
-import { AdminAuthenticationService } from '../../core/authentication/admin-authentication.service';
+import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
 
 const dateRangeValidator: ValidatorFn = (control): ValidationErrors | null => {
   const from = control.get('from')?.value as string | null;
@@ -26,21 +26,19 @@ const dateRangeValidator: ValidatorFn = (control): ValidationErrors | null => {
 
 @Component({
   selector: 'app-analytics-events',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink],
+  imports: [DatePipe, ReactiveFormsModule, AdminHeaderComponent],
   templateUrl: './analytics-events.html',
   styleUrl: './analytics-events.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AnalyticsEventsComponent implements OnInit {
   private readonly analyticsService = inject(AdminAnalyticsService);
-  private readonly authenticationService = inject(AdminAuthenticationService);
   private readonly router = inject(Router);
   private activeFilters: AnalyticsEventFilters = { page: 0, size: 25, sort: 'receivedAt,desc' };
 
   readonly eventsPage = signal<PageResponse<AnalyticsEventSummary> | null>(null);
   readonly isLoading = signal(false);
   readonly hasError = signal(false);
-  readonly isLoggingOut = signal(false);
   readonly filterForm = new FormGroup(
     {
       eventType: new FormControl('', { nonNullable: true }),
@@ -82,18 +80,6 @@ export class AnalyticsEventsComponent implements OnInit {
 
   retry(): void {
     this.loadEvents();
-  }
-
-  logout(): void {
-    if (this.isLoggingOut()) return;
-    this.isLoggingOut.set(true);
-    this.authenticationService
-      .logout()
-      .pipe(finalize(() => this.isLoggingOut.set(false)))
-      .subscribe({
-        next: () => void this.router.navigate(['/login']),
-        error: () => void this.router.navigate(['/login']),
-      });
   }
 
   previousPage(): void {

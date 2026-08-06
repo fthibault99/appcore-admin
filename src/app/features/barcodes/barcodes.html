@@ -1,0 +1,93 @@
+<app-admin-header />
+<main class="page-shell">
+  <header>
+    <h1>Barcodes</h1>
+    <p>Inspect cached products and manage manual corrections.</p>
+  </header>
+  <section class="panel">
+    <form [formGroup]="filterForm" (ngSubmit)="search()" class="search">
+      <label>Barcode, product or brand<input formControlName="query" /></label
+      ><label
+        >Domain<select formControlName="domain">
+          <option value="">All domains</option>
+          <option value="FOOD">Food</option>
+          <option value="LEGO">LEGO</option>
+          <option value="WINE">Wine</option>
+        </select></label
+      ><button type="submit">Search</button
+      ><button type="button" class="secondary" (click)="reset()">Reset</button>
+    </form>
+  </section>
+  <section class="panel" aria-live="polite">
+    @if (isLoading()) {
+      <p class="state">Loading barcodes…</p>
+    } @else if (hasError()) {
+      <div class="state error">
+        <p>Unable to load barcodes.</p>
+        <button type="button" (click)="retry()">Retry</button>
+      </div>
+    } @else if (page(); as barcodePage) {
+      <div class="results-heading">
+        <h2>Results</h2>
+        <span>{{ barcodePage.totalElements }} products</span>
+      </div>
+      @if (barcodePage.content.length === 0) {
+        <p class="state">No barcode products match this search.</p>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Barcode</th>
+                <th>Domain</th>
+                <th>Product</th>
+                <th>Brand</th>
+                <th>Provider</th>
+                <th>Updated</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (product of barcodePage.content; track product.id) {
+                <tr>
+                  <td class="identifier">{{ product.barcode }}</td>
+                  <td>{{ product.lookupDomain }}</td>
+                  <td>{{ product.productName || '—' }}</td>
+                  <td>{{ product.brand || '—' }}</td>
+                  <td>{{ product.provider }}</td>
+                  <td>{{ product.updatedAt | date: 'medium' }}</td>
+                  <td>
+                    <span class="badge" [class.manual]="product.manualOverride">{{
+                      product.manualOverride ? 'Manual' : 'Automatic'
+                    }}</span>
+                  </td>
+                  <td>
+                    <button type="button" class="link-button" (click)="view(product.id)">
+                      View
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <div class="pagination">
+        <span
+          >Page {{ barcodePage.totalPages === 0 ? 0 : barcodePage.number + 1 }} of
+          {{ barcodePage.totalPages }}</span
+        ><button
+          type="button"
+          class="secondary"
+          (click)="previous()"
+          [disabled]="barcodePage.first"
+        >
+          Previous</button
+        ><button type="button" class="secondary" (click)="next()" [disabled]="barcodePage.last">
+          Next
+        </button>
+      </div>
+    }
+  </section>
+</main>

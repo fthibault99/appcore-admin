@@ -1,0 +1,132 @@
+<app-admin-header />
+<main class="detail-page">
+  <a routerLink="/barcodes">← Back to barcodes</a>
+  @if (isLoading()) {
+    <p class="state">Loading barcode product…</p>
+  } @else if (hasError()) {
+    <div class="state error">
+      <p>Unable to load this barcode product.</p>
+      <button type="button" (click)="retry()">Retry</button>
+    </div>
+  } @else if (detail(); as data) {
+    <header class="heading">
+      <div>
+        <h1>{{ data.productName || data.barcode }}</h1>
+        <p>{{ data.barcode }} · {{ data.lookupDomain }}</p>
+      </div>
+      <span class="badge" [class.manual]="data.manualOverride">{{
+        data.manualOverride ? 'Manual override' : 'Automatic'
+      }}</span>
+    </header>
+    <section class="card metadata">
+      <dl>
+        <div>
+          <dt>Barcode</dt>
+          <dd>{{ data.barcode }}</dd>
+        </div>
+        <div>
+          <dt>Domain</dt>
+          <dd>{{ data.lookupDomain }}</dd>
+        </div>
+        <div>
+          <dt>Provider</dt>
+          <dd>{{ data.provider }}</dd>
+        </div>
+        <div>
+          <dt>Updated</dt>
+          <dd>{{ data.updatedAt | date: 'medium' }}</dd>
+        </div>
+        <div>
+          <dt>Expires</dt>
+          <dd>{{ data.manualOverride ? 'Manual override' : (data.expiresAt | date: 'medium') }}</dd>
+        </div>
+      </dl>
+    </section>
+    @if (!editing()) {
+      <div class="actions">
+        <button type="button" (click)="startEditing()">Edit product</button>
+        @if (data.manualOverride) {
+          <button
+            type="button"
+            class="secondary warning"
+            (click)="restoreAutomatic()"
+            [disabled]="isSaving()"
+          >
+            Restore automatic updates
+          </button>
+        }
+        <button type="button" class="danger" (click)="deleteBarcode()" [disabled]="isSaving()">
+          Delete cached barcode
+        </button>
+      </div>
+      <p class="deletion-note">
+        Deletion removes this cached barcode/domain association. A later scan can recreate it from a
+        provider.
+      </p>
+      @if (saveError()) {
+        <p class="error">{{ saveError() }}</p>
+      }
+      <section class="card product">
+        <div class="product-layout">
+          @if (data.imageUrl) {
+            <img [src]="data.imageUrl" [alt]="data.productName || data.barcode" />
+          }
+          <dl>
+            <div>
+              <dt>Product name</dt>
+              <dd>{{ data.productName || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Brand</dt>
+              <dd>{{ data.brand || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Category</dt>
+              <dd>{{ data.category || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Description</dt>
+              <dd>{{ data.description || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Ingredients</dt>
+              <dd class="pre-line">{{ data.ingredients || '—' }}</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+    } @else {
+      <form class="card editor" [formGroup]="form" (ngSubmit)="save()">
+        <p class="notice">Barcode, domain and provider are server-managed and cannot be edited.</p>
+        <label>Product name<input formControlName="productName" /></label>
+        <div class="field-grid">
+          <label>Brand<input formControlName="brand" /></label
+          ><label>Category<input formControlName="category" /></label
+          ><label>Image URL<input type="url" formControlName="imageUrl" /></label>
+        </div>
+        <label>Description<textarea rows="5" formControlName="description"></textarea></label
+        ><label>Ingredients<textarea rows="6" formControlName="ingredients"></textarea></label>
+        @if (form.invalid && form.touched) {
+          <p class="error">
+            Product name is required and fields must remain within their size limits.
+          </p>
+        }
+        @if (saveError()) {
+          <p class="error">{{ saveError() }}</p>
+        }
+        <div class="actions">
+          <button type="submit" [disabled]="isSaving()">
+            {{ isSaving() ? 'Saving…' : 'Save manual override' }}</button
+          ><button
+            type="button"
+            class="secondary"
+            (click)="cancelEditing()"
+            [disabled]="isSaving()"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    }
+  }
+</main>

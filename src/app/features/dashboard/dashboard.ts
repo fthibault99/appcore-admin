@@ -1,11 +1,18 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { AdminAuthenticationService } from '../../core/authentication/admin-authentication.service';
 import { DashboardService } from '../../core/dashboard/dashboard.service';
 import { Dashboard, TodayStatistics } from '../../models/dashboard.models';
+import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
 
 interface StatisticCard {
   label: string;
@@ -21,34 +28,36 @@ interface ServiceLink {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, AdminHeaderComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit {
   private readonly dashboardService = inject(DashboardService);
-  private readonly authenticationService = inject(AdminAuthenticationService);
   private readonly router = inject(Router);
 
   readonly dashboard = signal<Dashboard | null>(null);
   readonly isLoading = signal(true);
   readonly hasError = signal(false);
-  readonly isLoggingOut = signal(false);
   readonly statisticCards = computed<StatisticCard[]>(() => {
     const today = this.dashboard()?.today ?? this.emptyStatistics;
     return [
       { label: 'Analytics Events', value: today.analyticsEventsToday, backendPending: false },
-      { label: 'Recipe Extractions', value: today.recipeExtractionsToday, backendPending: true },
-      { label: 'Barcode Lookups', value: today.barcodeLookupsToday, backendPending: true },
-      { label: 'OpenAI Requests', value: today.openAiRequestsToday, backendPending: true },
+      { label: 'Recipe Extractions', value: today.recipeExtractionsToday, backendPending: false },
+      { label: 'Barcode Lookups', value: today.barcodeLookupsToday, backendPending: false },
+      { label: 'OpenAI Requests', value: today.openAiRequestsToday, backendPending: false },
     ];
   });
   readonly serviceLinks: ServiceLink[] = [
-    { label: 'Analytics Events', description: 'Inspect application events', route: '/analytics/events' },
+    {
+      label: 'Analytics Events',
+      description: 'Inspect application events',
+      route: '/analytics/events',
+    },
     { label: 'Recipes', description: 'Recipe operations', route: '/recipes' },
     { label: 'Barcodes', description: 'Barcode lookups', route: '/barcodes' },
-    { label: 'System', description: 'Runtime information', route: '/system' },
+    { label: 'OpenAI Usage', description: 'Requests, tokens and latency', route: '/openai/usage' },
   ];
 
   private readonly emptyStatistics: TodayStatistics = {
@@ -64,18 +73,6 @@ export class DashboardComponent implements OnInit {
 
   retry(): void {
     this.loadDashboard();
-  }
-
-  logout(): void {
-    if (this.isLoggingOut()) return;
-    this.isLoggingOut.set(true);
-    this.authenticationService
-      .logout()
-      .pipe(finalize(() => this.isLoggingOut.set(false)))
-      .subscribe({
-        next: () => void this.router.navigate(['/login']),
-        error: () => void this.router.navigate(['/login']),
-      });
   }
 
   formatUptime(seconds: number): string {
@@ -98,7 +95,10 @@ export class DashboardComponent implements OnInit {
       .subscribe({
         next: (dashboard) => this.dashboard.set(dashboard),
         error: (error: unknown) => {
-          if (error instanceof HttpErrorResponse && (error.status === 401 || error.status === 403)) {
+          if (
+            error instanceof HttpErrorResponse &&
+            (error.status === 401 || error.status === 403)
+          ) {
             void this.router.navigate(['/login']);
             return;
           }

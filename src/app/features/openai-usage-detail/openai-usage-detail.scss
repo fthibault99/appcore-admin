@@ -1,0 +1,10 @@
+@use '../barcode-detail/barcode-detail.scss';
+.token-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0; }
+.token-grid article { display: grid; gap: 0.5rem; }
+.token-grid span, .notice { color: #657086; }
+.token-grid strong { font-size: 1.6rem; }
+.metadata { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.metadata div { min-width: 0; }
+.identifier { overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.badge.failed { color: #b42318; background: #feeceb; }
+@media (max-width: 48rem) { .token-grid, .metadata { grid-template-columns: 1fr; } }

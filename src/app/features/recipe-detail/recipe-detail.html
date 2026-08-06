@@ -1,0 +1,170 @@
+<app-admin-header />
+<main class="detail-page">
+  <a routerLink="/recipes">← Back to recipes</a>
+  @if (isLoading()) {
+    <p class="state">Loading recipe…</p>
+  } @else if (hasError()) {
+    <div class="state error">
+      <p>Unable to load this recipe.</p>
+      <button type="button" (click)="retry()">Retry</button>
+    </div>
+  } @else if (detail(); as data) {
+    <header class="heading">
+      <div>
+        <h1>{{ data.recipe.name }}</h1>
+        <p>{{ data.sourceDomain }} · {{ data.extractionMethod }}</p>
+      </div>
+      <span class="badge" [class.manual]="data.manualOverride">{{
+        data.manualOverride ? 'Manual override' : 'Automatic'
+      }}</span>
+    </header>
+    <section class="card metadata">
+      <dl>
+        <div>
+          <dt>Source URL</dt>
+          <dd>
+            <a [href]="data.normalizedUrl" target="_blank" rel="noopener noreferrer">{{
+              data.normalizedUrl
+            }}</a>
+          </dd>
+        </div>
+        <div>
+          <dt>Updated</dt>
+          <dd>{{ data.updatedAt | date: 'medium' }}</dd>
+        </div>
+        <div>
+          <dt>Last accessed</dt>
+          <dd>{{ data.lastAccessedAt ? (data.lastAccessedAt | date: 'medium') : '—' }}</dd>
+        </div>
+        <div>
+          <dt>Access count</dt>
+          <dd>{{ data.accessCount }}</dd>
+        </div>
+      </dl>
+    </section>
+    @if (!editing()) {
+      <div class="actions">
+        <button type="button" (click)="startEditing()">Edit recipe</button>
+        @if (data.manualOverride) {
+          <button
+            type="button"
+            class="secondary warning"
+            (click)="restoreAutomatic()"
+            [disabled]="isSaving()"
+          >
+            Restore automatic updates
+          </button>
+        }
+      </div>
+      @if (saveError()) {
+        <p class="error">{{ saveError() }}</p>
+      }
+      <section class="card recipe">
+        <p>{{ data.recipe.description || 'No description.' }}</p>
+        <div class="two-columns">
+          <div>
+            <h2>Ingredients</h2>
+            <ul>
+              @for (ingredient of data.recipe.recipeIngredient; track $index) {
+                <li>{{ ingredient }}</li>
+              }
+            </ul>
+          </div>
+          <div>
+            <h2>Instructions</h2>
+            <ol>
+              @for (instruction of data.recipe.recipeInstructions; track $index) {
+                <li>{{ instruction }}</li>
+              }
+            </ol>
+          </div>
+        </div>
+      </section>
+    } @else {
+      <form class="card editor" [formGroup]="form" (ngSubmit)="save()">
+        <p class="notice">
+          The source URL and extraction metadata are server-managed and cannot be edited.
+        </p>
+        <label>Name<input formControlName="name" /></label>
+        <div class="field-grid">
+          <label>Author<input formControlName="author" /></label
+          ><label>Published date<input formControlName="datePublished" /></label
+          ><label>Preparation time<input formControlName="prepTime" /></label
+          ><label>Cooking time<input formControlName="cookTime" /></label
+          ><label>Total time<input formControlName="totalTime" /></label
+          ><label>Yield<input formControlName="recipeYield" /></label
+          ><label>Keywords<input formControlName="keywords" /></label>
+        </div>
+        <label>Description<textarea rows="4" formControlName="description"></textarea></label>
+        <fieldset formArrayName="image">
+          <legend>Images</legend>
+          @for (control of form.controls.image.controls; track $index) {
+            <div class="array-row">
+              <input [formControlName]="$index" /><button
+                type="button"
+                class="remove"
+                (click)="removeImage($index)"
+              >
+                Remove
+              </button>
+            </div>
+          }
+          <button type="button" class="secondary" (click)="addImage()">Add image</button>
+        </fieldset>
+        <fieldset formArrayName="recipeIngredient">
+          <legend>Ingredients</legend>
+          @for (control of form.controls.recipeIngredient.controls; track $index) {
+            <div class="array-row">
+              <input [formControlName]="$index" /><button
+                type="button"
+                class="remove"
+                (click)="removeIngredient($index)"
+                [disabled]="form.controls.recipeIngredient.length === 1"
+              >
+                Remove
+              </button>
+            </div>
+          }
+          <button type="button" class="secondary" (click)="addIngredient()">Add ingredient</button>
+        </fieldset>
+        <fieldset formArrayName="recipeInstructions">
+          <legend>Instructions</legend>
+          @for (control of form.controls.recipeInstructions.controls; track $index) {
+            <div class="array-row">
+              <textarea rows="2" [formControlName]="$index"></textarea
+              ><button
+                type="button"
+                class="remove"
+                (click)="removeInstruction($index)"
+                [disabled]="form.controls.recipeInstructions.length === 1"
+              >
+                Remove
+              </button>
+            </div>
+          }
+          <button type="button" class="secondary" (click)="addInstruction()">
+            Add instruction
+          </button>
+        </fieldset>
+        @if (form.invalid && form.touched) {
+          <p class="error">Name, ingredients and instructions cannot be empty.</p>
+        }
+        @if (saveError()) {
+          <p class="error">{{ saveError() }}</p>
+        }
+        <div class="actions">
+          <button type="submit" [disabled]="isSaving()">
+            {{ isSaving() ? 'Saving…' : 'Save manual override' }}</button
+          ><button
+            type="button"
+            class="secondary"
+            (click)="cancelEditing()"
+            [disabled]="isSaving()"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    }
+  }
+</main>

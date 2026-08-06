@@ -1,0 +1,84 @@
+<app-admin-header />
+<main class="page-shell">
+  <header>
+    <h1>Recipes</h1>
+    <p>Inspect cached recipes and manage manual corrections.</p>
+  </header>
+  <section class="panel">
+    <form (ngSubmit)="search()" class="search">
+      <label>Recipe name or source domain<input [formControl]="query" /></label
+      ><button type="submit">Search</button
+      ><button type="button" class="secondary" (click)="reset()">Reset</button>
+    </form>
+  </section>
+  <section class="panel" aria-live="polite">
+    @if (isLoading()) {
+      <p class="state">Loading recipes…</p>
+    } @else if (hasError()) {
+      <div class="state error">
+        <p>Unable to load recipes.</p>
+        <button type="button" (click)="retry()">Retry</button>
+      </div>
+    } @else if (page(); as recipesPage) {
+      <div class="results-heading">
+        <h2>Results</h2>
+        <span>{{ recipesPage.totalElements }} recipes</span>
+      </div>
+      @if (recipesPage.content.length === 0) {
+        <p class="state">No recipes match this search.</p>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Source</th>
+                <th>Extraction</th>
+                <th>Updated</th>
+                <th>Status</th>
+                <th>Uses</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (recipe of recipesPage.content; track recipe.id) {
+                <tr>
+                  <td>{{ recipe.name }}</td>
+                  <td>{{ recipe.sourceDomain }}</td>
+                  <td>{{ recipe.extractionMethod }}</td>
+                  <td>{{ recipe.updatedAt | date: 'medium' }}</td>
+                  <td>
+                    <span class="badge" [class.manual]="recipe.manualOverride">{{
+                      recipe.manualOverride ? 'Manual' : 'Automatic'
+                    }}</span>
+                  </td>
+                  <td>{{ recipe.accessCount }}</td>
+                  <td>
+                    <button type="button" class="link-button" (click)="view(recipe.id)">
+                      View
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <div class="pagination">
+        <span
+          >Page {{ recipesPage.totalPages === 0 ? 0 : recipesPage.number + 1 }} of
+          {{ recipesPage.totalPages }}</span
+        ><button
+          type="button"
+          class="secondary"
+          (click)="previous()"
+          [disabled]="recipesPage.first"
+        >
+          Previous</button
+        ><button type="button" class="secondary" (click)="next()" [disabled]="recipesPage.last">
+          Next
+        </button>
+      </div>
+    }
+  </section>
+</main>

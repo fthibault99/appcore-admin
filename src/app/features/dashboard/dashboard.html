@@ -1,13 +1,4 @@
-<header class="topbar">
-  <a class="brand" routerLink="/dashboard">AppCore Admin</a>
-  <nav aria-label="Primary navigation">
-    <a routerLink="/dashboard" aria-current="page">Dashboard</a>
-    <a routerLink="/analytics/events">Analytics</a>
-  </nav>
-  <button type="button" class="logout" (click)="logout()" [disabled]="isLoggingOut()">
-    {{ isLoggingOut() ? 'Signing out…' : 'Logout' }}
-  </button>
-</header>
+<app-admin-header />
 
 <main class="dashboard">
   <header class="page-heading">
@@ -88,7 +79,6 @@
           </article>
         }
       </div>
-      <!-- TODO: Populate recipe, barcode and OpenAI totals when backend dashboard sources exist. -->
     </section>
 
     <div class="detail-grid">
@@ -114,7 +104,10 @@
                 </tr>
               </thead>
               <tbody>
-                @for (activity of data.recentActivity.slice(0, 5); track activity.occurredAt + activity.eventType) {
+                @for (
+                  activity of data.recentActivity.slice(0, 5);
+                  track activity.occurredAt + activity.eventType
+                ) {
                   <tr>
                     <td>{{ activity.occurredAt | date: 'shortTime' }}</td>
                     <td>{{ activity.eventType }}</td>
@@ -141,7 +134,10 @@
           <ul class="error-list">
             @for (error of data.recentErrors; track error.occurredAt + error.source) {
               <li>
-                <div><strong>{{ error.source }}</strong><span>{{ error.severity }}</span></div>
+                <div>
+                  <strong>{{ error.source }}</strong
+                  ><span>{{ error.severity }}</span>
+                </div>
                 <p>{{ error.message }}</p>
                 <time [dateTime]="error.occurredAt">{{ error.occurredAt | date: 'short' }}</time>
               </li>
@@ -170,7 +166,6 @@
           </a>
         }
       </div>
-      <!-- TODO: Add routes for Recipes, Barcodes and System when their admin pages are implemented. -->
     </section>
   }
 </main>

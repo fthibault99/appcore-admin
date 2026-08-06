@@ -1,13 +1,4 @@
-<header class="topbar">
-  <a class="brand" routerLink="/dashboard">AppCore Admin</a>
-  <nav aria-label="Primary navigation">
-    <a routerLink="/dashboard">Dashboard</a>
-    <a routerLink="/analytics/events" aria-current="page">Analytics</a>
-  </nav>
-  <button type="button" class="logout" (click)="logout()" [disabled]="isLoggingOut()">
-    {{ isLoggingOut() ? 'Signing out…' : 'Logout' }}
-  </button>
-</header>
+<app-admin-header />
 <main class="page-shell">
   <header>
     <h1>Analytics Events</h1>

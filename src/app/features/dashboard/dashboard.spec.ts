@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
@@ -6,6 +7,9 @@ import { AdminAuthenticationService } from '../../core/authentication/admin-auth
 import { DashboardService } from '../../core/dashboard/dashboard.service';
 import { Dashboard } from '../../models/dashboard.models';
 import { DashboardComponent } from './dashboard';
+
+@Component({ template: 'Recipes page' })
+class RecipesTestComponent {}
 
 describe('DashboardComponent', () => {
   let fixture: ComponentFixture<DashboardComponent>;
@@ -42,7 +46,7 @@ describe('DashboardComponent', () => {
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
       providers: [
-        provideRouter([]),
+        provideRouter([{ path: 'recipes', component: RecipesTestComponent }]),
         { provide: DashboardService, useValue: dashboardService },
         { provide: AdminAuthenticationService, useValue: authenticationService },
       ],
@@ -89,9 +93,20 @@ describe('DashboardComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
   });
 
-  it('logs out and returns to login', () => {
-    component.logout();
-    expect(authenticationService.logout).toHaveBeenCalledTimes(1);
-    expect(router.navigate).toHaveBeenCalledWith(['/login']);
+  it('navigates to recipes from the services card', async () => {
+    fixture.detectChanges();
+    dashboardResult.next(dashboard);
+    dashboardResult.complete();
+    fixture.detectChanges();
+    const links = fixture.nativeElement.querySelectorAll(
+      '.service-card',
+    ) as NodeListOf<HTMLAnchorElement>;
+    const recipesLink = Array.from(links).find((link) => link.textContent?.includes('Recipes'));
+
+    expect(recipesLink?.getAttribute('href')).toBe('/recipes');
+    recipesLink?.click();
+    await fixture.whenStable();
+
+    expect(router.url).toBe('/recipes');
   });
 });

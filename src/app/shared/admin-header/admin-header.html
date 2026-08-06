@@ -1,0 +1,13 @@
+<header class="topbar">
+  <a class="brand" routerLink="/dashboard">AppCore Admin</a>
+  <nav aria-label="Primary navigation">
+    <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+    <a routerLink="/analytics/events" routerLinkActive="active">Analytics</a>
+    <a routerLink="/recipes" routerLinkActive="active">Recipes</a>
+    <a routerLink="/barcodes" routerLinkActive="active">Barcodes</a>
+    <a routerLink="/openai/usage" routerLinkActive="active">OpenAI</a>
+  </nav>
+  <button type="button" class="logout" (click)="logout()" [disabled]="isLoggingOut()">
+    {{ isLoggingOut() ? 'Signing out…' : 'Logout' }}
+  </button>
+</header>

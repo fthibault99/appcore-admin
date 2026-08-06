@@ -4,6 +4,13 @@ import { LoginComponent } from './features/login/login';
 import { adminAuthGuard } from './core/authentication/admin-auth.guard';
 import { AnalyticsEventsComponent } from './features/analytics-events/analytics-events';
 import { AnalyticsEventDetailComponent } from './features/analytics-event-detail/analytics-event-detail';
+import { RecipesComponent } from './features/recipes/recipes';
+import { RecipeDetailComponent } from './features/recipe-detail/recipe-detail';
+import { BarcodesComponent } from './features/barcodes/barcodes';
+import { BarcodeDetailComponent } from './features/barcode-detail/barcode-detail';
+import { OpenAIUsageComponent } from './features/openai-usage/openai-usage';
+import { OpenAIUsageDetailComponent } from './features/openai-usage-detail/openai-usage-detail';
+import { OpenAIPricesComponent } from './features/openai-prices/openai-prices';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -14,6 +21,13 @@ export const routes: Routes = [
     component: AnalyticsEventDetailComponent,
     canActivate: [adminAuthGuard],
   },
+  { path: 'recipes', component: RecipesComponent, canActivate: [adminAuthGuard] },
+  { path: 'recipes/:recipeId', component: RecipeDetailComponent, canActivate: [adminAuthGuard] },
+  { path: 'barcodes', component: BarcodesComponent, canActivate: [adminAuthGuard] },
+  { path: 'barcodes/:barcodeId', component: BarcodeDetailComponent, canActivate: [adminAuthGuard] },
+  { path: 'openai/usage', component: OpenAIUsageComponent, canActivate: [adminAuthGuard] },
+  { path: 'openai/usage/:usageId', component: OpenAIUsageDetailComponent, canActivate: [adminAuthGuard] },
+  { path: 'openai/prices', component: OpenAIPricesComponent, canActivate: [adminAuthGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: '**', redirectTo: 'login' },
 ];

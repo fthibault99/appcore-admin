@@ -133,12 +133,6 @@ describe('AnalyticsEventsComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
   });
 
-  it('logs out and returns to login', () => {
-    component.logout();
-    expect(authenticationService.logout).toHaveBeenCalledTimes(1);
-    expect(router.navigate).toHaveBeenCalledWith(['/login']);
-  });
-
   it('navigates to the selected event detail', () => {
     component.viewEvent('event-1');
     expect(router.navigate).toHaveBeenCalledWith(['/analytics/events', 'event-1']);

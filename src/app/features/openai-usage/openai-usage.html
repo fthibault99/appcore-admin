@@ -1,0 +1,33 @@
+<app-admin-header />
+<main class="page-shell">
+  <header><div><h1>OpenAI Usage</h1><p>Inspect request volume, latency and token consumption. Request and response content is never stored here.</p></div><a class="manage-link" routerLink="/openai/prices">Manage prices</a></header>
+  @if (summary(); as data) {
+    <section class="summary-grid" aria-label="OpenAI usage summary">
+      <article class="panel"><span>Requests</span><strong>{{ data.totalRequests | number }}</strong></article>
+      <article class="panel"><span>Failures</span><strong>{{ data.failedRequests | number }}</strong></article>
+      <article class="panel"><span>Total tokens</span><strong>{{ data.totalTokens | number }}</strong></article>
+      <article class="panel"><span>Average duration</span><strong>{{ data.averageDurationMs | number: '1.0-0' }} ms</strong></article>
+      <article class="panel"><span>Estimated cost</span><strong>{{ data.estimatedCostUsd === null ? 'Not configured' : (data.estimatedCostUsd | currency: 'USD': 'symbol': '1.2-8') }}</strong></article>
+    </section>
+  }
+  <section class="panel">
+    <form [formGroup]="filters" (ngSubmit)="search()" class="search">
+      <label>Feature<input formControlName="feature" placeholder="recipe-image-extraction" /></label>
+      <label>Status<select formControlName="status"><option value="">All statuses</option><option value="SUCCESS">Success</option><option value="RATE_LIMITED">Rate limited</option><option value="TIMEOUT">Timeout</option><option value="UNAVAILABLE">Unavailable</option><option value="PROVIDER_ERROR">Provider error</option></select></label>
+      <button type="submit">Search</button><button type="button" class="secondary" (click)="reset()">Reset</button>
+    </form>
+  </section>
+  <section class="panel" aria-live="polite">
+    @if (isLoading()) { <p class="state">Loading OpenAI usage…</p> }
+    @else if (hasError()) { <div class="state error"><p>Unable to load OpenAI usage.</p><button type="button" (click)="retry()">Retry</button></div> }
+    @else if (page(); as usagePage) {
+      <div class="results-heading"><h2>Requests</h2><span>{{ usagePage.totalElements }} records</span></div>
+      @if (usagePage.content.length === 0) { <p class="state">No OpenAI requests match these filters.</p> }
+      @else {
+        <div class="table-scroll"><table><thead><tr><th>Started</th><th>Feature</th><th>Model</th><th>Status</th><th>Tokens</th><th>Duration</th><th>Estimated cost</th><th>Action</th></tr></thead>
+          <tbody>@for (usage of usagePage.content; track usage.id) { <tr><td>{{ usage.startedAt | date: 'medium' }}</td><td>{{ usage.feature }}</td><td>{{ usage.model }}</td><td><span class="badge" [class.failed]="usage.status !== 'SUCCESS'">{{ usage.status }}</span></td><td>{{ usage.totalTokens === null ? '—' : (usage.totalTokens | number) }}</td><td>{{ usage.durationMs | number }} ms</td><td>{{ usage.estimatedCostUsd === null ? '—' : (usage.estimatedCostUsd | currency: 'USD': 'symbol': '1.2-8') }}</td><td><button type="button" class="link-button" (click)="view(usage.id)">View</button></td></tr> }</tbody></table></div>
+      }
+      <div class="pagination"><span>Page {{ usagePage.totalPages === 0 ? 0 : usagePage.number + 1 }} of {{ usagePage.totalPages }}</span><button type="button" class="secondary" (click)="previous()" [disabled]="usagePage.first">Previous</button><button type="button" class="secondary" (click)="next()" [disabled]="usagePage.last">Next</button></div>
+    }
+  </section>
+</main>

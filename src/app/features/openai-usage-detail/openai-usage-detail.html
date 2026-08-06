@@ -1,0 +1,50 @@
+<app-admin-header />
+<main class="detail-page">
+  <a routerLink="/openai/usage">← Back to OpenAI usage</a>
+  @if (isLoading()) {
+    <p class="state">Loading OpenAI request…</p>
+  } @else if (hasError()) {
+    <div class="state error"><p>Unable to load this OpenAI request.</p><button type="button" (click)="retry()">Retry</button></div>
+  } @else if (detail(); as data) {
+    <header class="heading">
+      <div><h1>{{ data.feature }}</h1><p>{{ data.startedAt | date: 'medium' }}</p></div>
+      <span class="badge" [class.failed]="data.status !== 'SUCCESS'">{{ data.status }}</span>
+    </header>
+    <section class="card">
+      <h2>Request</h2>
+      <dl class="metadata">
+        <div><dt>Feature</dt><dd>{{ data.feature }}</dd></div>
+        <div><dt>Model</dt><dd>{{ data.model }}</dd></div>
+        <div><dt>Started</dt><dd>{{ data.startedAt | date: 'medium' }}</dd></div>
+        <div><dt>Duration</dt><dd>{{ data.durationMs | number }} ms</dd></div>
+        <div><dt>Status</dt><dd>{{ data.status }}</dd></div>
+        <div><dt>Service tier</dt><dd>{{ data.serviceTier || 'Unavailable' }}</dd></div>
+        <div><dt>Context</dt><dd>{{ data.contextType || 'No matching price' }}</dd></div>
+        <div><dt>Error code</dt><dd>{{ data.errorCode || '—' }}</dd></div>
+      </dl>
+    </section>
+    <section class="token-grid" aria-label="Token usage">
+      <article class="card"><span>Input tokens</span><strong>{{ data.inputTokens === null ? 'Unavailable' : (data.inputTokens | number) }}</strong></article>
+      <article class="card"><span>Output tokens</span><strong>{{ data.outputTokens === null ? 'Unavailable' : (data.outputTokens | number) }}</strong></article>
+      <article class="card"><span>Total tokens</span><strong>{{ data.totalTokens === null ? 'Unavailable' : (data.totalTokens | number) }}</strong></article>
+      <article class="card"><span>Cached input</span><strong>{{ data.cachedInputTokens === null ? 'Unavailable' : (data.cachedInputTokens | number) }}</strong></article>
+      <article class="card"><span>Cache writes</span><strong>{{ data.cacheWriteTokens === null ? 'Unavailable' : (data.cacheWriteTokens | number) }}</strong></article>
+    </section>
+    <section class="card">
+      <h2>Cost and attribution</h2>
+      <dl class="metadata">
+        <div><dt>Estimated cost</dt><dd>{{ data.estimatedCostUsd === null ? 'Not configured' : (data.estimatedCostUsd | currency: 'USD': 'symbol': '1.2-8') }}</dd></div>
+        <div><dt>Input cost</dt><dd>{{ data.inputCostUsd === null ? '—' : (data.inputCostUsd | currency: 'USD': 'symbol': '1.2-8') }}</dd></div>
+        <div><dt>Cached input cost</dt><dd>{{ data.cachedInputCostUsd === null ? '—' : (data.cachedInputCostUsd | currency: 'USD': 'symbol': '1.2-8') }}</dd></div>
+        <div><dt>Cache-write cost</dt><dd>{{ data.cacheWriteCostUsd === null ? '—' : (data.cacheWriteCostUsd | currency: 'USD': 'symbol': '1.2-8') }}</dd></div>
+        <div><dt>Output cost</dt><dd>{{ data.outputCostUsd === null ? '—' : (data.outputCostUsd | currency: 'USD': 'symbol': '1.2-8') }}</dd></div>
+        <div><dt>Pricing version</dt><dd>{{ data.pricingVersion || '—' }}</dd></div>
+        <div><dt>Price ID</dt><dd class="identifier">{{ data.priceId || 'Unavailable' }}</dd></div>
+        <div><dt>Application client ID</dt><dd class="identifier">{{ data.appClientId || 'Unavailable' }}</dd></div>
+        <div><dt>API key ID</dt><dd class="identifier">{{ data.apiKeyId || 'Unavailable' }}</dd></div>
+        <div><dt>Usage record ID</dt><dd class="identifier">{{ data.id }}</dd></div>
+      </dl>
+    </section>
+    <p class="notice">Prompts, images and response contents are not stored in usage records.</p>
+  }
+</main>
