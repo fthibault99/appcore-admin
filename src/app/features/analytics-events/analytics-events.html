@@ -1,0 +1,129 @@
+<header class="topbar">
+  <a class="brand" routerLink="/dashboard">AppCore Admin</a>
+  <nav aria-label="Primary navigation">
+    <a routerLink="/dashboard">Dashboard</a>
+    <a routerLink="/analytics/events" aria-current="page">Analytics</a>
+  </nav>
+  <button type="button" class="logout" (click)="logout()" [disabled]="isLoggingOut()">
+    {{ isLoggingOut() ? 'Signing out…' : 'Logout' }}
+  </button>
+</header>
+<main class="page-shell">
+  <header>
+    <h1>Analytics Events</h1>
+    <p>Inspect events received by AppCore.</p>
+  </header>
+
+  <section class="panel" aria-labelledby="filters-title">
+    <h2 id="filters-title">Filters</h2>
+    <form [formGroup]="filterForm" (ngSubmit)="search()">
+      <div class="filter-grid">
+        <label>Event type<input formControlName="eventType" /></label>
+        <label>Application<input formControlName="clientId" /></label>
+        <label>Platform<input formControlName="platform" /></label>
+        <label>App version<input formControlName="appVersion" /></label>
+        <label>Anonymous user ID<input formControlName="anonymousUserId" /></label>
+        <label>Session ID<input formControlName="sessionId" /></label>
+        <label>From date/time<input type="datetime-local" formControlName="from" /></label>
+        <label>To date/time<input type="datetime-local" formControlName="to" /></label>
+      </div>
+      @if (filterForm.hasError('dateRange')) {
+        <p class="validation-error">From date/time must not be after To date/time.</p>
+      }
+      <div class="actions">
+        <button type="submit" [disabled]="isLoading()">Search</button
+        ><button type="button" class="secondary" (click)="reset()" [disabled]="isLoading()">
+          Reset
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel results" aria-labelledby="results-title" aria-live="polite">
+    <div class="results-heading">
+      <h2 id="results-title">Results</h2>
+      @if (eventsPage(); as page) {
+        <span>{{ page.totalElements }} events</span>
+      }
+    </div>
+    @if (isLoading()) {
+      <p class="state">Loading analytics events…</p>
+    } @else if (hasError()) {
+      <div class="state error">
+        <p>Unable to load analytics events. Please try again.</p>
+        <button type="button" (click)="retry()">Retry</button>
+      </div>
+    } @else if (eventsPage(); as page) {
+      @if (page.content.length === 0) {
+        <p class="state">No analytics events match the selected filters.</p>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Received</th>
+                <th>Occurred</th>
+                <th>Event type</th>
+                <th>Application</th>
+                <th>Platform</th>
+                <th>App version</th>
+                <th>Anonymous user</th>
+                <th>Session</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (event of page.content; track event.id) {
+                <tr>
+                  <td [title]="event.receivedAt">{{ event.receivedAt | date: 'medium' }}</td>
+                  <td [title]="event.occurredAt">{{ event.occurredAt | date: 'medium' }}</td>
+                  <td class="identifier" [title]="event.eventType">{{ event.eventType }}</td>
+                  <td class="identifier" [title]="event.appClientId">{{ event.appClientId }}</td>
+                  <td>{{ event.platform || '—' }}</td>
+                  <td>{{ event.appVersion || '—' }}</td>
+                  <td class="identifier" [title]="event.anonymousUserId || ''">
+                    {{ event.anonymousUserId || '—' }}
+                  </td>
+                  <td class="identifier" [title]="event.sessionId || ''">
+                    {{ event.sessionId || '—' }}
+                  </td>
+                  <td>
+                    <button type="button" class="link-button" (click)="viewEvent(event.id)">
+                      View
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <div class="pagination">
+        <label
+          >Page size
+          <select [value]="page.size" (change)="changePageSize($event)" [disabled]="isLoading()">
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select></label
+        >
+        <span>Page {{ page.totalPages === 0 ? 0 : page.number + 1 }} of {{ page.totalPages }}</span
+        ><button
+          type="button"
+          class="secondary"
+          (click)="previousPage()"
+          [disabled]="page.first || isLoading()"
+        >
+          Previous</button
+        ><button
+          type="button"
+          class="secondary"
+          (click)="nextPage()"
+          [disabled]="page.last || isLoading()"
+        >
+          Next
+        </button>
+      </div>
+    }
+  </section>
+</main>

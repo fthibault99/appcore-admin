@@ -1,0 +1,176 @@
+<header class="topbar">
+  <a class="brand" routerLink="/dashboard">AppCore Admin</a>
+  <nav aria-label="Primary navigation">
+    <a routerLink="/dashboard" aria-current="page">Dashboard</a>
+    <a routerLink="/analytics/events">Analytics</a>
+  </nav>
+  <button type="button" class="logout" (click)="logout()" [disabled]="isLoggingOut()">
+    {{ isLoggingOut() ? 'Signing out…' : 'Logout' }}
+  </button>
+</header>
+
+<main class="dashboard">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">Overview</p>
+      <h1>Dashboard</h1>
+      <p>Is AppCore healthy and what happened today?</p>
+    </div>
+    <p class="updated">Current application state</p>
+  </header>
+
+  @if (isLoading()) {
+    <section class="loading-grid" aria-label="Loading dashboard" aria-live="polite">
+      @for (placeholder of [1, 2, 3, 4, 5, 6]; track placeholder) {
+        <div class="placeholder-card">
+          <span class="placeholder-line short"></span>
+          <span class="placeholder-line value"></span>
+          <span class="placeholder-line"></span>
+        </div>
+      }
+    </section>
+  } @else if (hasError()) {
+    <section class="panel load-error" aria-live="polite">
+      <h2>Dashboard unavailable</h2>
+      <p>Unable to load data.</p>
+      <button type="button" class="primary-button" (click)="retry()">Retry</button>
+    </section>
+  } @else if (dashboard(); as data) {
+    <section aria-labelledby="status-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">System</p>
+          <h2 id="status-title">AppCore Status</h2>
+        </div>
+        <span class="status-badge" [class.status-up]="data.system.status === 'UP'">
+          {{ data.system.status || 'Status unavailable' }}
+        </span>
+      </div>
+      <div class="status-grid">
+        <article class="card">
+          <h3>Health status</h3>
+          <p class="card-value compact">{{ data.system.status || 'Unavailable' }}</p>
+          <p class="card-subtitle">Application health</p>
+        </article>
+        <article class="card">
+          <h3>Environment</h3>
+          <p class="card-value compact">{{ data.system.environment || 'Unavailable' }}</p>
+          <p class="card-subtitle">Active environment</p>
+        </article>
+        <article class="card">
+          <h3>Version</h3>
+          <p class="card-value compact">{{ data.system.version || 'Unavailable' }}</p>
+          <p class="card-subtitle">Deployed release</p>
+        </article>
+        <article class="card">
+          <h3>Uptime</h3>
+          <p class="card-value compact">{{ formatUptime(data.system.uptime) }}</p>
+          <p class="card-subtitle">Since last restart</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="activity-today-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Today</p>
+          <h2 id="activity-today-title">Today's Activity</h2>
+        </div>
+      </div>
+      <div class="statistics-grid">
+        @for (statistic of statisticCards(); track statistic.label) {
+          <article class="card statistic-card">
+            <h3>{{ statistic.label }}</h3>
+            <p class="card-value">{{ statistic.value }}</p>
+            <p class="card-subtitle">
+              {{ statistic.backendPending ? 'Backend integration pending' : 'Recorded today' }}
+            </p>
+          </article>
+        }
+      </div>
+      <!-- TODO: Populate recipe, barcode and OpenAI totals when backend dashboard sources exist. -->
+    </section>
+
+    <div class="detail-grid">
+      <section class="panel" aria-labelledby="recent-activity-title">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Latest events</p>
+            <h2 id="recent-activity-title">Recent Activity</h2>
+          </div>
+          <a class="text-link" routerLink="/analytics/events">View all</a>
+        </div>
+        @if (data.recentActivity.length === 0) {
+          <p class="empty-state">No recent activity</p>
+        } @else {
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Event Type</th>
+                  <th>Application</th>
+                  <th>Platform</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (activity of data.recentActivity.slice(0, 5); track activity.occurredAt + activity.eventType) {
+                  <tr>
+                    <td>{{ activity.occurredAt | date: 'shortTime' }}</td>
+                    <td>{{ activity.eventType }}</td>
+                    <td>{{ activity.application || '—' }}</td>
+                    <td>{{ activity.platform || '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+
+      <section class="panel" aria-labelledby="recent-errors-title">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Operations</p>
+            <h2 id="recent-errors-title">Recent Errors</h2>
+          </div>
+        </div>
+        @if (data.recentErrors.length === 0) {
+          <p class="empty-state">No recent errors</p>
+        } @else {
+          <ul class="error-list">
+            @for (error of data.recentErrors; track error.occurredAt + error.source) {
+              <li>
+                <div><strong>{{ error.source }}</strong><span>{{ error.severity }}</span></div>
+                <p>{{ error.message }}</p>
+                <time [dateTime]="error.occurredAt">{{ error.occurredAt | date: 'short' }}</time>
+              </li>
+            }
+          </ul>
+        }
+        <!-- TODO: Populate this card when application error reporting is available in the backend. -->
+      </section>
+    </div>
+
+    <section aria-labelledby="services-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Quick access</p>
+          <h2 id="services-title">Services</h2>
+        </div>
+      </div>
+      <div class="services-grid">
+        @for (service of serviceLinks; track service.label) {
+          <a class="service-card" [routerLink]="service.route">
+            <span>
+              <strong>{{ service.label }}</strong>
+              <small>{{ service.description }}</small>
+            </span>
+            <span aria-hidden="true">→</span>
+          </a>
+        }
+      </div>
+      <!-- TODO: Add routes for Recipes, Barcodes and System when their admin pages are implemented. -->
+    </section>
+  }
+</main>

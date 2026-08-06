@@ -1,0 +1,62 @@
+<main class="detail-page">
+  <a routerLink="/analytics/events">← Back to events</a>
+  <header>
+    <h1>Analytics Event</h1>
+    <p>Inspect the event payload and safe metadata.</p>
+  </header>
+  @if (isLoading()) {
+    <p class="state">Loading analytics event…</p>
+  } @else if (hasError()) {
+    <div class="state error">
+      <p>Unable to load this analytics event. Please try again.</p>
+      <button type="button" (click)="retry()">Retry</button>
+    </div>
+  } @else if (event(); as item) {
+    <section class="card">
+      <dl>
+        <div>
+          <dt>ID</dt>
+          <dd>{{ item.id }}</dd>
+        </div>
+        <div>
+          <dt>Event type</dt>
+          <dd>{{ item.eventType }}</dd>
+        </div>
+        <div>
+          <dt>App client ID</dt>
+          <dd>{{ item.appClientId }}</dd>
+        </div>
+        <div>
+          <dt>API key ID</dt>
+          <dd>{{ item.apiKeyId }}</dd>
+        </div>
+        <div>
+          <dt>Occurred</dt>
+          <dd [title]="item.occurredAt">{{ item.occurredAt | date: 'medium' }}</dd>
+        </div>
+        <div>
+          <dt>Received</dt>
+          <dd [title]="item.receivedAt">{{ item.receivedAt | date: 'medium' }}</dd>
+        </div>
+        <div>
+          <dt>Anonymous user ID</dt>
+          <dd>{{ item.anonymousUserId || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Session ID</dt>
+          <dd>{{ item.sessionId || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Platform</dt>
+          <dd>{{ item.platform || '—' }}</dd>
+        </div>
+        <div>
+          <dt>App version</dt>
+          <dd>{{ item.appVersion || '—' }}</dd>
+        </div>
+      </dl>
+      <h2>Properties</h2>
+      <pre>{{ formattedProperties }}</pre>
+    </section>
+  }
+</main>

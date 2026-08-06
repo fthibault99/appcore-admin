@@ -1,0 +1,79 @@
+:host {
+  display: block;
+}
+.detail-page {
+  width: min(100%, 62rem);
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+a {
+  color: #2457b8;
+  font-weight: 700;
+}
+header {
+  margin: 1.5rem 0;
+}
+h1,
+p {
+  margin-top: 0;
+}
+header p {
+  color: #657086;
+}
+.card {
+  padding: 1.25rem;
+  border: 1px solid #dfe5ee;
+  border-radius: 0.625rem;
+  background: #fff;
+}
+dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1rem;
+}
+dl div {
+  min-width: 0;
+}
+dt {
+  color: #657086;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+dd {
+  margin: 0.3rem 0 0;
+  overflow-wrap: anywhere;
+}
+h2 {
+  margin-top: 2rem;
+  font-size: 1.1rem;
+}
+pre {
+  overflow: auto;
+  padding: 1rem;
+  border-radius: 0.4rem;
+  background: #172033;
+  color: #eef2f8;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.state {
+  padding: 2rem;
+  text-align: center;
+}
+.error {
+  color: #b42318;
+}
+button {
+  padding: 0.6rem 0.9rem;
+  border: 0;
+  border-radius: 0.35rem;
+  color: #fff;
+  background: #2457b8;
+  font-weight: 700;
+}
+@media (max-width: 40rem) {
+  .detail-page {
+    padding: 1rem;
+  }
+}
