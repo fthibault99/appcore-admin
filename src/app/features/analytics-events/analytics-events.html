@@ -58,6 +58,8 @@
                 <th>Application</th>
                 <th>Platform</th>
                 <th>App version</th>
+                <th>Language</th>
+                <th>Region</th>
                 <th>Anonymous user</th>
                 <th>Session</th>
                 <th>Action</th>
@@ -72,6 +74,8 @@
                   <td class="identifier" [title]="event.appClientId">{{ event.appClientId }}</td>
                   <td>{{ event.platform || '—' }}</td>
                   <td>{{ event.appVersion || '—' }}</td>
+                  <td>{{ event.language || '—' }}</td>
+                  <td>{{ event.region || '—' }}</td>
                   <td class="identifier" [title]="event.anonymousUserId || ''">
                     {{ event.anonymousUserId || '—' }}
                   </td>

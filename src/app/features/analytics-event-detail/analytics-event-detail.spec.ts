@@ -19,8 +19,8 @@ describe('AnalyticsEventDetailComponent', () => {
         sessionId: null,
         platform: 'ios',
         appVersion: '1',
-        language: null,
-        region: null,
+        language: 'fr',
+        region: 'CA',
         subscriptionStatus: null,
         purchased: false,
         properties: { source: '<b>unsafe</b>' },
@@ -39,5 +39,9 @@ describe('AnalyticsEventDetailComponent', () => {
     expect(getEvent).toHaveBeenCalledWith('event-1');
     expect(fixture.nativeElement.querySelector('pre').textContent).toContain('<b>unsafe</b>');
     expect(fixture.nativeElement.querySelector('pre b')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Language');
+    expect(fixture.nativeElement.textContent).toContain('fr');
+    expect(fixture.nativeElement.textContent).toContain('Region');
+    expect(fixture.nativeElement.textContent).toContain('CA');
   });
 });

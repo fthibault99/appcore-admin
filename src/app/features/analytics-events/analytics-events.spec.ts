@@ -137,4 +137,42 @@ describe('AnalyticsEventsComponent', () => {
     component.viewEvent('event-1');
     expect(router.navigate).toHaveBeenCalledWith(['/analytics/events', 'event-1']);
   });
+
+  it('displays language and region columns', () => {
+    fixture.detectChanges();
+    results.next(
+      emptyPage({
+        content: [
+          {
+            id: 'event-1',
+            appClientId: 'client-1',
+            apiKeyId: 'key-1',
+            eventType: 'app.opened',
+            occurredAt: '2026-08-01T12:00:00Z',
+            receivedAt: '2026-08-01T12:00:01Z',
+            anonymousUserId: null,
+            sessionId: null,
+            platform: 'ios',
+            appVersion: '1',
+            language: 'fr',
+            region: 'CA',
+            subscriptionStatus: null,
+            purchased: false,
+            properties: null,
+          },
+        ],
+        totalElements: 1,
+      }),
+    );
+    results.complete();
+    fixture.detectChanges();
+
+    const headers = Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('th')).map(
+      (header) => header.textContent?.trim(),
+    );
+    expect(headers).toContain('Language');
+    expect(headers).toContain('Region');
+    expect(fixture.nativeElement.textContent).toContain('fr');
+    expect(fixture.nativeElement.textContent).toContain('CA');
+  });
 });
