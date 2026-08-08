@@ -3,7 +3,9 @@ export type AnalyticsEventProperties = Record<string, unknown> | unknown[] | nul
 export interface AnalyticsEventSummary {
   id: string;
   appClientId: string;
+  appClientName: string;
   apiKeyId: string;
+  apiKeyName: string;
   eventType: string;
   occurredAt: string;
   receivedAt: string;
@@ -20,6 +22,11 @@ export interface AnalyticsEventSummary {
 
 export type AnalyticsEventDetail = AnalyticsEventSummary;
 
+export interface AnalyticsEventFilterOptions {
+  clientNames: string[];
+  applicationNames: string[];
+}
+
 export interface PageResponse<T> {
   content: T[];
   number: number;
@@ -33,6 +40,7 @@ export interface PageResponse<T> {
 export interface AnalyticsEventFilters {
   eventType?: string;
   clientId?: string;
+  apiKeyName?: string;
   platform?: string;
   appVersion?: string;
   anonymousUserId?: string;

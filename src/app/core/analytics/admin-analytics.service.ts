@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import {
   AnalyticsEventDetail,
   AnalyticsEventFilters,
+  AnalyticsEventFilterOptions,
   AnalyticsEventSummary,
   PageResponse,
 } from './analytics-event.models';
@@ -35,5 +36,12 @@ export class AdminAnalyticsService {
     return this.http.get<AnalyticsEventDetail>(`${this.eventsUrl}/${encodeURIComponent(eventId)}`, {
       withCredentials: true,
     });
+  }
+
+  getEventFilterOptions(): Observable<AnalyticsEventFilterOptions> {
+    return this.http.get<AnalyticsEventFilterOptions>(
+      `${environment.apiBaseUrl}/api/admin/analytics/event-filter-options`,
+      { withCredentials: true },
+    );
   }
 }

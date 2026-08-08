@@ -23,6 +23,7 @@ describe('AdminAnalyticsService', () => {
       .getEvents({
         eventType: 'app.opened',
         clientId: 'Meal Master',
+        apiKeyName: 'Meal Master Live',
         platform: 'ios',
         appVersion: '2.1',
         anonymousUserId: 'anon',
@@ -39,6 +40,7 @@ describe('AdminAnalyticsService', () => {
     expect(request.request.withCredentials).toBe(true);
     expect(request.request.params.get('eventType')).toBe('app.opened');
     expect(request.request.params.get('clientId')).toBe('Meal Master');
+    expect(request.request.params.get('apiKeyName')).toBe('Meal Master Live');
     expect(request.request.params.get('platform')).toBe('ios');
     expect(request.request.params.get('page')).toBe('2');
     expect(request.request.params.get('size')).toBe('50');
@@ -84,5 +86,18 @@ describe('AdminAnalyticsService', () => {
     expect(request.request.method).toBe('GET');
     expect(request.request.withCredentials).toBe(true);
     request.flush({});
+  });
+
+  it('gets client and application names represented in events with credentials', () => {
+    service.getEventFilterOptions().subscribe();
+    const request = http.expectOne(
+      `${environment.apiBaseUrl}/api/admin/analytics/event-filter-options`,
+    );
+    expect(request.request.method).toBe('GET');
+    expect(request.request.withCredentials).toBe(true);
+    request.flush({
+      clientNames: ['AppCore', 'Meal Master Plan'],
+      applicationNames: ['AppCore Live', 'Meal Master Live'],
+    });
   });
 });

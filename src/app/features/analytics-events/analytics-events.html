@@ -10,7 +10,24 @@
     <form [formGroup]="filterForm" (ngSubmit)="search()">
       <div class="filter-grid">
         <label>Event type<input formControlName="eventType" /></label>
-        <label>Application<input formControlName="clientId" /></label>
+        <label
+          >Client Name
+          <select formControlName="clientId">
+            <option value="">All clients</option>
+            @for (clientName of clientNames(); track clientName) {
+              <option [value]="clientName">{{ clientName }}</option>
+            }
+          </select></label
+        >
+        <label
+          >Application
+          <select formControlName="apiKeyName">
+            <option value="">All applications</option>
+            @for (applicationName of applicationNames(); track applicationName) {
+              <option [value]="applicationName">{{ applicationName }}</option>
+            }
+          </select></label
+        >
         <label>Platform<input formControlName="platform" /></label>
         <label>App version<input formControlName="appVersion" /></label>
         <label>Anonymous user ID<input formControlName="anonymousUserId" /></label>
@@ -55,6 +72,7 @@
                 <th>Received</th>
                 <th>Occurred</th>
                 <th>Event type</th>
+                <th>Client Name</th>
                 <th>Application</th>
                 <th>Platform</th>
                 <th>App version</th>
@@ -71,7 +89,10 @@
                   <td [title]="event.receivedAt">{{ event.receivedAt | date: 'medium' }}</td>
                   <td [title]="event.occurredAt">{{ event.occurredAt | date: 'medium' }}</td>
                   <td class="identifier" [title]="event.eventType">{{ event.eventType }}</td>
-                  <td class="identifier" [title]="event.appClientId">{{ event.appClientId }}</td>
+                  <td class="identifier" [title]="event.appClientName">
+                    {{ event.appClientName }}
+                  </td>
+                  <td class="identifier" [title]="event.apiKeyName">{{ event.apiKeyName }}</td>
                   <td>{{ event.platform || '—' }}</td>
                   <td>{{ event.appVersion || '—' }}</td>
                   <td>{{ event.language || '—' }}</td>

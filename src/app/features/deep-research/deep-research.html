@@ -1,0 +1,103 @@
+<app-admin-header />
+
+<main class="page-shell">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">OpenAI</p>
+      <h1>Deep Research</h1>
+      <p>Start a new research job or retrieve an existing report without creating another request.</p>
+    </div>
+  </header>
+
+  <div class="form-grid">
+    <form class="panel" [formGroup]="queryForm" (ngSubmit)="start()">
+      <h2>New research</h2>
+      <p class="help">Starting a job incurs OpenAI usage. Check for an existing job ID first.</p>
+      <label for="research-query">Research query</label>
+      <textarea id="research-query" rows="6" formControlName="query"
+        placeholder="Compare AWS RDS, Supabase and Neon…"></textarea>
+      @if (queryForm.controls.query.invalid && queryForm.controls.query.touched) {
+        <p class="field-error">Enter a query of at most 4,000 characters.</p>
+      }
+      <button type="submit" [disabled]="isStarting() || hasActiveResearch()">
+        {{ isStarting() ? 'Starting…' : hasActiveResearch() ? 'Research in progress…' : 'Start research' }}
+      </button>
+    </form>
+
+    <form class="panel" [formGroup]="jobForm" (ngSubmit)="load()">
+      <h2>Existing job</h2>
+      <p class="help">Loading by ID only retrieves the existing job. It does not start a new search.</p>
+      <label for="job-id">Job ID</label>
+      <input id="job-id" formControlName="id" placeholder="00000000-0000-0000-0000-000000000000" />
+      @if (jobForm.controls.id.invalid && jobForm.controls.id.touched) {
+        <p class="field-error">Enter a valid UUID.</p>
+      }
+      <button type="submit" [disabled]="isLoadingJob()">
+        {{ isLoadingJob() ? 'Loading…' : 'Load report' }}
+      </button>
+    </form>
+  </div>
+
+  @if (errorMessage()) {
+    <section class="panel error" aria-live="assertive">{{ errorMessage() }}</section>
+  }
+
+  @if (job(); as current) {
+    <section class="panel job-panel" aria-live="polite">
+      <div class="job-heading">
+        <div>
+          <p class="eyebrow">Job</p>
+          <h2>{{ current.id }}</h2>
+        </div>
+        <span class="status" [class.pending]="current.status === 'QUEUED' || current.status === 'IN_PROGRESS'">
+          {{ current.status }}
+        </span>
+      </div>
+      <dl class="metadata">
+        <div><dt>Model</dt><dd>{{ current.model }}</dd></div>
+        <div><dt>Maximum searches</dt><dd>{{ current.maxSearches }}</dd></div>
+        <div><dt>Created</dt><dd>{{ current.createdAt | date: 'medium' }}</dd></div>
+        <div><dt>Updated</dt><dd>{{ current.updatedAt | date: 'medium' }}</dd></div>
+      </dl>
+      <p class="query"><strong>Query:</strong> {{ current.query }}</p>
+
+      @if (waitingMessage()) {
+        <div class="waiting">
+          <span class="spinner" aria-hidden="true"></span>
+          <div><strong>{{ waitingMessage() }}</strong><small>Job ID saved above. This page checks its status every 3 seconds.</small></div>
+        </div>
+      }
+
+      @if (current.errorMessage) {
+        <p class="provider-error">OpenAI: {{ current.errorMessage }}</p>
+      }
+
+      @if (current.report) {
+        <div class="report-heading">
+          <h2>Report</h2>
+          <button type="button" class="secondary" (click)="print()">Print / Save as PDF</button>
+        </div>
+        @if (current.status === 'INCOMPLETE') {
+          <p class="notice">OpenAI marked this job incomplete, but the available report is shown below.</p>
+        }
+        <div class="report markdown" [innerHTML]="reportHtml()"></div>
+      } @else if (!waitingMessage()) {
+        <p class="empty">This job has no report to display.</p>
+      }
+
+      @if (current.sources.length) {
+        <section class="sources">
+          <h2>Sources</h2>
+          <ol>
+            @for (source of current.sources; track source.url) {
+              <li><a [href]="source.url" target="_blank" rel="noopener noreferrer">{{ source.title || source.url }}</a></li>
+            }
+          </ol>
+        </section>
+      }
+      @if (!isPolling() && (current.status === 'QUEUED' || current.status === 'IN_PROGRESS')) {
+        <button type="button" class="secondary" (click)="refresh()">Resume status checks</button>
+      }
+    </section>
+  }
+</main>

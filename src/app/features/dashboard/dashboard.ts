@@ -58,6 +58,7 @@ export class DashboardComponent implements OnInit {
     { label: 'Recipes', description: 'Recipe operations', route: '/recipes' },
     { label: 'Barcodes', description: 'Barcode lookups', route: '/barcodes' },
     { label: 'OpenAI Usage', description: 'Requests, tokens and latency', route: '/openai/usage' },
+    { label: 'Deep Research', description: 'Start or retrieve research reports', route: '/openai/deep-research' },
   ];
 
   private readonly emptyStatistics: TodayStatistics = {

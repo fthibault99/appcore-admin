@@ -11,7 +11,9 @@ describe('AnalyticsEventDetailComponent', () => {
       of({
         id: 'event-1',
         appClientId: 'client-1',
+        appClientName: 'AppCore',
         apiKeyId: 'key-1',
+        apiKeyName: 'AppCore Live',
         eventType: 'app.opened',
         occurredAt: '2026-08-01T12:00:00Z',
         receivedAt: '2026-08-01T12:00:01Z',
@@ -43,5 +45,10 @@ describe('AnalyticsEventDetailComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('fr');
     expect(fixture.nativeElement.textContent).toContain('Region');
     expect(fixture.nativeElement.textContent).toContain('CA');
+    expect(fixture.nativeElement.textContent).toContain('Client Name');
+    expect(fixture.nativeElement.textContent).toContain('AppCore');
+    expect(fixture.nativeElement.textContent).toContain('Application');
+    expect(fixture.nativeElement.textContent).toContain('AppCore Live');
+    expect(fixture.nativeElement.textContent).not.toContain('client-1');
   });
 });

@@ -11,7 +11,10 @@ describe('AnalyticsEventsComponent', () => {
   let fixture: ComponentFixture<AnalyticsEventsComponent>;
   let component: AnalyticsEventsComponent;
   let results: Subject<PageResponse<AnalyticsEventSummary>>;
-  let service: { getEvents: ReturnType<typeof vi.fn> };
+  let service: {
+    getEvents: ReturnType<typeof vi.fn>;
+    getEventFilterOptions: ReturnType<typeof vi.fn>;
+  };
   let authenticationService: { logout: ReturnType<typeof vi.fn> };
   let router: Router;
   const emptyPage = (
@@ -32,6 +35,12 @@ describe('AnalyticsEventsComponent', () => {
     service = {
       getEvents: vi.fn((): Observable<PageResponse<AnalyticsEventSummary>> =>
         results.asObservable(),
+      ),
+      getEventFilterOptions: vi.fn(() =>
+        of({
+          clientNames: ['AppCore', 'Meal Master Plan'],
+          applicationNames: ['AppCore Live', 'Meal Master Live'],
+        }),
       ),
     };
     authenticationService = { logout: vi.fn(() => of(undefined)) };
@@ -146,7 +155,9 @@ describe('AnalyticsEventsComponent', () => {
           {
             id: 'event-1',
             appClientId: 'client-1',
+            appClientName: 'AppCore',
             apiKeyId: 'key-1',
+            apiKeyName: 'AppCore Live',
             eventType: 'app.opened',
             occurredAt: '2026-08-01T12:00:00Z',
             receivedAt: '2026-08-01T12:00:01Z',
@@ -174,5 +185,37 @@ describe('AnalyticsEventsComponent', () => {
     expect(headers).toContain('Region');
     expect(fixture.nativeElement.textContent).toContain('fr');
     expect(fixture.nativeElement.textContent).toContain('CA');
+  });
+
+  it('lists and filters client and application names represented in events', () => {
+    fixture.detectChanges();
+    results.next(emptyPage());
+    results.complete();
+
+    const clientOptions = Array.from<HTMLOptionElement>(
+      fixture.nativeElement.querySelectorAll('select[formControlName="clientId"] option'),
+    ).map((option) => option.textContent?.trim());
+    expect(clientOptions).toEqual(['All clients', 'AppCore', 'Meal Master Plan']);
+    const applicationOptions = Array.from<HTMLOptionElement>(
+      fixture.nativeElement.querySelectorAll('select[formControlName="apiKeyName"] option'),
+    ).map((option) => option.textContent?.trim());
+    expect(applicationOptions).toEqual([
+      'All applications',
+      'AppCore Live',
+      'Meal Master Live',
+    ]);
+
+    results = new Subject();
+    service.getEvents.mockImplementation(() => results.asObservable());
+    component.filterForm.controls.clientId.setValue('Meal Master Plan');
+    component.filterForm.controls.apiKeyName.setValue('Meal Master Live');
+    component.search();
+    expect(service.getEvents).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        clientId: 'Meal Master Plan',
+        apiKeyName: 'Meal Master Live',
+        page: 0,
+      }),
+    );
   });
 });

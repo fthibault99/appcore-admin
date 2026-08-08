@@ -37,12 +37,15 @@ export class AnalyticsEventsComponent implements OnInit {
   private activeFilters: AnalyticsEventFilters = { page: 0, size: 25, sort: 'receivedAt,desc' };
 
   readonly eventsPage = signal<PageResponse<AnalyticsEventSummary> | null>(null);
+  readonly clientNames = signal<string[]>([]);
+  readonly applicationNames = signal<string[]>([]);
   readonly isLoading = signal(false);
   readonly hasError = signal(false);
   readonly filterForm = new FormGroup(
     {
       eventType: new FormControl('', { nonNullable: true }),
       clientId: new FormControl('', { nonNullable: true }),
+      apiKeyName: new FormControl('', { nonNullable: true }),
       platform: new FormControl('', { nonNullable: true }),
       appVersion: new FormControl('', { nonNullable: true }),
       anonymousUserId: new FormControl('', { nonNullable: true }),
@@ -54,6 +57,7 @@ export class AnalyticsEventsComponent implements OnInit {
   );
 
   ngOnInit(): void {
+    this.loadFilterOptions();
     this.loadEvents();
   }
 
@@ -127,6 +131,23 @@ export class AnalyticsEventsComponent implements OnInit {
           this.hasError.set(true);
         },
       });
+  }
+
+  private loadFilterOptions(): void {
+    this.analyticsService.getEventFilterOptions().subscribe({
+      next: (options) => {
+        this.clientNames.set(options.clientNames);
+        this.applicationNames.set(options.applicationNames);
+      },
+      error: (error: unknown) => {
+        if (
+          error instanceof HttpErrorResponse &&
+          (error.status === 401 || error.status === 403)
+        ) {
+          void this.router.navigate(['/login']);
+        }
+      },
+    });
   }
 
   private cleanTextFilters(
