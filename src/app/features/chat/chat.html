@@ -1,0 +1,78 @@
+<app-admin-header />
+
+<main class="page-shell">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">OpenAI tools</p>
+      <h1>Streaming chat</h1>
+      <p>Test a stateless response from the server-owned GPT-5.6 Luna configuration.</p>
+    </div>
+    <span class="model-badge">{{ model() }}</span>
+  </header>
+
+  <section class="chat-panel" aria-label="OpenAI streaming chat">
+    <section class="conversation" aria-live="polite" [attr.aria-busy]="isStreaming()">
+      @if (submittedPrompt()) {
+        <article class="message-row user-row">
+          <div class="message user-message">
+            <span class="message-role">You</span>
+            <p>{{ submittedPrompt() }}</p>
+          </div>
+        </article>
+        <article class="message-row assistant-row">
+          <div class="assistant-avatar" aria-hidden="true">AI</div>
+          <div class="message assistant-message">
+            <div class="message-meta">
+              <span class="message-role">GPT-5.6 Luna</span>
+              @if (isStreaming()) { <span class="streaming-indicator">Generating</span> }
+            </div>
+            @if (errorMessage()) {
+              <p class="error-message" role="alert">{{ errorMessage() }}</p>
+            } @else if (answer()) {
+              <div class="markdown-response" [innerHTML]="answerHtml()"></div>
+            } @else {
+              <div class="typing-dots" aria-label="Waiting for the first response tokens"><i></i><i></i><i></i></div>
+            }
+            @if (usage(); as tokenUsage) {
+              <dl class="usage">
+                <div><dt>Input</dt><dd>{{ tokenUsage.inputTokens ?? '—' }}</dd></div>
+                <div><dt>Output</dt><dd>{{ tokenUsage.outputTokens ?? '—' }}</dd></div>
+                <div><dt>Total</dt><dd>{{ tokenUsage.totalTokens ?? '—' }}</dd></div>
+              </dl>
+            }
+          </div>
+        </article>
+      } @else {
+        <div class="welcome-state">
+          <div class="assistant-avatar" aria-hidden="true">AI</div>
+          <h2>What would you like to test?</h2>
+          <p>The Markdown response will appear here token by token.</p>
+        </div>
+      }
+    </section>
+
+    <form class="composer" [formGroup]="form" (ngSubmit)="send()">
+      <label for="chat-prompt">Message</label>
+      <textarea
+        id="chat-prompt"
+        formControlName="prompt"
+        rows="3"
+        placeholder="Ask GPT-5.6 Luna something…"
+        [attr.aria-invalid]="form.controls.prompt.invalid && form.controls.prompt.touched"
+      ></textarea>
+      @if (form.controls.prompt.touched && form.controls.prompt.hasError('required')) {
+        <p class="field-error">Enter a message.</p>
+      } @else if (form.controls.prompt.touched && form.controls.prompt.hasError('maxlength')) {
+        <p class="field-error">The message cannot exceed 20,000 characters.</p>
+      }
+      <div class="actions">
+        <button type="submit" class="primary" [disabled]="form.invalid || isStreaming()">
+          {{ isStreaming() ? 'Streaming…' : 'Send message' }}
+        </button>
+        @if (isStreaming()) {
+          <button type="button" class="secondary" (click)="stop()">Stop</button>
+        }
+      </div>
+    </form>
+  </section>
+</main>

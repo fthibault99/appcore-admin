@@ -12,6 +12,7 @@ import { OpenAIUsageComponent } from './features/openai-usage/openai-usage';
 import { OpenAIUsageDetailComponent } from './features/openai-usage-detail/openai-usage-detail';
 import { OpenAIPricesComponent } from './features/openai-prices/openai-prices';
 import { DeepResearchComponent } from './features/deep-research/deep-research';
+import { ChatComponent } from './features/chat/chat';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -30,6 +31,7 @@ export const routes: Routes = [
   { path: 'openai/usage/:usageId', component: OpenAIUsageDetailComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/prices', component: OpenAIPricesComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/deep-research', component: DeepResearchComponent, canActivate: [adminAuthGuard] },
+  { path: 'openai/chat', component: ChatComponent, canActivate: [adminAuthGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: '**', redirectTo: 'login' },
 ];
