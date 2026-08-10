@@ -10,6 +10,13 @@ export interface AdminChatResponse {
   usage: AdminChatUsage;
 }
 
+export type AdminChatRole = 'USER' | 'ASSISTANT';
+
+export interface AdminChatMessage {
+  role: AdminChatRole;
+  content: string;
+}
+
 export type AdminChatStreamEvent =
   | { type: 'delta'; text: string }
   | { type: 'completed'; response: AdminChatResponse };

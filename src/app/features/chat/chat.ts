@@ -3,7 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { finalize, Subscription } from 'rxjs';
 import { AdminChatRequestError, AdminChatService } from '../../core/chat/admin-chat.service';
-import { AdminChatUsage } from '../../core/chat/admin-chat.models';
+import { AdminChatMessage, AdminChatUsage } from '../../core/chat/admin-chat.models';
 import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
 import { marked } from 'marked';
 
@@ -26,8 +26,12 @@ export class ChatComponent implements OnDestroy {
       validators: [Validators.required, Validators.maxLength(20_000)],
     }),
   });
+  readonly messages = signal<ReadonlyArray<AdminChatMessage & {
+    usage?: AdminChatUsage;
+    model?: string;
+    html?: string;
+  }>>([]);
   readonly answer = signal('');
-  readonly submittedPrompt = signal('');
   readonly answerHtml = computed(() => marked.parse(this.answer(), { async: false, gfm: true }));
   readonly model = signal('gpt-5.6-luna');
   readonly usage = signal<AdminChatUsage | null>(null);
@@ -37,19 +41,29 @@ export class ChatComponent implements OnDestroy {
   send(): void {
     this.form.markAllAsTouched();
     if (this.form.invalid || this.isStreaming()) return;
+    const prompt = this.form.controls.prompt.value.trim();
+    const conversation = this.messages().map(({ role, content }) => ({ role, content }));
     this.answer.set('');
-    this.submittedPrompt.set(this.form.controls.prompt.value.trim());
+    this.messages.update((messages) => [...messages, { role: 'USER', content: prompt }]);
+    this.form.controls.prompt.setValue('');
     this.usage.set(null);
     this.errorMessage.set('');
     this.isStreaming.set(true);
-    this.streamSubscription = this.chat.stream(this.form.controls.prompt.value)
+    this.streamSubscription = this.chat.stream(prompt, conversation)
       .pipe(finalize(() => this.isStreaming.set(false)))
       .subscribe({
         next: (event) => {
           this.zone.run(() => {
             if (event.type === 'delta') this.answer.update((answer) => answer + event.text);
             else {
-              this.answer.set(event.response.answer);
+              this.messages.update((messages) => [...messages, {
+                role: 'ASSISTANT',
+                content: event.response.answer,
+                model: event.response.model,
+                usage: event.response.usage,
+                html: marked.parse(event.response.answer, { async: false, gfm: true }),
+              }]);
+              this.answer.set('');
               this.model.set(event.response.model);
               this.usage.set(event.response.usage);
             }

@@ -48,11 +48,39 @@ describe('ChatComponent', () => {
     events.complete();
     fixture.detectChanges();
 
-    expect(chatService.stream).toHaveBeenCalledWith('Say hello');
+    expect(chatService.stream).toHaveBeenCalledWith('Say hello', []);
     expect(fixture.nativeElement.textContent).toContain('Hello world');
     expect(fixture.nativeElement.textContent).toContain('gpt-5.6-luna');
     expect(component.usage()?.totalTokens).toBe(6);
     expect(component.isStreaming()).toBe(false);
+  });
+
+  it('sends completed conversation history with the next prompt', () => {
+    component.form.controls.prompt.setValue('First question');
+    component.send();
+    events.next({
+      type: 'completed',
+      response: {
+        answer: 'First answer',
+        model: 'gpt-5.6-luna',
+        usage: { inputTokens: 2, outputTokens: 2, totalTokens: 4 },
+      },
+    });
+    events.complete();
+
+    events = new Subject<AdminChatStreamEvent>();
+    component.form.controls.prompt.setValue('Follow-up question');
+    component.send();
+
+    expect(chatService.stream).toHaveBeenLastCalledWith('Follow-up question', [
+      { role: 'USER', content: 'First question' },
+      { role: 'ASSISTANT', content: 'First answer' },
+    ]);
+    expect(component.messages().map(({ role, content }) => ({ role, content }))).toEqual([
+      { role: 'USER', content: 'First question' },
+      { role: 'ASSISTANT', content: 'First answer' },
+      { role: 'USER', content: 'Follow-up question' },
+    ]);
   });
 
   it('cancels the active stream', () => {

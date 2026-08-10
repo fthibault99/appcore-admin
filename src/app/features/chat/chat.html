@@ -5,20 +5,39 @@
     <div>
       <p class="eyebrow">OpenAI tools</p>
       <h1>Streaming chat</h1>
-      <p>Test a stateless response from the server-owned GPT-5.6 Luna configuration.</p>
+      <p>Test a conversation with server-owned instructions and GPT-5.6 Luna.</p>
     </div>
     <span class="model-badge">{{ model() }}</span>
   </header>
 
   <section class="chat-panel" aria-label="OpenAI streaming chat">
     <section class="conversation" aria-live="polite" [attr.aria-busy]="isStreaming()">
-      @if (submittedPrompt()) {
-        <article class="message-row user-row">
-          <div class="message user-message">
-            <span class="message-role">You</span>
-            <p>{{ submittedPrompt() }}</p>
-          </div>
-        </article>
+      @for (message of messages(); track $index) {
+        @if (message.role === 'USER') {
+          <article class="message-row user-row">
+            <div class="message user-message">
+              <span class="message-role">You</span>
+              <p>{{ message.content }}</p>
+            </div>
+          </article>
+        } @else {
+          <article class="message-row assistant-row">
+            <div class="assistant-avatar" aria-hidden="true">AI</div>
+            <div class="message assistant-message">
+              <div class="message-meta"><span class="message-role">{{ message.model ?? 'GPT-5.6 Luna' }}</span></div>
+              <div class="markdown-response" [innerHTML]="message.html"></div>
+              @if (message.usage; as tokenUsage) {
+                <dl class="usage">
+                  <div><dt>Input</dt><dd>{{ tokenUsage.inputTokens ?? '—' }}</dd></div>
+                  <div><dt>Output</dt><dd>{{ tokenUsage.outputTokens ?? '—' }}</dd></div>
+                  <div><dt>Total</dt><dd>{{ tokenUsage.totalTokens ?? '—' }}</dd></div>
+                </dl>
+              }
+            </div>
+          </article>
+        }
+      }
+      @if (isStreaming() || answer() || errorMessage()) {
         <article class="message-row assistant-row">
           <div class="assistant-avatar" aria-hidden="true">AI</div>
           <div class="message assistant-message">
@@ -33,16 +52,9 @@
             } @else {
               <div class="typing-dots" aria-label="Waiting for the first response tokens"><i></i><i></i><i></i></div>
             }
-            @if (usage(); as tokenUsage) {
-              <dl class="usage">
-                <div><dt>Input</dt><dd>{{ tokenUsage.inputTokens ?? '—' }}</dd></div>
-                <div><dt>Output</dt><dd>{{ tokenUsage.outputTokens ?? '—' }}</dd></div>
-                <div><dt>Total</dt><dd>{{ tokenUsage.totalTokens ?? '—' }}</dd></div>
-              </dl>
-            }
           </div>
         </article>
-      } @else {
+      } @else if (messages().length === 0) {
         <div class="welcome-state">
           <div class="assistant-avatar" aria-hidden="true">AI</div>
           <h2>What would you like to test?</h2>

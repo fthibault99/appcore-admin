@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom, map, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AdminChatResponse, AdminChatStreamEvent } from './admin-chat.models';
+import { AdminChatMessage, AdminChatResponse, AdminChatStreamEvent } from './admin-chat.models';
 
 export class AdminChatRequestError extends Error {
   constructor(readonly status: number, message: string) {
@@ -16,10 +16,10 @@ export class AdminChatService {
   private readonly url = `${environment.apiBaseUrl}/api/admin/openai/chat/stream`;
   private readonly csrfUrl = `${environment.apiBaseUrl}/api/admin/auth/csrf`;
 
-  stream(prompt: string): Observable<AdminChatStreamEvent> {
+  stream(prompt: string, conversation: readonly AdminChatMessage[] = []): Observable<AdminChatStreamEvent> {
     return new Observable((subscriber) => {
       const abortController = new AbortController();
-      void this.consume(prompt.trim(), abortController.signal, (event) => subscriber.next(event))
+      void this.consume(prompt.trim(), conversation, abortController.signal, (event) => subscriber.next(event))
         .then(() => subscriber.complete())
         .catch((error: unknown) => {
           if (!subscriber.closed) subscriber.error(error);
@@ -30,6 +30,7 @@ export class AdminChatService {
 
   private async consume(
     prompt: string,
+    conversation: readonly AdminChatMessage[],
     signal: AbortSignal,
     emit: (event: AdminChatStreamEvent) => void,
   ): Promise<void> {
@@ -42,7 +43,7 @@ export class AdminChatService {
         'Content-Type': 'application/json',
         'X-XSRF-TOKEN': csrfToken,
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, conversation }),
     });
     if (!response.ok) {
       throw new AdminChatRequestError(response.status, `Chat request failed with HTTP ${response.status}.`);
