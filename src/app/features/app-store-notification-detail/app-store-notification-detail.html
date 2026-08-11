@@ -1,0 +1,30 @@
+<app-admin-header />
+<main class="page-shell">
+  <a routerLink="/app-store/notifications">← App Store notifications</a>
+  @if (isLoading()) {
+    <p class="state">Loading notification…</p>
+  } @else if (hasError()) {
+    <p class="state error">Unable to load this App Store notification.</p>
+  } @else if (detail(); as detail) {
+    <header><h1>{{ detail.notification.notificationType }}</h1><p>{{ detail.notification.subtype || 'No subtype' }}</p></header>
+    <section class="panel details">
+      <h2>Verified notification</h2>
+      <dl>
+        <div><dt>Received</dt><dd>{{ detail.notification.receivedAt | date: 'medium' }}</dd></div>
+        <div><dt>Environment</dt><dd>{{ detail.notification.environment }}</dd></div>
+        <div><dt>Application</dt><dd>{{ detail.notification.applicationName || detail.notification.applicationKey || 'Legacy' }}</dd></div>
+        <div><dt>Product</dt><dd>{{ detail.notification.productId || '—' }}</dd></div>
+        <div><dt>Bundle ID</dt><dd>{{ detail.notification.bundleId }}</dd></div>
+        <div><dt>Notification UUID</dt><dd>{{ detail.notification.notificationUuid }}</dd></div>
+        <div><dt>Transaction ID</dt><dd>{{ detail.notification.transactionId || '—' }}</dd></div>
+        <div><dt>Original transaction ID</dt><dd>{{ detail.notification.originalTransactionId || '—' }}</dd></div>
+        <div><dt>Purchase date</dt><dd>{{ detail.notification.purchaseDate ? (detail.notification.purchaseDate | date: 'medium') : '—' }}</dd></div>
+        <div><dt>Expiration date</dt><dd>{{ detail.notification.expiresDate ? (detail.notification.expiresDate | date: 'medium') : '—' }}</dd></div>
+        <div><dt>Revocation date</dt><dd>{{ detail.notification.revocationDate ? (detail.notification.revocationDate | date: 'medium') : '—' }}</dd></div>
+        <div><dt>Consumption request</dt><dd>{{ detail.notification.consumptionRequestReason || '—' }}</dd></div>
+      </dl>
+    </section>
+    <section class="panel"><h2>Decoded verified payload</h2><pre>{{ detail.decodedPayload | json }}</pre></section>
+    <details class="panel"><summary>Original signed payload</summary><pre>{{ detail.signedPayload }}</pre></details>
+  }
+</main>

@@ -1,0 +1,77 @@
+<app-admin-header />
+<main class="page-shell">
+  <header class="page-heading">
+    <div><h1>App Store Notifications</h1><p>Verified App Store Server Notifications V2 received by AppCore.</p></div>
+    <a routerLink="/app-store/applications">Manage applications</a>
+  </header>
+
+  <section class="panel">
+    <h2>Filters</h2>
+    <form [formGroup]="filterForm" (ngSubmit)="search()">
+      <div class="filter-grid">
+        <label>Application
+          <select formControlName="applicationKey">
+            <option value="">All applications</option>
+            @for (application of applications(); track application.id) {
+              <option [value]="application.applicationKey">{{ application.displayName }}</option>
+            }
+          </select>
+        </label>
+        <label>Environment
+          <select formControlName="environment">
+            <option value="">All environments</option>
+            <option value="Production">Production</option>
+            <option value="Sandbox">Sandbox</option>
+          </select>
+        </label>
+        <label>Notification type<input formControlName="notificationType" placeholder="REFUND" /></label>
+      </div>
+      <div class="actions">
+        <button type="submit" [disabled]="isLoading()">Search</button>
+        <button type="button" class="secondary" (click)="reset()" [disabled]="isLoading()">Reset</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel" aria-live="polite">
+    <div class="results-heading">
+      <h2>Events</h2>
+      @if (page(); as result) { <span>{{ result.totalElements }} notifications</span> }
+    </div>
+    @if (isLoading()) {
+      <p class="state">Loading App Store notifications…</p>
+    } @else if (hasError()) {
+      <div class="state error"><p>Unable to load App Store notifications.</p><button type="button" (click)="retry()">Retry</button></div>
+    } @else if (page(); as result) {
+      @if (result.content.length === 0) {
+        <p class="state">No App Store notifications match these filters.</p>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Received</th><th>Application</th><th>Environment</th><th>Type</th><th>Subtype</th><th>Product</th><th>Original transaction</th><th>Expires</th><th>Action</th></tr></thead>
+            <tbody>
+              @for (event of result.content; track event.id) {
+                <tr>
+                  <td>{{ event.receivedAt | date: 'medium' }}</td>
+                  <td>{{ event.applicationName || event.applicationKey || 'Legacy' }}</td>
+                  <td><span class="badge" [class.sandbox]="event.environment === 'Sandbox'">{{ event.environment }}</span></td>
+                  <td class="identifier">{{ event.notificationType }}</td>
+                  <td>{{ event.subtype || '—' }}</td>
+                  <td class="identifier">{{ event.productId || '—' }}</td>
+                  <td class="identifier" [title]="event.originalTransactionId || ''">{{ event.originalTransactionId || '—' }}</td>
+                  <td>{{ event.expiresDate ? (event.expiresDate | date: 'medium') : '—' }}</td>
+                  <td><button type="button" class="link-button" (click)="view(event.id)">View</button></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <div class="pagination">
+        <span>Page {{ result.totalPages === 0 ? 0 : result.number + 1 }} of {{ result.totalPages }}</span>
+        <button type="button" class="secondary" (click)="previousPage()" [disabled]="result.first || isLoading()">Previous</button>
+        <button type="button" class="secondary" (click)="nextPage()" [disabled]="result.last || isLoading()">Next</button>
+      </div>
+    }
+  </section>
+</main>

@@ -1,0 +1,69 @@
+<app-admin-header />
+<main class="page-shell">
+  <header>
+    <div><h1>App Store Applications</h1><p>Register applications without restarting AppCore.</p></div>
+    <a routerLink="/app-store/notifications">View notifications</a>
+  </header>
+
+  <section class="panel">
+    <h2>{{ editing() ? 'Edit application' : 'Add application' }}</h2>
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="form-grid">
+        <label>Application key<input formControlName="applicationKey" placeholder="do-it-tomorrow" /></label>
+        <label>Display name<input formControlName="displayName" placeholder="Do It Tomorrow" /></label>
+        <label>Bundle ID<input formControlName="bundleId" placeholder="com.example.app" /></label>
+        <label>App Apple ID<input type="number" formControlName="appAppleId" /></label>
+        @if (editing()) { <label class="checkbox"><input type="checkbox" formControlName="enabled" /> Enabled</label> }
+      </div>
+      @if (form.controls.applicationKey.invalid && form.controls.applicationKey.touched) {
+        <p class="error">Use lowercase letters, numbers, and single hyphens for the application key.</p>
+      }
+      @if (errorMessage()) { <p class="error">{{ errorMessage() }}</p> }
+      <div class="actions">
+        <button type="submit" [disabled]="isSaving()">{{ isSaving() ? 'Saving…' : editing() ? 'Save changes' : 'Add application' }}</button>
+        @if (editing()) { <button type="button" class="secondary" (click)="cancel()">Cancel</button> }
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Registered applications</h2>
+    @if (isLoading()) {
+      <p class="state">Loading applications…</p>
+    } @else if (applications().length === 0) {
+      <p class="state">No App Store applications are registered.</p>
+    } @else {
+      <div class="cards">
+        @if (copyError()) { <p class="error" role="alert">Unable to copy the URL. Select it manually.</p> }
+        @for (application of applications(); track application.id) {
+          <article>
+            <div class="card-heading"><h3>{{ application.displayName }}</h3><span [class.disabled]="!application.enabled">{{ application.enabled ? 'Enabled' : 'Disabled' }}</span></div>
+            <dl>
+              <div><dt>Application key</dt><dd>{{ application.applicationKey }}</dd></div>
+              <div><dt>Bundle ID</dt><dd>{{ application.bundleId }}</dd></div>
+              <div><dt>App Apple ID</dt><dd>{{ application.appAppleId }}</dd></div>
+              <div><dt>Updated</dt><dd>{{ application.updatedAt | date: 'medium' }}</dd></div>
+            </dl>
+            <div class="urls">
+              <strong>Production URL</strong>
+              <div class="url-row">
+                <code>{{ appStoreUrl(application.applicationKey, 'production') }}</code>
+                <button type="button" class="copy-button" (click)="copyUrl(appStoreUrl(application.applicationKey, 'production'))">
+                  {{ copiedUrl() === appStoreUrl(application.applicationKey, 'production') ? 'Copied' : 'Copy' }}
+                </button>
+              </div>
+              <strong>Sandbox URL</strong>
+              <div class="url-row">
+                <code>{{ appStoreUrl(application.applicationKey, 'sandbox') }}</code>
+                <button type="button" class="copy-button" (click)="copyUrl(appStoreUrl(application.applicationKey, 'sandbox'))">
+                  {{ copiedUrl() === appStoreUrl(application.applicationKey, 'sandbox') ? 'Copied' : 'Copy' }}
+                </button>
+              </div>
+            </div>
+            <button type="button" class="secondary" (click)="edit(application)">Edit</button>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</main>

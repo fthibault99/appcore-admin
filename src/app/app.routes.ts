@@ -13,11 +13,21 @@ import { OpenAIUsageDetailComponent } from './features/openai-usage-detail/opena
 import { OpenAIPricesComponent } from './features/openai-prices/openai-prices';
 import { DeepResearchComponent } from './features/deep-research/deep-research';
 import { ChatComponent } from './features/chat/chat';
+import { AppStoreNotificationsComponent } from './features/app-store-notifications/app-store-notifications';
+import { AppStoreNotificationDetailComponent } from './features/app-store-notification-detail/app-store-notification-detail';
+import { AppStoreApplicationsComponent } from './features/app-store-applications/app-store-applications';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'dashboard', component: DashboardComponent, canActivate: [adminAuthGuard] },
   { path: 'analytics/events', component: AnalyticsEventsComponent, canActivate: [adminAuthGuard] },
+  { path: 'app-store/notifications', component: AppStoreNotificationsComponent, canActivate: [adminAuthGuard] },
+  { path: 'app-store/applications', component: AppStoreApplicationsComponent, canActivate: [adminAuthGuard] },
+  {
+    path: 'app-store/notifications/:notificationId',
+    component: AppStoreNotificationDetailComponent,
+    canActivate: [adminAuthGuard],
+  },
   {
     path: 'analytics/events/:eventId',
     component: AnalyticsEventDetailComponent,

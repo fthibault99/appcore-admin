@@ -25,6 +25,7 @@ describe('AdminHeaderComponent', () => {
     expect(links.map((link) => link.textContent?.trim())).toEqual([
       'Dashboard',
       'Analytics',
+      'App Store',
       'Recipes',
       'Barcodes',
       'OpenAI',
