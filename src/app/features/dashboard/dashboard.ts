@@ -11,6 +11,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { DashboardService } from '../../core/dashboard/dashboard.service';
+import { AdminNotificationService } from '../../core/notifications/admin-notification.service';
 import { Dashboard, TodayStatistics } from '../../models/dashboard.models';
 import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
 
@@ -35,11 +36,14 @@ interface ServiceLink {
 })
 export class DashboardComponent implements OnInit {
   private readonly dashboardService = inject(DashboardService);
+  private readonly notificationService = inject(AdminNotificationService);
   private readonly router = inject(Router);
 
   readonly dashboard = signal<Dashboard | null>(null);
   readonly isLoading = signal(true);
   readonly hasError = signal(false);
+  readonly isSendingTestEmail = signal(false);
+  readonly testEmailStatus = signal<'success' | 'error' | null>(null);
   readonly statisticCards = computed<StatisticCard[]>(() => {
     const today = this.dashboard()?.today ?? this.emptyStatistics;
     return [
@@ -74,6 +78,28 @@ export class DashboardComponent implements OnInit {
 
   retry(): void {
     this.loadDashboard();
+  }
+
+  sendTestEmail(): void {
+    if (this.isSendingTestEmail()) return;
+    this.isSendingTestEmail.set(true);
+    this.testEmailStatus.set(null);
+    this.notificationService
+      .sendTestEmail()
+      .pipe(finalize(() => this.isSendingTestEmail.set(false)))
+      .subscribe({
+        next: () => this.testEmailStatus.set('success'),
+        error: (error: unknown) => {
+          if (
+            error instanceof HttpErrorResponse &&
+            (error.status === 401 || error.status === 403)
+          ) {
+            void this.router.navigate(['/login']);
+            return;
+          }
+          this.testEmailStatus.set('error');
+        },
+      });
   }
 
   formatUptime(seconds: number): string {

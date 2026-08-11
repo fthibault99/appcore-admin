@@ -5,6 +5,7 @@ import { Router, provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { AdminAuthenticationService } from '../../core/authentication/admin-authentication.service';
 import { DashboardService } from '../../core/dashboard/dashboard.service';
+import { AdminNotificationService } from '../../core/notifications/admin-notification.service';
 import { Dashboard } from '../../models/dashboard.models';
 import { DashboardComponent } from './dashboard';
 
@@ -17,6 +18,7 @@ describe('DashboardComponent', () => {
   let dashboardResult: Subject<Dashboard>;
   let dashboardService: { getDashboard: ReturnType<typeof vi.fn> };
   let authenticationService: { logout: ReturnType<typeof vi.fn> };
+  let notificationService: { sendTestEmail: ReturnType<typeof vi.fn> };
   let router: Router;
 
   const dashboard: Dashboard = {
@@ -42,12 +44,14 @@ describe('DashboardComponent', () => {
     dashboardResult = new Subject<Dashboard>();
     dashboardService = { getDashboard: vi.fn(() => dashboardResult.asObservable()) };
     authenticationService = { logout: vi.fn(() => of(undefined)) };
+    notificationService = { sendTestEmail: vi.fn(() => of({ status: 'DISPATCH_ATTEMPTED' })) };
 
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
       providers: [
         provideRouter([{ path: 'recipes', component: RecipesTestComponent }]),
         { provide: DashboardService, useValue: dashboardService },
+        { provide: AdminNotificationService, useValue: notificationService },
         { provide: AdminAuthenticationService, useValue: authenticationService },
       ],
     }).compileComponents();
@@ -108,5 +112,21 @@ describe('DashboardComponent', () => {
     await fixture.whenStable();
 
     expect(router.url).toBe('/recipes');
+  });
+
+  it('requests a test email and shows confirmation', () => {
+    fixture.detectChanges();
+    dashboardResult.next(dashboard);
+    dashboardResult.complete();
+    fixture.detectChanges();
+
+    const button = fixture.nativeElement.querySelector('.secondary-button') as HTMLButtonElement;
+    button.click();
+    fixture.detectChanges();
+
+    expect(notificationService.sendTestEmail).toHaveBeenCalledTimes(1);
+    expect(fixture.nativeElement.textContent).toContain(
+      'Test email requested. Check the administrative inbox.',
+    );
   });
 });

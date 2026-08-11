@@ -7,7 +7,24 @@
       <h1>Dashboard</h1>
       <p>Is AppCore healthy and what happened today?</p>
     </div>
-    <p class="updated">Current application state</p>
+    <div class="heading-actions">
+      <p class="updated">Current application state</p>
+      <button
+        type="button"
+        class="secondary-button"
+        [disabled]="isSendingTestEmail()"
+        (click)="sendTestEmail()"
+      >
+        {{ isSendingTestEmail() ? 'Sending test email…' : 'Send test email' }}
+      </button>
+      <p class="test-email-feedback" aria-live="polite">
+        @if (testEmailStatus() === 'success') {
+          Test email requested. Check the administrative inbox.
+        } @else if (testEmailStatus() === 'error') {
+          Unable to request the test email. Verify that SNS notifications are enabled.
+        }
+      </p>
+    </div>
   </header>
 
   @if (isLoading()) {
