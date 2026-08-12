@@ -23,7 +23,12 @@ import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
 export class AppStoreNotificationsComponent implements OnInit {
   private readonly service = inject(AdminAppStoreService);
   private readonly router = inject(Router);
-  private filters: AppStoreNotificationFilters = { page: 0, size: 50, sort: 'receivedAt,desc' };
+  private filters: AppStoreNotificationFilters = {
+    environment: 'Production',
+    page: 0,
+    size: 50,
+    sort: 'receivedAt,desc',
+  };
 
   readonly page = signal<AppStoreNotificationPage | null>(null);
   readonly applications = signal<AppStoreApplication[]>([]);
@@ -32,7 +37,7 @@ export class AppStoreNotificationsComponent implements OnInit {
   readonly hasError = signal(false);
   readonly filterForm = new FormGroup({
     applicationKey: new FormControl('', { nonNullable: true }),
-    environment: new FormControl('', { nonNullable: true }),
+    environment: new FormControl('Production', { nonNullable: true }),
     notificationType: new FormControl('', { nonNullable: true }),
   });
 
@@ -56,8 +61,13 @@ export class AppStoreNotificationsComponent implements OnInit {
   }
 
   reset(): void {
-    this.filterForm.reset();
-    this.filters = { page: 0, size: this.filters.size, sort: 'receivedAt,desc' };
+    this.filterForm.reset({ applicationKey: '', environment: 'Production', notificationType: '' });
+    this.filters = {
+      environment: 'Production',
+      page: 0,
+      size: this.filters.size,
+      sort: 'receivedAt,desc',
+    };
     this.load();
   }
 
