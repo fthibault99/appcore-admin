@@ -16,10 +16,15 @@ export class AdminAppStoreService {
   private readonly http = inject(HttpClient);
   private readonly notificationsUrl = `${environment.apiBaseUrl}/api/admin/app-store/notifications`;
   private readonly applicationsUrl = `${environment.apiBaseUrl}/api/admin/app-store/applications`;
+  private readonly notificationTypesUrl = `${this.notificationsUrl}/filter-options/types`;
   private readonly csrfUrl = `${environment.apiBaseUrl}/api/admin/auth/csrf`;
 
   getApplications(): Observable<AppStoreApplication[]> {
     return this.http.get<AppStoreApplication[]>(this.applicationsUrl, { withCredentials: true });
+  }
+
+  getNotificationTypes(): Observable<string[]> {
+    return this.http.get<string[]>(this.notificationTypesUrl, { withCredentials: true });
   }
 
   createApplication(request: CreateAppStoreApplication): Observable<AppStoreApplication> {

@@ -27,6 +27,19 @@ describe('AdminAppStoreService', () => {
     request.flush({ content: [], number: 0, size: 50, totalElements: 0, totalPages: 0, first: true, last: true });
   });
 
+  it('loads distinct notification types stored by AppCore', () => {
+    service.getNotificationTypes().subscribe((types) => {
+      expect(types).toEqual(['CONSUMPTION_REQUEST', 'ONE_TIME_CHARGE']);
+    });
+
+    const request = http.expectOne(
+      `${environment.apiBaseUrl}/api/admin/app-store/notifications/filter-options/types`,
+    );
+    expect(request.request.method).toBe('GET');
+    expect(request.request.withCredentials).toBe(true);
+    request.flush(['CONSUMPTION_REQUEST', 'ONE_TIME_CHARGE']);
+  });
+
   it('gets CSRF before registering an application', () => {
     service.createApplication({
       applicationKey: 'do-it-tomorrow', displayName: 'Do It Tomorrow',

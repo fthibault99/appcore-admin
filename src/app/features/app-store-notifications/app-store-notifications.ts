@@ -27,6 +27,7 @@ export class AppStoreNotificationsComponent implements OnInit {
 
   readonly page = signal<AppStoreNotificationPage | null>(null);
   readonly applications = signal<AppStoreApplication[]>([]);
+  readonly notificationTypes = signal<string[]>([]);
   readonly isLoading = signal(false);
   readonly hasError = signal(false);
   readonly filterForm = new FormGroup({
@@ -37,6 +38,7 @@ export class AppStoreNotificationsComponent implements OnInit {
 
   ngOnInit(): void {
     this.service.getApplications().subscribe({ next: (applications) => this.applications.set(applications) });
+    this.service.getNotificationTypes().subscribe({ next: (types) => this.notificationTypes.set(types) });
     this.load();
   }
 

@@ -24,7 +24,14 @@
             <option value="Sandbox">Sandbox</option>
           </select>
         </label>
-        <label>Notification type<input formControlName="notificationType" placeholder="REFUND" /></label>
+        <label>Notification type
+          <select formControlName="notificationType">
+            <option value="">All types</option>
+            @for (type of notificationTypes(); track type) {
+              <option [value]="type">{{ type }}</option>
+            }
+          </select>
+        </label>
       </div>
       <div class="actions">
         <button type="submit" [disabled]="isLoading()">Search</button>
