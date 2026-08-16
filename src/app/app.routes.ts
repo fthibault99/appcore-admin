@@ -16,6 +16,7 @@ import { ChatComponent } from './features/chat/chat';
 import { AppStoreNotificationsComponent } from './features/app-store-notifications/app-store-notifications';
 import { AppStoreNotificationDetailComponent } from './features/app-store-notification-detail/app-store-notification-detail';
 import { AppStoreApplicationsComponent } from './features/app-store-applications/app-store-applications';
+import { VoiceInboxComponent } from './features/voice-inbox/voice-inbox';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -42,6 +43,7 @@ export const routes: Routes = [
   { path: 'openai/prices', component: OpenAIPricesComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/deep-research', component: DeepResearchComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/chat', component: ChatComponent, canActivate: [adminAuthGuard] },
+  { path: 'openai/voice-inbox', component: VoiceInboxComponent, canActivate: [adminAuthGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: '**', redirectTo: 'login' },
 ];

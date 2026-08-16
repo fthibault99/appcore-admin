@@ -1,0 +1,57 @@
+<app-admin-header />
+
+<main class="page-shell">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">OpenAI tools</p>
+      <h1>Voice Inbox</h1>
+      <p>Record a thought, transcribe it, and turn the actionable parts into a focused task list.</p>
+    </div>
+  </header>
+
+  <section class="workspace" aria-label="Voice Inbox recorder">
+    <section class="recorder-card">
+      <div class="recorder-icon" [class.active]="isRecording()" aria-hidden="true">🎙</div>
+      @if (isRecording()) {
+        <p class="recording-status"><span></span> Recording… {{ formattedElapsed() }}</p>
+        <button type="button" class="stop-button" (click)="stopRecording()">Stop recording</button>
+      } @else {
+        <h2>Capture a voice note</h2>
+        <p>Your recording is sent directly to AppCore for transcription and is not stored by this page.</p>
+        <button type="button" class="record-button" (click)="startRecording()" [disabled]="isTranscribing()">
+          {{ isTranscribing() ? 'Transcribing…' : '🎙 Start recording' }}
+        </button>
+      }
+    </section>
+
+    @if (errorMessage()) { <p class="error-message" role="alert">{{ errorMessage() }}</p> }
+
+    <section class="content-card">
+      <div class="section-heading">
+        <div><p class="step">Step 2</p><h2>Transcript</h2></div>
+        <button type="button" class="organize-button" (click)="organize()"
+                [disabled]="!transcript().trim() || isOrganizing() || isTranscribing()">
+          {{ isOrganizing() ? 'Organizing…' : 'Organize' }}
+        </button>
+      </div>
+      @if (transcript()) {
+        <blockquote>{{ transcript() }}</blockquote>
+      } @else {
+        <p class="empty-state">Your transcript will appear here after you stop recording.</p>
+      }
+    </section>
+
+    @if (result(); as organized) {
+      <section class="results" aria-live="polite">
+        <article><span>Title</span><h2>{{ organized.title }}</h2></article>
+        <article><span>Summary</span><p>{{ organized.summary }}</p></article>
+        <article>
+          <span>Tasks</span>
+          @if (organized.tasks.length) {
+            <ul>@for (task of organized.tasks; track $index) { <li>{{ task }}</li> }</ul>
+          } @else { <p class="empty-state">No tasks were identified.</p> }
+        </article>
+      </section>
+    }
+  </section>
+</main>

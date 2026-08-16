@@ -12,6 +12,7 @@
     <a routerLink="/openai/usage" routerLinkActive="active">OpenAI</a>
     <a routerLink="/openai/deep-research" routerLinkActive="active">Research</a>
     <a routerLink="/openai/chat" routerLinkActive="active">Chat</a>
+    <a routerLink="/openai/voice-inbox" routerLinkActive="active">Voice Inbox</a>
   </nav>
   <button type="button" class="logout" (click)="logout()" [disabled]="isLoggingOut()">
     {{ isLoggingOut() ? 'Signing out…' : 'Logout' }}
