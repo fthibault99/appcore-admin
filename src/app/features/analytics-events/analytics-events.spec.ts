@@ -7,6 +7,20 @@ import { AnalyticsEventSummary, PageResponse } from '../../core/analytics/analyt
 import { AdminAuthenticationService } from '../../core/authentication/admin-authentication.service';
 import { AnalyticsEventsComponent } from './analytics-events';
 
+const createStorage = (): Storage => {
+  const values = new Map<string, string>();
+  return {
+    get length() {
+      return values.size;
+    },
+    clear: () => values.clear(),
+    getItem: (key) => values.get(key) ?? null,
+    key: (index) => Array.from(values.keys())[index] ?? null,
+    removeItem: (key) => values.delete(key),
+    setItem: (key, value) => values.set(key, value),
+  };
+};
+
 describe('AnalyticsEventsComponent', () => {
   let fixture: ComponentFixture<AnalyticsEventsComponent>;
   let component: AnalyticsEventsComponent;
@@ -31,6 +45,11 @@ describe('AnalyticsEventsComponent', () => {
   });
 
   beforeEach(async () => {
+    sessionStorage.clear();
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: createStorage(),
+    });
     results = new Subject();
     service = {
       getEvents: vi.fn((): Observable<PageResponse<AnalyticsEventSummary>> =>
@@ -183,6 +202,8 @@ describe('AnalyticsEventsComponent', () => {
     );
     expect(headers).toContain('Language');
     expect(headers).toContain('Region');
+    expect(headers).not.toContain('Occurred');
+    expect(headers).not.toContain('Client Name');
     expect(fixture.nativeElement.textContent).toContain('fr');
     expect(fixture.nativeElement.textContent).toContain('CA');
   });
@@ -217,5 +238,101 @@ describe('AnalyticsEventsComponent', () => {
         page: 0,
       }),
     );
+  });
+
+  it('restores filters and pagination for the browser session', () => {
+    fixture.detectChanges();
+    results.next(emptyPage());
+    results.complete();
+
+    results = new Subject();
+    service.getEvents.mockImplementation(() => results.asObservable());
+    component.filterForm.patchValue({
+      eventType: 'app.opened',
+      clientId: 'Meal Master Plan',
+      from: '2026-08-01T08:30',
+    });
+    component.search();
+    results.next(emptyPage({ totalElements: 60, totalPages: 3, first: false, last: false }));
+    results.complete();
+
+    results = new Subject();
+    service.getEvents.mockImplementation(() => results.asObservable());
+    component.nextPage();
+    fixture.destroy();
+
+    results = new Subject();
+    service.getEvents.mockImplementation(() => results.asObservable());
+    fixture = TestBed.createComponent(AnalyticsEventsComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.filterForm.getRawValue()).toEqual(
+      expect.objectContaining({
+        eventType: 'app.opened',
+        clientId: 'Meal Master Plan',
+        from: '2026-08-01T08:30',
+      }),
+    );
+    expect(service.getEvents).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        eventType: 'app.opened',
+        clientId: 'Meal Master Plan',
+        from: new Date('2026-08-01T08:30').toISOString(),
+        page: 1,
+      }),
+    );
+  });
+
+  it('saves, restores, applies, and deletes named filters', () => {
+    fixture.detectChanges();
+    results.next(emptyPage());
+    results.complete();
+
+    component.filterForm.patchValue({
+      eventType: 'app.opened',
+      apiKeyName: 'Meal Master Live',
+      platform: 'ios',
+    });
+    component.savedFilterName.setValue('Meal Master iOS');
+    component.saveCurrentFilter();
+
+    expect(component.savedFilters().map((filter) => filter.name)).toEqual(['Meal Master iOS']);
+    fixture.destroy();
+
+    results = new Subject();
+    service.getEvents.mockImplementation(() => results.asObservable());
+    fixture = TestBed.createComponent(AnalyticsEventsComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    results.next(emptyPage());
+    results.complete();
+
+    expect(component.savedFilters().map((filter) => filter.name)).toEqual(['Meal Master iOS']);
+    component.filterForm.reset();
+    component.selectedSavedFilter.set('Meal Master iOS');
+    results = new Subject();
+    service.getEvents.mockImplementation(() => results.asObservable());
+    component.applySavedFilter();
+
+    expect(component.filterForm.getRawValue()).toEqual(
+      expect.objectContaining({
+        eventType: 'app.opened',
+        apiKeyName: 'Meal Master Live',
+        platform: 'ios',
+      }),
+    );
+    expect(service.getEvents).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        eventType: 'app.opened',
+        apiKeyName: 'Meal Master Live',
+        platform: 'ios',
+        page: 0,
+      }),
+    );
+
+    component.deleteSavedFilter();
+    expect(component.savedFilters()).toEqual([]);
+    expect(window.localStorage.getItem('appcore-admin.analytics-events.saved-filters')).toBe('[]');
   });
 });

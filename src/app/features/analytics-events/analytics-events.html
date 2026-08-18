@@ -7,6 +7,52 @@
 
   <section class="panel" aria-labelledby="filters-title">
     <h2 id="filters-title">Filters</h2>
+    <div class="saved-filters" aria-labelledby="saved-filters-title">
+      <h3 id="saved-filters-title">Saved filters</h3>
+      <div class="saved-filter-controls">
+        <label
+          >Saved filter
+          <select
+            [value]="selectedSavedFilter()"
+            (change)="selectSavedFilter($event)"
+            [disabled]="savedFilters().length === 0"
+          >
+            <option value="">Choose a filter</option>
+            @for (savedFilter of savedFilters(); track savedFilter.name) {
+              <option [value]="savedFilter.name">{{ savedFilter.name }}</option>
+            }
+          </select>
+        </label>
+        <button
+          type="button"
+          class="secondary"
+          (click)="applySavedFilter()"
+          [disabled]="!selectedSavedFilter() || isLoading()"
+        >
+          Apply
+        </button>
+        <button
+          type="button"
+          class="danger-button"
+          (click)="deleteSavedFilter()"
+          [disabled]="!selectedSavedFilter()"
+        >
+          Delete
+        </button>
+        <label
+          >Filter name
+          <input [formControl]="savedFilterName" maxlength="80" placeholder="e.g. iOS production" />
+        </label>
+        <button
+          type="button"
+          class="secondary"
+          (click)="saveCurrentFilter()"
+          [disabled]="!savedFilterName.value.trim()"
+        >
+          Save current filters
+        </button>
+      </div>
+    </div>
     <form [formGroup]="filterForm" (ngSubmit)="search()">
       <div class="filter-grid">
         <label>Event type<input formControlName="eventType" /></label>
@@ -70,9 +116,7 @@
             <thead>
               <tr>
                 <th>Received</th>
-                <th>Occurred</th>
                 <th>Event type</th>
-                <th>Client Name</th>
                 <th>Application</th>
                 <th>Platform</th>
                 <th>App version</th>
@@ -87,11 +131,7 @@
               @for (event of page.content; track event.id) {
                 <tr>
                   <td [title]="event.receivedAt">{{ event.receivedAt | date: 'medium' }}</td>
-                  <td [title]="event.occurredAt">{{ event.occurredAt | date: 'medium' }}</td>
                   <td class="identifier" [title]="event.eventType">{{ event.eventType }}</td>
-                  <td class="identifier" [title]="event.appClientName">
-                    {{ event.appClientName }}
-                  </td>
                   <td class="identifier" [title]="event.apiKeyName">{{ event.apiKeyName }}</td>
                   <td>{{ event.platform || '—' }}</td>
                   <td>{{ event.appVersion || '—' }}</td>

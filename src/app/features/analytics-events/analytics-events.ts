@@ -24,6 +24,31 @@ const dateRangeValidator: ValidatorFn = (control): ValidationErrors | null => {
   return from && to && new Date(from) > new Date(to) ? { dateRange: true } : null;
 };
 
+const analyticsEventsStateKey = 'appcore-admin.analytics-events.state';
+const analyticsEventsSavedFiltersKey = 'appcore-admin.analytics-events.saved-filters';
+
+interface AnalyticsEventsFormValue {
+  eventType: string;
+  clientId: string;
+  apiKeyName: string;
+  platform: string;
+  appVersion: string;
+  anonymousUserId: string;
+  sessionId: string;
+  from: string;
+  to: string;
+}
+
+interface AnalyticsEventsSessionState {
+  filters: AnalyticsEventFilters;
+  form: AnalyticsEventsFormValue;
+}
+
+interface SavedAnalyticsFilter {
+  name: string;
+  form: AnalyticsEventsFormValue;
+}
+
 @Component({
   selector: 'app-analytics-events',
   imports: [DatePipe, ReactiveFormsModule, AdminHeaderComponent],
@@ -41,6 +66,9 @@ export class AnalyticsEventsComponent implements OnInit {
   readonly applicationNames = signal<string[]>([]);
   readonly isLoading = signal(false);
   readonly hasError = signal(false);
+  readonly savedFilters = signal<SavedAnalyticsFilter[]>([]);
+  readonly selectedSavedFilter = signal('');
+  readonly savedFilterName = new FormControl('', { nonNullable: true });
   readonly filterForm = new FormGroup(
     {
       eventType: new FormControl('', { nonNullable: true }),
@@ -57,6 +85,8 @@ export class AnalyticsEventsComponent implements OnInit {
   );
 
   ngOnInit(): void {
+    this.restoreSavedFilters();
+    this.restoreState();
     this.loadFilterOptions();
     this.loadEvents();
   }
@@ -73,12 +103,14 @@ export class AnalyticsEventsComponent implements OnInit {
       size: this.activeFilters.size,
       sort: this.activeFilters.sort,
     };
+    this.persistState();
     this.loadEvents();
   }
 
   reset(): void {
     this.filterForm.reset();
     this.activeFilters = { page: 0, size: this.activeFilters.size, sort: 'receivedAt,desc' };
+    this.persistState();
     this.loadEvents();
   }
 
@@ -99,6 +131,7 @@ export class AnalyticsEventsComponent implements OnInit {
       page: 0,
       size: Number((event.target as HTMLSelectElement).value),
     };
+    this.persistState();
     this.loadEvents();
   }
 
@@ -106,9 +139,112 @@ export class AnalyticsEventsComponent implements OnInit {
     void this.router.navigate(['/analytics/events', eventId]);
   }
 
+  saveCurrentFilter(): void {
+    const name = this.savedFilterName.value.trim();
+    if (!name) return;
+    const savedFilter: SavedAnalyticsFilter = { name, form: this.filterForm.getRawValue() };
+    const filters = this.savedFilters().filter((filter) => filter.name !== name);
+    this.savedFilters.set([...filters, savedFilter].sort((left, right) => left.name.localeCompare(right.name)));
+    this.selectedSavedFilter.set(name);
+    this.savedFilterName.setValue('');
+    this.persistSavedFilters();
+  }
+
+  selectSavedFilter(event: Event): void {
+    this.selectedSavedFilter.set((event.target as HTMLSelectElement).value);
+  }
+
+  applySavedFilter(): void {
+    const savedFilter = this.savedFilters().find(
+      (filter) => filter.name === this.selectedSavedFilter(),
+    );
+    if (!savedFilter || this.isLoading()) return;
+    this.filterForm.setValue(savedFilter.form);
+    this.search();
+  }
+
+  deleteSavedFilter(): void {
+    const name = this.selectedSavedFilter();
+    if (!name) return;
+    this.savedFilters.update((filters) => filters.filter((filter) => filter.name !== name));
+    this.selectedSavedFilter.set('');
+    this.persistSavedFilters();
+  }
+
   private changePage(page: number): void {
     this.activeFilters = { ...this.activeFilters, page };
+    this.persistState();
     this.loadEvents();
+  }
+
+  private restoreState(): void {
+    try {
+      const storedState = sessionStorage.getItem(analyticsEventsStateKey);
+      if (!storedState) return;
+      const state = JSON.parse(storedState) as Partial<AnalyticsEventsSessionState>;
+      if (!state.filters || !state.form) return;
+      if (
+        typeof state.filters.page !== 'number' ||
+        typeof state.filters.size !== 'number' ||
+        typeof state.filters.sort !== 'string' ||
+        Object.values(state.form).some((value) => typeof value !== 'string')
+      ) {
+        return;
+      }
+      this.activeFilters = state.filters;
+      this.filterForm.patchValue(state.form);
+    } catch {
+      sessionStorage.removeItem(analyticsEventsStateKey);
+    }
+  }
+
+  private persistState(): void {
+    const state: AnalyticsEventsSessionState = {
+      filters: this.activeFilters,
+      form: this.filterForm.getRawValue(),
+    };
+    try {
+      sessionStorage.setItem(analyticsEventsStateKey, JSON.stringify(state));
+    } catch {
+      // Keep the page usable when browser storage is unavailable.
+    }
+  }
+
+  private restoreSavedFilters(): void {
+    try {
+      const storedFilters = window.localStorage.getItem(analyticsEventsSavedFiltersKey);
+      if (!storedFilters) return;
+      const filters = JSON.parse(storedFilters) as SavedAnalyticsFilter[];
+      if (!Array.isArray(filters) || filters.some((filter) => !this.isValidSavedFilter(filter))) {
+        window.localStorage.removeItem(analyticsEventsSavedFiltersKey);
+        return;
+      }
+      this.savedFilters.set(filters);
+    } catch {
+      window.localStorage.removeItem(analyticsEventsSavedFiltersKey);
+    }
+  }
+
+  private persistSavedFilters(): void {
+    try {
+      window.localStorage.setItem(
+        analyticsEventsSavedFiltersKey,
+        JSON.stringify(this.savedFilters()),
+      );
+    } catch {
+      // Keep the page usable when browser storage is unavailable.
+    }
+  }
+
+  private isValidSavedFilter(filter: SavedAnalyticsFilter): boolean {
+    return (
+      typeof filter?.name === 'string' &&
+      filter.name.trim().length > 0 &&
+      filter.form !== null &&
+      typeof filter.form === 'object' &&
+      Object.values(filter.form).length === 9 &&
+      Object.values(filter.form).every((value) => typeof value === 'string')
+    );
   }
 
   private loadEvents(): void {

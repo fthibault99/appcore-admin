@@ -33,7 +33,7 @@ describe('DashboardComponent', () => {
       {
         occurredAt: '2026-08-05T18:00:00Z',
         eventType: 'app.opened',
-        application: 'BrickCollector',
+        application: 'Brick Collector Live',
         platform: 'ios',
       },
     ],
@@ -76,6 +76,7 @@ describe('DashboardComponent', () => {
     expect(text).toContain('production');
     expect(text).toContain('1h 1m');
     expect(text).toContain('app.opened');
+    expect(text).toContain('Brick Collector Live');
     expect(text).toContain('No recent errors');
   });
 
