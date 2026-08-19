@@ -40,4 +40,15 @@ export class AppStoreNotificationDetailComponent implements OnInit {
       },
     });
   }
+
+  price(price: number | null, currency: string | null): string {
+    if (price === null) return '—';
+    const amount = price / 1000;
+    if (!currency) return amount.toFixed(2);
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
+    } catch {
+      return `${amount.toFixed(2)} ${currency}`;
+    }
+  }
 }

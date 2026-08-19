@@ -14,6 +14,13 @@ export interface AppStoreNotificationSummary {
   purchaseDate: string | null;
   expiresDate: string | null;
   revocationDate: string | null;
+  inAppOwnershipType: string | null;
+  transactionReason: string | null;
+  transactionType: string | null;
+  price: number | null;
+  currency: string | null;
+  storefront: string | null;
+  revocationReason: number | null;
   autoRenewStatus: number | null;
   consumptionRequestReason: string | null;
   receivedAt: string;
@@ -67,6 +74,7 @@ export interface AppStoreNotificationFilters {
   applicationKey?: string;
   environment?: string;
   notificationType?: string;
+  inAppOwnershipType?: string;
   page: number;
   size: number;
   sort: string;

@@ -39,6 +39,7 @@ export class AppStoreNotificationsComponent implements OnInit {
     applicationKey: new FormControl('', { nonNullable: true }),
     environment: new FormControl('Production', { nonNullable: true }),
     notificationType: new FormControl('', { nonNullable: true }),
+    inAppOwnershipType: new FormControl('', { nonNullable: true }),
   });
 
   ngOnInit(): void {
@@ -53,6 +54,7 @@ export class AppStoreNotificationsComponent implements OnInit {
       applicationKey: values.applicationKey || undefined,
       environment: values.environment || undefined,
       notificationType: values.notificationType.trim() || undefined,
+      inAppOwnershipType: values.inAppOwnershipType || undefined,
       page: 0,
       size: this.filters.size,
       sort: this.filters.sort,
@@ -61,7 +63,9 @@ export class AppStoreNotificationsComponent implements OnInit {
   }
 
   reset(): void {
-    this.filterForm.reset({ applicationKey: '', environment: 'Production', notificationType: '' });
+    this.filterForm.reset({
+      applicationKey: '', environment: 'Production', notificationType: '', inAppOwnershipType: '',
+    });
     this.filters = {
       environment: 'Production',
       page: 0,
@@ -85,6 +89,17 @@ export class AppStoreNotificationsComponent implements OnInit {
 
   retry(): void {
     this.load();
+  }
+
+  price(price: number | null, currency: string | null): string {
+    if (price === null) return '—';
+    const amount = price / 1000;
+    if (!currency) return amount.toFixed(2);
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
+    } catch {
+      return `${amount.toFixed(2)} ${currency}`;
+    }
   }
 
   private changePage(page: number): void {

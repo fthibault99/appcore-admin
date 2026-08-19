@@ -32,6 +32,13 @@
             }
           </select>
         </label>
+        <label>Ownership type
+          <select formControlName="inAppOwnershipType">
+            <option value="">All ownership types</option>
+            <option value="PURCHASED">Purchased</option>
+            <option value="FAMILY_SHARED">Family shared</option>
+          </select>
+        </label>
       </div>
       <div class="actions">
         <button type="submit" [disabled]="isLoading()">Search</button>
@@ -55,7 +62,7 @@
       } @else {
         <div class="table-scroll">
           <table>
-            <thead><tr><th>Received</th><th>Application</th><th>Environment</th><th>Type</th><th>Subtype</th><th>Product</th><th>Original transaction</th><th>Expires</th><th>Action</th></tr></thead>
+            <thead><tr><th>Received</th><th>Application</th><th>Environment</th><th>Type</th><th>Ownership</th><th>Product</th><th>Price</th><th>Purchased</th><th>Action</th></tr></thead>
             <tbody>
               @for (event of result.content; track event.id) {
                 <tr>
@@ -63,10 +70,16 @@
                   <td>{{ event.applicationName || event.applicationKey || 'Legacy' }}</td>
                   <td><span class="badge" [class.sandbox]="event.environment === 'Sandbox'">{{ event.environment }}</span></td>
                   <td class="identifier">{{ event.notificationType }}</td>
-                  <td>{{ event.subtype || '—' }}</td>
+                  <td>
+                    @if (event.inAppOwnershipType) {
+                      <span class="ownership" [class.family]="event.inAppOwnershipType === 'FAMILY_SHARED'">
+                        {{ event.inAppOwnershipType }}
+                      </span>
+                    } @else { — }
+                  </td>
                   <td class="identifier">{{ event.productId || '—' }}</td>
-                  <td class="identifier" [title]="event.originalTransactionId || ''">{{ event.originalTransactionId || '—' }}</td>
-                  <td>{{ event.expiresDate ? (event.expiresDate | date: 'medium') : '—' }}</td>
+                  <td>{{ price(event.price, event.currency) }}</td>
+                  <td>{{ event.purchaseDate ? (event.purchaseDate | date: 'medium') : '—' }}</td>
                   <td><button type="button" class="link-button" (click)="view(event.id)">View</button></td>
                 </tr>
               }

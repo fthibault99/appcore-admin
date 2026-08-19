@@ -4,6 +4,8 @@ a { color: #2457b8; font-weight: 700; text-decoration: none; }
 header { margin: 1.5rem 0; }
 h1, h2, p { margin-top: 0; }
 header p { color: #657086; }
+.ownership { display: inline-block; padding: .3rem .6rem; border-radius: 999px; color: #175c35; background: #eaf8ef; font-size: .78rem; font-weight: 750; }
+.ownership.family { color: #6941c6; background: #f2edff; }
 .panel { margin-bottom: 1.25rem; padding: 1.25rem; border: 1px solid #dfe5ee; border-radius: .625rem; background: #fff; }
 h2 { font-size: 1.1rem; }
 dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; margin: 0; }

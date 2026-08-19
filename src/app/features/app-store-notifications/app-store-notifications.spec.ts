@@ -49,7 +49,9 @@ describe('AppStoreNotificationsComponent', () => {
 
   it('restores production when filters are reset', () => {
     fixture.detectChanges();
-    component.filterForm.patchValue({ environment: 'Sandbox', notificationType: 'TEST' });
+    component.filterForm.patchValue({
+      environment: 'Sandbox', notificationType: 'TEST', inAppOwnershipType: 'FAMILY_SHARED',
+    });
 
     component.reset();
 

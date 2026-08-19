@@ -25,6 +25,8 @@ th { color: #4d596e; background: #f8f9fb; }
 .identifier { max-width: 15rem; overflow: hidden; text-overflow: ellipsis; }
 .badge { display: inline-block; padding: .2rem .45rem; border-radius: 999px; color: #175c35; background: #eaf8ef; font-size: .75rem; font-weight: 750; }
 .badge.sandbox { color: #775500; background: #fff4cc; }
+.ownership { display: inline-block; padding: .2rem .45rem; border-radius: 999px; color: #175c35; background: #eaf8ef; font-size: .72rem; font-weight: 750; }
+.ownership.family { color: #6941c6; background: #f2edff; }
 .state { padding: 2rem 1rem; text-align: center; }
 .error { color: #b42318; }
 .pagination { justify-content: flex-end; flex-wrap: wrap; margin-top: 1rem; }

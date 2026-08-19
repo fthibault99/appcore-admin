@@ -6,14 +6,30 @@
   } @else if (hasError()) {
     <p class="state error">Unable to load this App Store notification.</p>
   } @else if (detail(); as detail) {
-    <header><h1>{{ detail.notification.notificationType }}</h1><p>{{ detail.notification.subtype || 'No subtype' }}</p></header>
+    <header>
+      <h1>{{ detail.notification.notificationType }}</h1>
+      <p>{{ detail.notification.subtype || 'No subtype' }}</p>
+      @if (detail.notification.inAppOwnershipType) {
+        <span class="ownership" [class.family]="detail.notification.inAppOwnershipType === 'FAMILY_SHARED'">
+          {{ detail.notification.inAppOwnershipType }} · {{ detail.notification.inAppOwnershipType === 'PURCHASED' ? 'Revenue purchase' : 'Family sharing' }}
+        </span>
+      }
+    </header>
     <section class="panel details">
       <h2>Verified notification</h2>
       <dl>
         <div><dt>Received</dt><dd>{{ detail.notification.receivedAt | date: 'medium' }}</dd></div>
+        <div><dt>Notification type</dt><dd>{{ detail.notification.notificationType }}</dd></div>
+        <div><dt>Subtype</dt><dd>{{ detail.notification.subtype || '—' }}</dd></div>
+        <div><dt>Ownership type</dt><dd>{{ detail.notification.inAppOwnershipType || '—' }}</dd></div>
+        <div><dt>Transaction reason</dt><dd>{{ detail.notification.transactionReason || '—' }}</dd></div>
+        <div><dt>Transaction type</dt><dd>{{ detail.notification.transactionType || '—' }}</dd></div>
         <div><dt>Environment</dt><dd>{{ detail.notification.environment }}</dd></div>
         <div><dt>Application</dt><dd>{{ detail.notification.applicationName || detail.notification.applicationKey || 'Legacy' }}</dd></div>
         <div><dt>Product</dt><dd>{{ detail.notification.productId || '—' }}</dd></div>
+        <div><dt>Price</dt><dd>{{ price(detail.notification.price, detail.notification.currency) }}</dd></div>
+        <div><dt>Currency</dt><dd>{{ detail.notification.currency || '—' }}</dd></div>
+        <div><dt>Storefront</dt><dd>{{ detail.notification.storefront || '—' }}</dd></div>
         <div><dt>Bundle ID</dt><dd>{{ detail.notification.bundleId }}</dd></div>
         <div><dt>Notification UUID</dt><dd>{{ detail.notification.notificationUuid }}</dd></div>
         <div><dt>Transaction ID</dt><dd>{{ detail.notification.transactionId || '—' }}</dd></div>
@@ -21,6 +37,7 @@
         <div><dt>Purchase date</dt><dd>{{ detail.notification.purchaseDate ? (detail.notification.purchaseDate | date: 'medium') : '—' }}</dd></div>
         <div><dt>Expiration date</dt><dd>{{ detail.notification.expiresDate ? (detail.notification.expiresDate | date: 'medium') : '—' }}</dd></div>
         <div><dt>Revocation date</dt><dd>{{ detail.notification.revocationDate ? (detail.notification.revocationDate | date: 'medium') : '—' }}</dd></div>
+        <div><dt>Revocation reason</dt><dd>{{ detail.notification.revocationReason === null ? '—' : detail.notification.revocationReason }}</dd></div>
         <div><dt>Consumption request</dt><dd>{{ detail.notification.consumptionRequestReason || '—' }}</dd></div>
       </dl>
     </section>
