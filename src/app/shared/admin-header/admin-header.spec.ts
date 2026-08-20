@@ -33,6 +33,7 @@ describe('AdminHeaderComponent', () => {
       'Chat',
       'Voice Inbox',
       'Dish Recreation',
+      'Recipe Discovery',
     ]);
     const brand = fixture.nativeElement.querySelector('.brand') as HTMLAnchorElement;
     expect(brand.textContent?.trim()).toBe('App Core Admin');

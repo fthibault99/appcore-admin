@@ -1,0 +1,49 @@
+<app-admin-header />
+<main class="page-shell">
+  <header class="page-heading"><div><p class="eyebrow">OpenAI tools</p><h1>Recipe Discovery</h1>
+    <p>Search the web for real recipes matching a Meal Master Plan inventory.</p></div></header>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <section class="form-card">
+      <div class="field"><label for="locale">Locale</label>
+        <input id="locale" formControlName="locale" placeholder="fr-CA" /></div>
+      <div class="field"><label for="priorityProductIds">Priority product IDs</label>
+        <input id="priorityProductIds" formControlName="priorityProductIds"
+          placeholder="product-1, product-2" /></div>
+      <div class="field wide"><label for="comment">User comment</label>
+        <textarea id="comment" rows="3" formControlName="comment"
+          placeholder="Quick, for four people, not too spicy…"></textarea></div>
+      <div class="field wide"><label for="inventory">Inventory JSON</label>
+        <textarea id="inventory" class="inventory" rows="17" formControlName="inventory"
+          spellcheck="false"></textarea>
+        <small>Array of 1–500 products. Each product requires an id and name.</small></div>
+      <div class="actions wide"><p>Priority IDs must exist in the submitted inventory.</p>
+        <button type="submit" [disabled]="isSubmitting() || form.invalid">
+          {{ isSubmitting() ? 'Discovering…' : 'Discover recipes' }}</button></div>
+    </section>
+  </form>
+
+  @if (errorMessage()) { <p class="error-message" role="alert">{{ errorMessage() }}</p> }
+  @if (currentState(); as state) { <section class="progress-card" aria-live="polite">
+    <span class="spinner"></span><div><p>Recipe discovery in progress</p><h2>{{ stateLabel(state) }}…</h2></div>
+  </section> }
+
+  @if (result(); as discovery) { <section class="result-section" aria-live="polite">
+    <header class="result-heading"><p class="eyebrow">Web results</p><h2>Discovered recipes</h2>
+      <p>{{ discovery.recipes.length }} reliable recipe{{ discovery.recipes.length === 1 ? '' : 's' }}</p></header>
+    @if (discovery.recipes.length === 0) { <p class="empty-state">No reliable recipe with an image was found.</p> }
+    <div class="recipe-grid">
+      @for (recipe of discovery.recipes; track recipe.id) {
+        <article class="recipe-card">
+          <img [src]="recipe.imageUrl" [alt]="recipe.title" loading="lazy" />
+          <div class="recipe-content"><p class="source">{{ recipe.sourceName }} · {{ recipe.language }}</p>
+            <h3>{{ recipe.title }}</h3>
+            <div class="matches">@for (product of recipe.matchedProducts; track product) {
+              <span>{{ product }}</span> }</div>
+            <a [href]="recipe.sourceUrl" target="_blank" rel="noopener noreferrer">Open source recipe ↗</a>
+          </div>
+        </article>
+      }
+    </div>
+  </section> }
+</main>
