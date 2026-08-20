@@ -17,6 +17,7 @@ import { AppStoreNotificationsComponent } from './features/app-store-notificatio
 import { AppStoreNotificationDetailComponent } from './features/app-store-notification-detail/app-store-notification-detail';
 import { AppStoreApplicationsComponent } from './features/app-store-applications/app-store-applications';
 import { VoiceInboxComponent } from './features/voice-inbox/voice-inbox';
+import { DishRecreationComponent } from './features/dish-recreation/dish-recreation';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -44,6 +45,7 @@ export const routes: Routes = [
   { path: 'openai/deep-research', component: DeepResearchComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/chat', component: ChatComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/voice-inbox', component: VoiceInboxComponent, canActivate: [adminAuthGuard] },
+  { path: 'openai/dish-recreation', component: DishRecreationComponent, canActivate: [adminAuthGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: '**', redirectTo: 'login' },
 ];

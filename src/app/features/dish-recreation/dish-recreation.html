@@ -1,0 +1,52 @@
+<app-admin-header />
+<main class="page-shell">
+  <header class="page-heading"><div><p class="eyebrow">OpenAI tools</p><h1>Dish Recreation</h1>
+    <p>Combine restaurant details, notes, and photos to generate a practical inspired recipe.</p></div></header>
+  <form class="workspace" [formGroup]="form" (ngSubmit)="submit()">
+    <section class="form-card">
+      <div class="field wide"><label for="dishName">Dish name <strong>*</strong></label>
+        <input id="dishName" formControlName="dishName" placeholder="Salmon poke bowl" /></div>
+      <div class="field"><label for="restaurantName">Restaurant</label>
+        <input id="restaurantName" formControlName="restaurantName" placeholder="Restaurant name" /></div>
+      <div class="field"><label for="restaurantLocation">Location</label>
+        <input id="restaurantLocation" formControlName="restaurantLocation" placeholder="Montréal, QC" /></div>
+      <div class="field"><label for="servings">Servings</label>
+        <input id="servings" type="number" min="1" max="50" formControlName="servings" /></div>
+      <div class="field"><label for="language">Language</label>
+        <input id="language" maxlength="2" formControlName="language" placeholder="fr" /></div>
+      <div class="field wide"><label for="description">Description or notes</label>
+        <textarea id="description" rows="4" formControlName="description"
+          placeholder="Sauces, texture, visible ingredients, what made the dish distinctive…"></textarea></div>
+      <label class="upload"><span>Dish image</span><small>JPEG, PNG or WebP</small>
+        <input type="file" accept="image/jpeg,image/png,image/webp" (change)="chooseImage('dish', $event)" />
+        <b>{{ dishImageName() || 'Choose dish photo' }}</b></label>
+      <label class="upload"><span>Menu image</span><small>JPEG, PNG or WebP</small>
+        <input type="file" accept="image/jpeg,image/png,image/webp" (change)="chooseImage('menu', $event)" />
+        <b>{{ menuImageName() || 'Choose menu photo' }}</b></label>
+      <div class="actions wide"><p>Dish name plus at least one restaurant, note, or image is required.</p>
+        <button type="submit" [disabled]="isSubmitting() || form.invalid">
+          {{ isSubmitting() ? 'Recreating…' : 'Recreate dish' }}</button></div>
+    </section>
+  </form>
+  @if (errorMessage()) { <p class="error-message" role="alert">{{ errorMessage() }}</p> }
+  @if (currentState(); as state) { <section class="progress-card" aria-live="polite">
+    <span class="spinner"></span><div><p>Dish recreation in progress</p><h2>{{ stateLabel(state) }}…</h2></div></section> }
+  @if (result(); as recreation) { <section class="result-section" aria-live="polite">
+    <header class="result-heading"><p class="eyebrow">Generated dish</p><h2>{{ recreation.name }}</h2>
+      <p>{{ recreation.recipes.length }} reusable recipe component{{ recreation.recipes.length === 1 ? '' : 's' }}</p></header>
+    <div class="component-list">
+      @for (component of recreation.recipes; track $index) {
+        <article class="recipe-card">
+          <header><div class="component-title"><span class="type-badge">{{ componentLabel(component.type) }}</span>
+            <h3>{{ component.recipe.name }}</h3></div><p>{{ component.recipe.description }}</p>
+            <div class="meta"><span>{{ component.recipe.recipeYield || 'Yield not specified' }}</span>
+              @if (component.recipe.totalTime) { <span>{{ component.recipe.totalTime }}</span> }</div></header>
+          <div class="recipe-grid"><section><h4>Ingredients</h4><ul>
+            @for (ingredient of component.recipe.recipeIngredient; track $index) { <li>{{ ingredient }}</li> }</ul></section>
+            <section><h4>Instructions</h4><ol>
+              @for (step of component.recipe.recipeInstructions; track $index) { <li>{{ step }}</li> }</ol></section></div>
+        </article>
+      }
+    </div>
+  </section> }
+</main>
