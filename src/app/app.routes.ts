@@ -19,6 +19,7 @@ import { AppStoreApplicationsComponent } from './features/app-store-applications
 import { VoiceInboxComponent } from './features/voice-inbox/voice-inbox';
 import { DishRecreationComponent } from './features/dish-recreation/dish-recreation';
 import { RecipeDiscoveryComponent } from './features/recipe-discovery/recipe-discovery';
+import { RecipeExtractionDomainsComponent } from './features/recipe-extraction-domains/recipe-extraction-domains';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -38,6 +39,7 @@ export const routes: Routes = [
   },
   { path: 'recipes', component: RecipesComponent, canActivate: [adminAuthGuard] },
   { path: 'recipes/:recipeId', component: RecipeDetailComponent, canActivate: [adminAuthGuard] },
+  { path: 'recipe-extraction-domains', component: RecipeExtractionDomainsComponent, canActivate: [adminAuthGuard] },
   { path: 'barcodes', component: BarcodesComponent, canActivate: [adminAuthGuard] },
   { path: 'barcodes/:barcodeId', component: BarcodeDetailComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/usage', component: OpenAIUsageComponent, canActivate: [adminAuthGuard] },

@@ -1,0 +1,26 @@
+<app-admin-header />
+<main class="page-shell">
+  <header><h1>Recipe extraction domains</h1><p>Domains whose HTML must be downloaded by the client instead of AppCore on AWS.</p></header>
+  <section class="panel">
+    <h2>{{ editing() ? 'Edit domain' : 'Add domain' }}</h2>
+    <form [formGroup]="form" (ngSubmit)="save()" class="domain-form">
+      <label>Domain<input formControlName="domain" placeholder="example.com" /></label>
+      <label>Reason<select formControlName="reason"><option value="MANUAL">Manual</option><option value="HTTP_402">HTTP 402</option><option value="HTTP_403">HTTP 403</option></select></label>
+      <label class="wide">Evidence URL<input formControlName="sampleUrl" type="url" placeholder="https://example.com/recipe" /></label>
+      <label class="wide">Notes<textarea formControlName="notes" rows="3"></textarea></label>
+      @if (editing()) { <label class="checkbox"><input formControlName="active" type="checkbox" /> Active for clients</label> }
+      <div class="actions"><button type="submit" [disabled]="isSaving()">{{ isSaving() ? 'Saving…' : (editing() ? 'Save changes' : 'Add domain') }}</button>
+        @if (editing()) { <button type="button" class="secondary" (click)="reset()">Cancel</button> }</div>
+    </form>
+  </section>
+  @if (error()) { <p class="state error">{{ error() }}</p> }
+  <section class="panel" aria-live="polite">
+    @if (isLoading()) { <p class="state">Loading domains…</p> }
+    @else if (domains().length === 0) { <p class="state">No extraction domains configured.</p> }
+    @else { <div class="table-scroll"><table><thead><tr><th>Domain</th><th>Reason</th><th>Status</th><th>Occurrences</th><th>Last observed</th><th>Evidence</th><th>Actions</th></tr></thead>
+      <tbody>@for (item of domains(); track item.id) { <tr [class.inactive]="!item.active"><td class="identifier">{{ item.domain }}</td><td>{{ item.reason }}</td>
+        <td>{{ item.active ? 'Active' : 'Inactive' }}{{ item.lastHttpStatus ? ' · HTTP ' + item.lastHttpStatus : '' }}</td><td>{{ item.occurrenceCount }}</td>
+        <td>{{ item.lastObservedAt ? (item.lastObservedAt | date: 'medium') : '—' }}</td><td>@if (item.sampleUrl) { <a [href]="item.sampleUrl" target="_blank" rel="noopener">Test URL</a> } @else { — }</td>
+        <td class="row-actions"><button type="button" class="link-button" (click)="edit(item)">Edit</button><button type="button" class="danger-link" (click)="remove(item)">Delete</button></td></tr> }</tbody></table></div> }
+  </section>
+</main>
