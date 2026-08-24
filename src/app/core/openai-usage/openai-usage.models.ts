@@ -20,6 +20,8 @@ export interface OpenAIUsage {
   cachedInputCostUsd: number | null;
   cacheWriteCostUsd: number | null;
   outputCostUsd: number | null;
+  webSearchCalls: number | null;
+  webSearchCostUsd: number | null;
   estimatedCostUsd: number | null;
   pricingVersion: string | null;
 }
@@ -35,6 +37,7 @@ export interface OpenAIModelPrice {
   cachedInputUsdPerMillion: number | null;
   cacheWriteUsdPerMillion: number | null;
   outputUsdPerMillion: number;
+  webSearchUsdPerCall: number;
   effectiveFrom: string;
   effectiveTo: string | null;
   version: string;
@@ -52,6 +55,7 @@ export interface CreateOpenAIModelPrice {
   cachedInputUsdPerMillion: number | null;
   cacheWriteUsdPerMillion: number | null;
   outputUsdPerMillion: number;
+  webSearchUsdPerCall: number;
   effectiveFrom: string;
   effectiveTo: string | null;
   version: string;

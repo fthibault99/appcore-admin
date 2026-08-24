@@ -29,6 +29,7 @@
       <article class="card"><span>Total tokens</span><strong>{{ data.totalTokens === null ? 'Unavailable' : (data.totalTokens | number) }}</strong></article>
       <article class="card"><span>Cached input</span><strong>{{ data.cachedInputTokens === null ? 'Unavailable' : (data.cachedInputTokens | number) }}</strong></article>
       <article class="card"><span>Cache writes</span><strong>{{ data.cacheWriteTokens === null ? 'Unavailable' : (data.cacheWriteTokens | number) }}</strong></article>
+      <article class="card"><span>Web searches</span><strong>{{ data.webSearchCalls === null ? 'Unavailable' : (data.webSearchCalls | number) }}</strong></article>
     </section>
     <section class="card">
       <h2>Cost and attribution</h2>
@@ -38,6 +39,7 @@
         <div><dt>Cached input cost</dt><dd>{{ data.cachedInputCostUsd === null ? '—' : (data.cachedInputCostUsd | currency: 'USD': 'symbol': '1.2-8') }}</dd></div>
         <div><dt>Cache-write cost</dt><dd>{{ data.cacheWriteCostUsd === null ? '—' : (data.cacheWriteCostUsd | currency: 'USD': 'symbol': '1.2-8') }}</dd></div>
         <div><dt>Output cost</dt><dd>{{ data.outputCostUsd === null ? '—' : (data.outputCostUsd | currency: 'USD': 'symbol': '1.2-8') }}</dd></div>
+        <div><dt>Web Search cost</dt><dd>{{ data.webSearchCostUsd === null ? '—' : (data.webSearchCostUsd | currency: 'USD': 'symbol': '1.2-8') }}</dd></div>
         <div><dt>Pricing version</dt><dd>{{ data.pricingVersion || '—' }}</dd></div>
         <div><dt>Price ID</dt><dd class="identifier">{{ data.priceId || 'Unavailable' }}</dd></div>
         <div><dt>Application client ID</dt><dd class="identifier">{{ data.appClientId || 'Unavailable' }}</dd></div>

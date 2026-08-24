@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AdminAnalyticsService } from '../../core/analytics/admin-analytics.service';
 import {
+  AnalyticsEventProperties,
   AnalyticsEventFilters,
   AnalyticsEventSummary,
   PageResponse,
@@ -137,6 +138,24 @@ export class AnalyticsEventsComponent implements OnInit {
 
   viewEvent(eventId: string): void {
     void this.router.navigate(['/analytics/events', eventId]);
+  }
+
+  propertyInfo(properties: AnalyticsEventProperties): string {
+    if (properties === null || Array.isArray(properties) || typeof properties !== 'object') return '—';
+    const info = properties['info'];
+    if (info === null || info === undefined) return '—';
+    if (typeof info === 'object') {
+      try {
+        return JSON.stringify(info);
+      } catch {
+        return String(info);
+      }
+    }
+    return String(info);
+  }
+
+  propertyInfoPreview(properties: AnalyticsEventProperties): string {
+    return this.propertyInfo(properties).slice(0, 20);
   }
 
   saveCurrentFilter(): void {

@@ -166,7 +166,7 @@ describe('AnalyticsEventsComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/analytics/events', 'event-1']);
   });
 
-  it('displays language and region columns', () => {
+  it('orders application before event type and displays the info property', () => {
     fixture.detectChanges();
     results.next(
       emptyPage({
@@ -188,7 +188,7 @@ describe('AnalyticsEventsComponent', () => {
             region: 'CA',
             subscriptionStatus: null,
             purchased: false,
-            properties: null,
+            properties: { info: 'Opened from widget' },
           },
         ],
         totalElements: 1,
@@ -202,10 +202,27 @@ describe('AnalyticsEventsComponent', () => {
     );
     expect(headers).toContain('Language');
     expect(headers).toContain('Region');
+    expect(headers.indexOf('Application')).toBeLessThan(headers.indexOf('Event type'));
+    expect(headers.indexOf('Info')).toBe(headers.indexOf('Event type') + 1);
     expect(headers).not.toContain('Occurred');
     expect(headers).not.toContain('Client Name');
     expect(fixture.nativeElement.textContent).toContain('fr');
     expect(fixture.nativeElement.textContent).toContain('CA');
+    expect(fixture.nativeElement.textContent).toContain('Opened from widget');
+  });
+
+  it('uses a dash when the info property is absent', () => {
+    expect(component.propertyInfo({ source: 'widget' })).toBe('—');
+    expect(component.propertyInfo(null)).toBe('—');
+  });
+
+  it('limits the displayed info value to 20 characters', () => {
+    expect(component.propertyInfoPreview({ info: '12345678901234567890extra' })).toBe(
+      '12345678901234567890',
+    );
+    expect(component.propertyInfo({ info: '12345678901234567890extra' })).toBe(
+      '12345678901234567890extra',
+    );
   });
 
   it('lists and filters client and application names represented in events', () => {

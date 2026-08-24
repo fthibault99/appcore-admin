@@ -116,8 +116,9 @@
             <thead>
               <tr>
                 <th>Received</th>
-                <th>Event type</th>
                 <th>Application</th>
+                <th>Event type</th>
+                <th>Info</th>
                 <th>Platform</th>
                 <th>App version</th>
                 <th>Language</th>
@@ -131,8 +132,9 @@
               @for (event of page.content; track event.id) {
                 <tr>
                   <td [title]="event.receivedAt">{{ event.receivedAt | date: 'medium' }}</td>
-                  <td class="identifier" [title]="event.eventType">{{ event.eventType }}</td>
                   <td class="identifier" [title]="event.apiKeyName">{{ event.apiKeyName }}</td>
+                  <td class="identifier" [title]="event.eventType">{{ event.eventType }}</td>
+                  <td [title]="propertyInfo(event.properties)">{{ propertyInfoPreview(event.properties) }}</td>
                   <td>{{ event.platform || '—' }}</td>
                   <td>{{ event.appVersion || '—' }}</td>
                   <td>{{ event.language || '—' }}</td>
