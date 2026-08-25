@@ -6,7 +6,14 @@
       <h1>Brickset API usage</h1>
       <p>Daily getSets calls reported by Brickset for the last 30 calendar days.</p>
     </div>
+    <button type="button" (click)="testUsage()" [disabled]="isLoading() || isTesting()">
+      {{ isTesting() ? 'Testing getKeyUsageStats…' : 'Test getKeyUsageStats' }}
+    </button>
   </header>
+
+  @if (testMessage()) {
+    <p class="test-status" [class.error]="testError()" aria-live="polite">{{ testMessage() }}</p>
+  }
 
   @if (isLoading()) {
     <section class="panel"><p class="state">Loading Brickset API usage…</p></section>
@@ -17,10 +24,18 @@
     </section>
   } @else {
     <section class="summary-grid" aria-label="Brickset usage summary">
-      <article class="panel"><span>Latest day</span><strong>{{ latest() | number }}</strong></article>
-      <article class="panel"><span>30-day total</span><strong>{{ total() | number }}</strong></article>
-      <article class="panel"><span>Daily average</span><strong>{{ average() | number: '1.0-1' }}</strong></article>
-      <article class="panel"><span>Peak day</span><strong>{{ peak() | number }}</strong></article>
+      <article class="panel">
+        <span>Latest day</span><strong>{{ latest() | number }}</strong>
+      </article>
+      <article class="panel">
+        <span>30-day total</span><strong>{{ total() | number }}</strong>
+      </article>
+      <article class="panel">
+        <span>Daily average</span><strong>{{ average() | number: '1.0-1' }}</strong>
+      </article>
+      <article class="panel">
+        <span>Peak day</span><strong>{{ peak() | number }}</strong>
+      </article>
     </section>
 
     <section class="panel" aria-live="polite">
@@ -35,7 +50,9 @@
           @for (day of usage(); track day.date) {
             <div class="usage-row">
               <time [attr.datetime]="day.date">{{ localDate(day.date) | date: 'mediumDate' }}</time>
-              <div class="bar-track" aria-hidden="true"><span [style.width.%]="barWidth(day.count)"></span></div>
+              <div class="bar-track" aria-hidden="true">
+                <span [style.width.%]="barWidth(day.count)"></span>
+              </div>
               <strong>{{ day.count | number }}</strong>
             </div>
           }

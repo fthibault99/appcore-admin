@@ -1,16 +1,95 @@
 @use '../recipes/recipes.scss';
 
-.page-heading a { display: inline-block; margin-bottom: 0.7rem; color: #2457b8; font-weight: 700; text-decoration: none; }
-.summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
-.summary-grid article { display: grid; gap: 0.45rem; }
-.summary-grid span, .fetched { color: #657086; }
-.summary-grid strong { color: #172033; font-size: 1.55rem; font-variant-numeric: tabular-nums; }
-.usage-list { display: grid; gap: 0.8rem; margin-top: 1.25rem; }
-.usage-row { display: grid; grid-template-columns: 8rem minmax(8rem, 1fr) 4.5rem; align-items: center; gap: 1rem; }
-.usage-row time { color: #4c5870; font-weight: 650; }
-.usage-row strong { text-align: right; font-variant-numeric: tabular-nums; }
-.bar-track { height: 0.75rem; overflow: hidden; border-radius: 999px; background: #e8edf5; }
-.bar-track span { display: block; min-width: 0.2rem; height: 100%; border-radius: inherit; background: #3972d1; }
-.fetched { margin: 1.25rem 0 0; font-size: 0.88rem; }
-@media (max-width: 54rem) { .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 36rem) { .summary-grid { grid-template-columns: 1fr; } .usage-row { grid-template-columns: 6.5rem minmax(4rem, 1fr) 3.5rem; gap: 0.6rem; } }
+.page-heading a {
+  display: inline-block;
+  margin-bottom: 0.7rem;
+  color: #2457b8;
+  font-weight: 700;
+  text-decoration: none;
+}
+.page-heading {
+  align-items: flex-end;
+}
+.page-heading button {
+  flex: 0 0 auto;
+}
+.test-status {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border-radius: 0.65rem;
+  color: #17643a;
+  background: #e8f7ee;
+  font-weight: 650;
+}
+.test-status.error {
+  color: #9f2727;
+  background: #fdecec;
+}
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+.summary-grid article {
+  display: grid;
+  gap: 0.45rem;
+}
+.summary-grid span,
+.fetched {
+  color: #657086;
+}
+.summary-grid strong {
+  color: #172033;
+  font-size: 1.55rem;
+  font-variant-numeric: tabular-nums;
+}
+.usage-list {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1.25rem;
+}
+.usage-row {
+  display: grid;
+  grid-template-columns: 8rem minmax(8rem, 1fr) 4.5rem;
+  align-items: center;
+  gap: 1rem;
+}
+.usage-row time {
+  color: #4c5870;
+  font-weight: 650;
+}
+.usage-row strong {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.bar-track {
+  height: 0.75rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8edf5;
+}
+.bar-track span {
+  display: block;
+  min-width: 0.2rem;
+  height: 100%;
+  border-radius: inherit;
+  background: #3972d1;
+}
+.fetched {
+  margin: 1.25rem 0 0;
+  font-size: 0.88rem;
+}
+@media (max-width: 54rem) {
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 36rem) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .usage-row {
+    grid-template-columns: 6.5rem minmax(4rem, 1fr) 3.5rem;
+    gap: 0.6rem;
+  }
+}

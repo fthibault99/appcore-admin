@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { Subject } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { AdminBricksetUsageDay } from '../../core/brickset/admin-brickset.models';
 import { AdminBricksetService } from '../../core/brickset/admin-brickset.service';
 import { BricksetUsageComponent } from './brickset-usage';
@@ -9,12 +9,15 @@ import { BricksetUsageComponent } from './brickset-usage';
 describe('BricksetUsageComponent', () => {
   let fixture: ComponentFixture<BricksetUsageComponent>;
   let result: Subject<AdminBricksetUsageDay[]>;
-  let service: { getUsage: ReturnType<typeof vi.fn> };
+  let service: { getUsage: ReturnType<typeof vi.fn>; syncUsage: ReturnType<typeof vi.fn> };
   let router: Router;
 
   beforeEach(async () => {
     result = new Subject<AdminBricksetUsageDay[]>();
-    service = { getUsage: vi.fn(() => result.asObservable()) };
+    service = {
+      getUsage: vi.fn(() => result.asObservable()),
+      syncUsage: vi.fn(() => of({ daysSynchronized: 30 })),
+    };
     await TestBed.configureTestingModule({
       imports: [BricksetUsageComponent],
       providers: [provideRouter([]), { provide: AdminBricksetService, useValue: service }],
@@ -46,12 +49,36 @@ describe('BricksetUsageComponent', () => {
     result.next([]);
     result.complete();
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('No Brickset usage has been synchronized yet.');
+    expect(fixture.nativeElement.textContent).toContain(
+      'No Brickset usage has been synchronized yet.',
+    );
   });
 
   it('redirects an expired session to login', () => {
     fixture.detectChanges();
     result.error(new HttpErrorResponse({ status: 401 }));
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
+  });
+
+  it('tests getKeyUsageStats and refreshes the displayed usage', () => {
+    service.getUsage.mockReset();
+    service.getUsage
+      .mockReturnValueOnce(of([]))
+      .mockReturnValueOnce(
+        of([{ date: '2026-08-25', count: 165, fetchedAt: '2026-08-25T15:50:00Z' }]),
+      );
+    fixture.detectChanges();
+
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector('.page-heading button');
+    expect(button.disabled).toBe(false);
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+
+    expect(service.syncUsage).toHaveBeenCalledOnce();
+    expect(service.getUsage).toHaveBeenLastCalledWith(30);
+    expect(fixture.nativeElement.textContent).toContain(
+      'getKeyUsageStats succeeded: 30 days synchronized.',
+    );
+    expect(fixture.nativeElement.querySelectorAll('.usage-row')).toHaveLength(1);
   });
 });

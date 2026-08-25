@@ -46,3 +46,7 @@ export interface AdminBricksetUsageDay {
   count: number;
   fetchedAt: string;
 }
+
+export interface AdminBricksetUsageSyncResponse {
+  daysSynchronized: number;
+}

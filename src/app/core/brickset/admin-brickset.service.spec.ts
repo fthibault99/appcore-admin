@@ -29,7 +29,15 @@ describe('AdminBricksetService', () => {
     expect(request.request.params.get('page')).toBe('1');
     expect(request.request.params.get('size')).toBe('25');
     expect(request.request.withCredentials).toBe(true);
-    request.flush({ content: [], totalElements: 0, totalPages: 0, size: 25, number: 1, first: false, last: true });
+    request.flush({
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      size: 25,
+      number: 1,
+      first: false,
+      last: true,
+    });
   });
 
   it('loads a Brickset cache detail', () => {
@@ -49,5 +57,19 @@ describe('AdminBricksetService', () => {
     expect(request.request.params.get('days')).toBe('30');
     expect(request.request.withCredentials).toBe(true);
     request.flush([]);
+  });
+
+  it('synchronizes Brickset API usage with CSRF protection', () => {
+    service.syncUsage().subscribe((result) => expect(result.daysSynchronized).toBe(30));
+
+    const csrf = http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`);
+    expect(csrf.request.withCredentials).toBe(true);
+    csrf.flush('', { headers: { 'X-XSRF-TOKEN': 'token' } });
+
+    const request = http.expectOne(`${usageUrl}/sync`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get('X-XSRF-TOKEN')).toBe('token');
+    expect(request.request.withCredentials).toBe(true);
+    request.flush({ daysSynchronized: 30 });
   });
 });
