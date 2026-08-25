@@ -29,6 +29,7 @@ describe('AdminHeaderComponent', () => {
       'Recipes',
       'Extraction Domains',
       'Barcodes',
+      'Brickset',
       'OpenAI',
       'Research',
       'Chat',

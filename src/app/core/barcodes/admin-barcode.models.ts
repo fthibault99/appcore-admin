@@ -7,7 +7,9 @@ export interface AdminBarcodeSummary {
   productName: string | null;
   brand: string | null;
   category: string | null;
+  legoSetNumber: string | null;
   provider: string;
+  enrichmentProvider: string | null;
   updatedAt: string;
   expiresAt: string;
   manualOverride: boolean;
@@ -39,4 +41,5 @@ export interface UpdateAdminBarcode {
   category: string | null;
   imageUrl: string | null;
   ingredients: string | null;
+  legoSetNumber: string | null;
 }

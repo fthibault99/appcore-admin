@@ -1,0 +1,48 @@
+<app-admin-header />
+<main class="detail-page">
+  <a routerLink="/brickset">← Back to Brickset</a>
+  @if (isLoading()) {
+    <p class="state">Loading Brickset set…</p>
+  } @else if (hasError()) {
+    <div class="state error">
+      <p>Unable to load this Brickset set.</p>
+      <button type="button" (click)="retry()">Retry</button>
+    </div>
+  } @else if (detail(); as data) {
+    <header class="heading">
+      <div>
+        <h1>{{ data.setNumber }}-{{ data.numberVariant }}</h1>
+        <p>Brickset cache entry #{{ data.id }}</p>
+      </div>
+      <span class="badge" [class.available]="data.additionalImagesRawJson">{{ data.additionalImagesRawJson ? 'Images cached' : 'No additional images' }}</span>
+    </header>
+    <section class="card metadata">
+      <dl>
+        <div><dt>Set number</dt><dd>{{ data.setNumber }}-{{ data.numberVariant }}</dd></div>
+        <div><dt>Brickset ID</dt><dd>{{ data.bricksetSetId ?? '—' }}</dd></div>
+        <div><dt>Name</dt><dd>{{ data.setName || '—' }}</dd></div>
+        <div><dt>EAN</dt><dd>{{ data.ean || '—' }}</dd></div>
+        <div><dt>UPC</dt><dd>{{ data.upc || '—' }}</dd></div>
+        <div><dt>Set fetched</dt><dd>{{ data.fetchedAt | date: 'medium' }}</dd></div>
+        <div><dt>Images fetched</dt><dd>{{ data.imagesFetchedAt ? (data.imagesFetchedAt | date: 'medium') : '—' }}</dd></div>
+        <div><dt>Calls</dt><dd>{{ data.requestCount }}</dd></div>
+        <div><dt>Last called</dt><dd>{{ data.lastRequestedAt ? (data.lastRequestedAt | date: 'medium') : 'Never' }}</dd></div>
+        <div><dt>Updated</dt><dd>{{ data.updatedAt | date: 'medium' }}</dd></div>
+      </dl>
+    </section>
+    <div class="json-grid">
+      <section class="card json-card">
+        <h2>getSets JSON</h2>
+        <pre>{{ data.rawJson | json }}</pre>
+      </section>
+      <section class="card json-card">
+        <h2>getAdditionalImages JSON</h2>
+        @if (data.additionalImagesRawJson) {
+          <pre>{{ data.additionalImagesRawJson | json }}</pre>
+        } @else {
+          <p class="empty-json">No additional-images response is cached for this set.</p>
+        }
+      </section>
+    </div>
+  }
+</main>

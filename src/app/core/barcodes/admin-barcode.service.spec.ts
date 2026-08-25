@@ -46,6 +46,7 @@ describe('AdminBarcodeService', () => {
       category: null,
       imageUrl: null,
       ingredients: null,
+      legoSetNumber: '4637-1',
     };
     service.updateBarcode(7, update).subscribe();
     const csrf = http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`);

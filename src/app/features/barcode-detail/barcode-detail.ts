@@ -36,6 +36,10 @@ export class BarcodeDetailComponent implements OnInit {
     }),
     brand: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(255)] }),
     category: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(255)] }),
+    legoSetNumber: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.pattern(/^\d{3,7}-\d{1,2}$/)],
+    }),
     imageUrl: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(2_048)] }),
     ingredients: new FormControl('', {
       nonNullable: true,
@@ -57,6 +61,7 @@ export class BarcodeDetailComponent implements OnInit {
       description: data.description ?? '',
       brand: data.brand ?? '',
       category: data.category ?? '',
+      legoSetNumber: data.legoSetNumber ?? '',
       imageUrl: data.imageUrl ?? '',
       ingredients: data.ingredients ?? '',
     });
@@ -78,6 +83,7 @@ export class BarcodeDetailComponent implements OnInit {
       description: this.nullable(value.description),
       brand: this.nullable(value.brand),
       category: this.nullable(value.category),
+      legoSetNumber: this.nullable(value.legoSetNumber),
       imageUrl: this.nullable(value.imageUrl),
       ingredients: this.nullable(value.ingredients),
     };

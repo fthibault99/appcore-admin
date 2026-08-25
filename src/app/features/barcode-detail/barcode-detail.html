@@ -33,6 +33,10 @@
           <dd>{{ data.provider }}</dd>
         </div>
         <div>
+          <dt>Enriched by</dt>
+          <dd>{{ data.enrichmentProvider || '—' }}</dd>
+        </div>
+        <div>
           <dt>Updated</dt>
           <dd>{{ data.updatedAt | date: 'medium' }}</dd>
         </div>
@@ -85,6 +89,10 @@
               <dd>{{ data.category || '—' }}</dd>
             </div>
             <div>
+              <dt>LEGO set number</dt>
+              <dd>{{ data.legoSetNumber || '—' }}</dd>
+            </div>
+            <div>
               <dt>Description</dt>
               <dd>{{ data.description || '—' }}</dd>
             </div>
@@ -97,18 +105,19 @@
       </section>
     } @else {
       <form class="card editor" [formGroup]="form" (ngSubmit)="save()">
-        <p class="notice">Barcode, domain and provider are server-managed and cannot be edited.</p>
+        <p class="notice">Barcode, domain, provider and enrichment source are server-managed and cannot be edited.</p>
         <label>Product name<input formControlName="productName" /></label>
         <div class="field-grid">
           <label>Brand<input formControlName="brand" /></label
           ><label>Category<input formControlName="category" /></label
+          ><label>LEGO set number<input placeholder="4637-1" formControlName="legoSetNumber" /></label
           ><label>Image URL<input type="url" formControlName="imageUrl" /></label>
         </div>
         <label>Description<textarea rows="5" formControlName="description"></textarea></label
         ><label>Ingredients<textarea rows="6" formControlName="ingredients"></textarea></label>
         @if (form.invalid && form.touched) {
           <p class="error">
-            Product name is required and fields must remain within their size limits.
+            Product name is required, and the LEGO set number must use a format such as 4637-1.
           </p>
         }
         @if (saveError()) {

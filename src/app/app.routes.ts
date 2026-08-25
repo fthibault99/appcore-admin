@@ -20,6 +20,9 @@ import { VoiceInboxComponent } from './features/voice-inbox/voice-inbox';
 import { DishRecreationComponent } from './features/dish-recreation/dish-recreation';
 import { RecipeDiscoveryComponent } from './features/recipe-discovery/recipe-discovery';
 import { RecipeExtractionDomainsComponent } from './features/recipe-extraction-domains/recipe-extraction-domains';
+import { BricksetSetsComponent } from './features/brickset-sets/brickset-sets';
+import { BricksetSetDetailComponent } from './features/brickset-set-detail/brickset-set-detail';
+import { BricksetUsageComponent } from './features/brickset-usage/brickset-usage';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -42,6 +45,9 @@ export const routes: Routes = [
   { path: 'recipe-extraction-domains', component: RecipeExtractionDomainsComponent, canActivate: [adminAuthGuard] },
   { path: 'barcodes', component: BarcodesComponent, canActivate: [adminAuthGuard] },
   { path: 'barcodes/:barcodeId', component: BarcodeDetailComponent, canActivate: [adminAuthGuard] },
+  { path: 'brickset', component: BricksetSetsComponent, canActivate: [adminAuthGuard] },
+  { path: 'brickset/usage', component: BricksetUsageComponent, canActivate: [adminAuthGuard] },
+  { path: 'brickset/:setId', component: BricksetSetDetailComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/usage', component: OpenAIUsageComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/usage/:usageId', component: OpenAIUsageDetailComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/prices', component: OpenAIPricesComponent, canActivate: [adminAuthGuard] },

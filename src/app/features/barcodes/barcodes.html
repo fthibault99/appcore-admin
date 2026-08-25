@@ -41,8 +41,10 @@
                 <th>Barcode</th>
                 <th>Domain</th>
                 <th>Product</th>
+                <th>LEGO set</th>
                 <th>Brand</th>
                 <th>Provider</th>
+                <th>Enriched by</th>
                 <th>Updated</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -54,8 +56,10 @@
                   <td class="identifier">{{ product.barcode }}</td>
                   <td>{{ product.lookupDomain }}</td>
                   <td>{{ product.productName || '—' }}</td>
+                  <td class="identifier">{{ product.legoSetNumber || '—' }}</td>
                   <td>{{ product.brand || '—' }}</td>
                   <td>{{ product.provider }}</td>
+                  <td>{{ product.enrichmentProvider || '—' }}</td>
                   <td>{{ product.updatedAt | date: 'medium' }}</td>
                   <td>
                     <span class="badge" [class.manual]="product.manualOverride">{{

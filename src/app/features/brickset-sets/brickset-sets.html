@@ -1,0 +1,77 @@
+<app-admin-header />
+<main class="page-shell">
+  <header class="page-heading">
+    <div>
+      <h1>Brickset</h1>
+      <p>Inspect the raw Brickset responses cached for Brick Collector.</p>
+    </div>
+    <a class="usage-link" routerLink="/brickset/usage">View API usage</a>
+  </header>
+  <section class="panel">
+    <form (ngSubmit)="search()" class="search">
+      <label>Set number<input [formControl]="setNumber" placeholder="75313" /></label>
+      <button type="submit">Search</button>
+      <button type="button" class="secondary" (click)="reset()">Reset</button>
+    </form>
+  </section>
+  <section class="panel" aria-live="polite">
+    @if (isLoading()) {
+      <p class="state">Loading Brickset sets…</p>
+    } @else if (hasError()) {
+      <div class="state error">
+        <p>Unable to load Brickset sets.</p>
+        <button type="button" (click)="retry()">Retry</button>
+      </div>
+    } @else if (page(); as setPage) {
+      <div class="results-heading">
+        <h2>Cached sets</h2>
+        <span>{{ setPage.totalElements }} sets</span>
+      </div>
+      @if (setPage.content.length === 0) {
+        <p class="state">No cached set matches this set number.</p>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Set</th>
+                <th>Brickset ID</th>
+                <th>Name</th>
+                <th>EAN</th>
+                <th>UPC</th>
+                <th>Images</th>
+                <th>Calls</th>
+                <th>Last called</th>
+                <th>Fetched</th>
+                <th>Updated</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (set of setPage.content; track set.id) {
+                <tr>
+                  <td class="identifier">{{ set.setNumber }}-{{ set.numberVariant }}</td>
+                  <td>{{ set.bricksetSetId ?? '—' }}</td>
+                  <td>{{ set.setName || '—' }}</td>
+                  <td class="identifier">{{ set.ean || '—' }}</td>
+                  <td class="identifier">{{ set.upc || '—' }}</td>
+                  <td><span class="badge" [class.available]="set.hasAdditionalImages">{{ set.hasAdditionalImages ? 'Cached' : 'None' }}</span></td>
+                  <td>{{ set.requestCount }}</td>
+                  <td>{{ set.lastRequestedAt ? (set.lastRequestedAt | date: 'medium') : 'Never' }}</td>
+                  <td>{{ set.fetchedAt | date: 'medium' }}</td>
+                  <td>{{ set.updatedAt | date: 'medium' }}</td>
+                  <td><button type="button" class="link-button" (click)="view(set.id)">View</button></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <div class="pagination">
+        <span>Page {{ setPage.totalPages === 0 ? 0 : setPage.number + 1 }} of {{ setPage.totalPages }}</span>
+        <button type="button" class="secondary" (click)="previous()" [disabled]="setPage.first">Previous</button>
+        <button type="button" class="secondary" (click)="next()" [disabled]="setPage.last">Next</button>
+      </div>
+    }
+  </section>
+</main>
