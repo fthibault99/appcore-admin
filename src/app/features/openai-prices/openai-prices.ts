@@ -1,6 +1,7 @@
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -18,6 +19,7 @@ import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
 export class OpenAIPricesComponent implements OnInit {
   private readonly service = inject(AdminOpenAIUsageService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   readonly prices = signal<OpenAIModelPrice[]>([]);
   readonly isLoading = signal(false);
   readonly isSaving = signal(false);
@@ -38,10 +40,13 @@ export class OpenAIPricesComponent implements OnInit {
     effectiveFrom: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     effectiveTo: new FormControl('', { nonNullable: true }),
     version: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    sourceUrl: new FormControl('https://openai.com/api/pricing/', { nonNullable: true }),
+    sourceUrl: new FormControl('https://developers.openai.com/api/docs/pricing', { nonNullable: true }),
   });
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.saveError.set(''));
+    this.load();
+  }
   retry(): void { this.load(); }
   startAdding(): void { this.saveError.set(''); this.adding.set(true); }
   cancel(): void { this.saveError.set(''); this.adding.set(false); }
@@ -65,9 +70,8 @@ export class OpenAIPricesComponent implements OnInit {
     this.service.createPrice(request).pipe(finalize(() => this.isSaving.set(false))).subscribe({
       next: () => { this.adding.set(false); this.load(); },
       error: (error: unknown) => {
-        this.saveError.set(error instanceof HttpErrorResponse && error.status === 400
-          ? 'This price is invalid or overlaps an existing price period.'
-          : 'Unable to save this price.');
+        this.saveError.set(error instanceof HttpErrorResponse && typeof error.error?.message === 'string'
+          ? error.error.message : 'Unable to save this price.');
       },
     });
   }
