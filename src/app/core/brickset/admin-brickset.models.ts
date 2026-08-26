@@ -7,10 +7,12 @@ export interface AdminBricksetSetSummary {
   ean: string | null;
   upc: string | null;
   hasAdditionalImages: boolean;
+  hasInstructions: boolean;
   requestCount: number;
   lastRequestedAt: string | null;
   fetchedAt: string;
   imagesFetchedAt: string | null;
+  instructionsFetchedAt: string | null;
   updatedAt: string;
 }
 
@@ -26,9 +28,11 @@ export interface AdminBricksetSetDetail {
   lastRequestedAt: string | null;
   fetchedAt: string;
   imagesFetchedAt: string | null;
+  instructionsFetchedAt: string | null;
   updatedAt: string;
   rawJson: unknown;
   additionalImagesRawJson: unknown | null;
+  instructionsRawJson: unknown | null;
 }
 
 export interface BricksetSetPage {

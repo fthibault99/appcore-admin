@@ -14,7 +14,10 @@
         <h1>{{ data.setNumber }}-{{ data.numberVariant }}</h1>
         <p>Brickset cache entry #{{ data.id }}</p>
       </div>
-      <span class="badge" [class.available]="data.additionalImagesRawJson">{{ data.additionalImagesRawJson ? 'Images cached' : 'No additional images' }}</span>
+      <div class="cache-badges">
+        <span class="badge" [class.available]="data.additionalImagesRawJson">{{ data.additionalImagesRawJson ? 'Images cached' : 'No additional images' }}</span>
+        <span class="badge" [class.available]="data.instructionsRawJson">{{ data.instructionsRawJson ? 'Instructions cached' : 'No instructions' }}</span>
+      </div>
     </header>
     <section class="card metadata">
       <dl>
@@ -25,6 +28,7 @@
         <div><dt>UPC</dt><dd>{{ data.upc || '—' }}</dd></div>
         <div><dt>Set fetched</dt><dd>{{ data.fetchedAt | date: 'medium' }}</dd></div>
         <div><dt>Images fetched</dt><dd>{{ data.imagesFetchedAt ? (data.imagesFetchedAt | date: 'medium') : '—' }}</dd></div>
+        <div><dt>Instructions fetched</dt><dd>{{ data.instructionsFetchedAt ? (data.instructionsFetchedAt | date: 'medium') : '—' }}</dd></div>
         <div><dt>Calls</dt><dd>{{ data.requestCount }}</dd></div>
         <div><dt>Last called</dt><dd>{{ data.lastRequestedAt ? (data.lastRequestedAt | date: 'medium') : 'Never' }}</dd></div>
         <div><dt>Updated</dt><dd>{{ data.updatedAt | date: 'medium' }}</dd></div>
@@ -41,6 +45,14 @@
           <pre>{{ data.additionalImagesRawJson | json }}</pre>
         } @else {
           <p class="empty-json">No additional-images response is cached for this set.</p>
+        }
+      </section>
+      <section class="card json-card">
+        <h2>getInstructions2 JSON</h2>
+        @if (data.instructionsRawJson) {
+          <pre>{{ data.instructionsRawJson | json }}</pre>
+        } @else {
+          <p class="empty-json">No instructions response is cached for this set.</p>
         }
       </section>
     </div>

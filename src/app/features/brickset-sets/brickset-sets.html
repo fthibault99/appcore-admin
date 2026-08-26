@@ -40,6 +40,7 @@
                 <th>EAN</th>
                 <th>UPC</th>
                 <th>Images</th>
+                <th>Instructions</th>
                 <th>Calls</th>
                 <th>Last called</th>
                 <th>Fetched</th>
@@ -56,6 +57,7 @@
                   <td class="identifier">{{ set.ean || '—' }}</td>
                   <td class="identifier">{{ set.upc || '—' }}</td>
                   <td><span class="badge" [class.available]="set.hasAdditionalImages">{{ set.hasAdditionalImages ? 'Cached' : 'None' }}</span></td>
+                  <td><span class="badge" [class.available]="set.hasInstructions">{{ set.hasInstructions ? 'Cached' : 'None' }}</span></td>
                   <td>{{ set.requestCount }}</td>
                   <td>{{ set.lastRequestedAt ? (set.lastRequestedAt | date: 'medium') : 'Never' }}</td>
                   <td>{{ set.fetchedAt | date: 'medium' }}</td>

@@ -30,6 +30,13 @@ pre {
   color: #657086;
 }
 
+.cache-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
 .badge.available {
   color: #176b3a;
   background: #e8f7ee;
