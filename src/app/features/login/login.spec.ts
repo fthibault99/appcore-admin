@@ -51,6 +51,15 @@ describe('LoginComponent', () => {
     expect(submitButton().disabled).toBe(true);
   });
 
+  it('allows choosing the dark theme before signing in', () => {
+    const themeSelect = fixture.nativeElement.querySelector('.theme-picker select') as HTMLSelectElement;
+    themeSelect.value = 'dark';
+    themeSelect.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(document.documentElement.dataset['theme']).toBe('dark');
+  });
+
   it('enables submission for a valid email and password', () => {
     enterValidCredentials();
     expect(component.loginForm.valid).toBe(true);

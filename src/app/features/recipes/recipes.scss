@@ -8,12 +8,12 @@
   align-items: center;
   min-height: 4rem;
   padding: 0 2rem;
-  border-bottom: 1px solid #dfe5ee;
-  background: #fff;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 .brand,
 .topbar a {
-  color: #172033;
+  color: var(--color-text);
   text-decoration: none;
 }
 .brand {
@@ -25,12 +25,12 @@
 }
 .topbar nav a {
   padding: 0.55rem 0.8rem;
-  color: #596579;
+  color: var(--color-text-secondary);
   font-weight: 650;
 }
 .topbar nav a[aria-current='page'] {
-  color: #174ea6;
-  background: #edf3fc;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
   border-radius: 0.35rem;
 }
 .logout {
@@ -43,14 +43,14 @@
 }
 .page-shell > header p,
 .results-heading span {
-  color: #657086;
+  color: var(--color-text-secondary);
 }
 .panel {
   margin-bottom: 1.25rem;
   padding: 1.25rem;
-  border: 1px solid #dfe5ee;
+  border: 1px solid var(--color-border);
   border-radius: 0.625rem;
-  background: #fff;
+  background: var(--color-surface);
 }
 .search {
   display: flex;
@@ -66,22 +66,22 @@
 .search input {
   min-height: 2.5rem;
   padding: 0.5rem 0.65rem;
-  border: 1px solid #bdc7d5;
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.35rem;
 }
 button {
   padding: 0.6rem 0.9rem;
   border: 0;
   border-radius: 0.35rem;
-  color: #fff;
-  background: #2457b8;
+  color: var(--color-on-accent);
+  background: var(--color-primary);
   font-weight: 700;
   cursor: pointer;
 }
 .secondary {
-  border: 1px solid #c9d1dc;
-  color: #334057;
-  background: #fff;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
 }
 .results-heading,
 .pagination {
@@ -101,26 +101,26 @@ th,
 td {
   padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid #e5e9f0;
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 th {
   font-size: 0.8rem;
-  color: #657086;
+  color: var(--color-text-secondary);
 }
 .link-button {
   padding: 0;
-  color: #2457b8;
+  color: var(--color-primary);
   background: none;
 }
 .badge {
   display: inline-block;
   padding: 0.25rem 0.5rem;
   border-radius: 999px;
-  background: #eef2f6;
+  background: var(--color-surface-emphasis);
 }
 .badge.manual {
-  color: #8a4b08;
-  background: #fff1dc;
+  color: var(--color-warning);
+  background: var(--color-warning-soft);
 }
 .pagination {
   justify-content: flex-end;
@@ -131,7 +131,7 @@ th {
   padding: 2rem;
 }
 .error {
-  color: #b42318;
+  color: var(--color-danger);
 }
 @media (max-width: 48rem) {
   .topbar {

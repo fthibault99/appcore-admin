@@ -7,7 +7,7 @@
   padding: 1.5rem;
 }
 a {
-  color: #2457b8;
+  color: var(--color-primary);
   font-weight: 700;
 }
 header {
@@ -18,13 +18,13 @@ p {
   margin-top: 0;
 }
 header p {
-  color: #657086;
+  color: var(--color-text-secondary);
 }
 .card {
   padding: 1.25rem;
-  border: 1px solid #dfe5ee;
+  border: 1px solid var(--color-border);
   border-radius: 0.625rem;
-  background: #fff;
+  background: var(--color-surface);
 }
 dl {
   display: grid;
@@ -35,7 +35,7 @@ dl div {
   min-width: 0;
 }
 dt {
-  color: #657086;
+  color: var(--color-text-secondary);
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -52,8 +52,8 @@ pre {
   overflow: auto;
   padding: 1rem;
   border-radius: 0.4rem;
-  background: #172033;
-  color: #eef2f8;
+  background: var(--color-code-background);
+  color: var(--color-code-text);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -62,14 +62,14 @@ pre {
   text-align: center;
 }
 .error {
-  color: #b42318;
+  color: var(--color-danger);
 }
 button {
   padding: 0.6rem 0.9rem;
   border: 0;
   border-radius: 0.35rem;
-  color: #fff;
-  background: #2457b8;
+  color: var(--color-on-accent);
+  background: var(--color-primary);
   font-weight: 700;
 }
 @media (max-width: 40rem) {

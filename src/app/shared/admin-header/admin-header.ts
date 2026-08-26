@@ -2,6 +2,10 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AdminAuthenticationService } from '../../core/authentication/admin-authentication.service';
+import {
+  AdminThemePreference,
+  AdminThemeService,
+} from '../../core/theme/admin-theme.service';
 
 @Component({
   selector: 'app-admin-header',
@@ -13,7 +17,13 @@ import { AdminAuthenticationService } from '../../core/authentication/admin-auth
 export class AdminHeaderComponent {
   private readonly authentication = inject(AdminAuthenticationService);
   private readonly router = inject(Router);
+  readonly theme = inject(AdminThemeService);
   readonly isLoggingOut = signal(false);
+
+  setTheme(event: Event): void {
+    const preference = (event.target as HTMLSelectElement).value as AdminThemePreference;
+    this.theme.setPreference(preference);
+  }
 
   logout(): void {
     if (this.isLoggingOut()) return;

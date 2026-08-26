@@ -4,6 +4,10 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AdminAuthenticationService } from '../../core/authentication/admin-authentication.service';
+import {
+  AdminThemePreference,
+  AdminThemeService,
+} from '../../core/theme/admin-theme.service';
 
 @Component({
   selector: 'app-login',
@@ -15,6 +19,7 @@ import { AdminAuthenticationService } from '../../core/authentication/admin-auth
 export class LoginComponent {
   private readonly authenticationService = inject(AdminAuthenticationService);
   private readonly router = inject(Router);
+  readonly theme = inject(AdminThemeService);
 
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -28,6 +33,11 @@ export class LoginComponent {
       validators: [Validators.required, Validators.maxLength(128)],
     }),
   });
+
+  setTheme(event: Event): void {
+    const preference = (event.target as HTMLSelectElement).value as AdminThemePreference;
+    this.theme.setPreference(preference);
+  }
 
   submit(): void {
     this.loginForm.markAllAsTouched();

@@ -1,18 +1,18 @@
 :host { display: block; min-height: 100vh; }
 .page-shell { width: min(100%, 72rem); margin: 0 auto; padding: 1.5rem; }
-a { color: #2457b8; font-weight: 700; text-decoration: none; }
+a { color: var(--color-primary); font-weight: 700; text-decoration: none; }
 header { margin: 1.5rem 0; }
 h1, h2, p { margin-top: 0; }
-header p { color: #657086; }
-.ownership { display: inline-block; padding: .3rem .6rem; border-radius: 999px; color: #175c35; background: #eaf8ef; font-size: .78rem; font-weight: 750; }
-.ownership.family { color: #6941c6; background: #f2edff; }
-.panel { margin-bottom: 1.25rem; padding: 1.25rem; border: 1px solid #dfe5ee; border-radius: .625rem; background: #fff; }
+header p { color: var(--color-text-secondary); }
+.ownership { display: inline-block; padding: .3rem .6rem; border-radius: 999px; color: var(--color-success); background: var(--color-success-soft); font-size: .78rem; font-weight: 750; }
+.ownership.family { color: var(--color-purple); background: var(--color-purple-soft); }
+.panel { margin-bottom: 1.25rem; padding: 1.25rem; border: 1px solid var(--color-border); border-radius: .625rem; background: var(--color-surface); }
 h2 { font-size: 1.1rem; }
 dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; margin: 0; }
-dt { color: #657086; font-size: .8rem; font-weight: 750; text-transform: uppercase; }
+dt { color: var(--color-text-secondary); font-size: .8rem; font-weight: 750; text-transform: uppercase; }
 dd { margin: .25rem 0 0; overflow-wrap: anywhere; }
-pre { max-height: 32rem; margin: 0; padding: 1rem; overflow: auto; border-radius: .4rem; background: #f6f8fa; white-space: pre-wrap; overflow-wrap: anywhere; }
+pre { max-height: 32rem; margin: 0; padding: 1rem; overflow: auto; border-radius: .4rem; background: var(--color-surface-muted); white-space: pre-wrap; overflow-wrap: anywhere; }
 summary { cursor: pointer; font-weight: 750; }
 details pre { margin-top: 1rem; }
 .state { padding: 3rem; text-align: center; }
-.error { color: #b42318; }
+.error { color: var(--color-danger); }

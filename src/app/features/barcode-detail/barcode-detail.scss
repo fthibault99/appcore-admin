@@ -9,7 +9,7 @@
   max-height: 16rem;
   border-radius: 0.5rem;
   object-fit: contain;
-  background: #f4f6f9;
+  background: var(--color-background);
 }
 .product-layout dl {
   display: grid;
@@ -21,12 +21,12 @@
 }
 .danger {
   margin-left: auto;
-  border: 1px solid #b42318;
-  color: #b42318;
-  background: #fff;
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+  background: var(--color-surface);
 }
 .deletion-note {
-  color: #657086;
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
 }
 @media (max-width: 42rem) {

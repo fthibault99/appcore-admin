@@ -10,9 +10,9 @@
 .search select {
   min-height: 2.5rem;
   padding: 0.5rem 0.65rem;
-  border: 1px solid #bdc7d5;
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.35rem;
-  background: #fff;
+  background: var(--color-surface);
 }
 .identifier {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;

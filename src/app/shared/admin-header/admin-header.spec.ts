@@ -43,6 +43,12 @@ describe('AdminHeaderComponent', () => {
       '/assets/appcore-logo.png',
     );
 
+    const themeSelect = fixture.nativeElement.querySelector('.theme-picker select') as HTMLSelectElement;
+    themeSelect.value = 'dark';
+    themeSelect.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    expect(document.documentElement.dataset['theme']).toBe('dark');
+
     (fixture.nativeElement.querySelector('.logout') as HTMLButtonElement | null)?.click();
     expect(authentication.logout).toHaveBeenCalledTimes(1);
     expect(router.navigate).toHaveBeenCalledWith(['/login']);

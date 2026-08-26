@@ -7,7 +7,7 @@
   padding: 1.5rem;
 }
 .detail-page > a {
-  color: #2457b8;
+  color: var(--color-primary);
   font-weight: 700;
 }
 .heading {
@@ -23,14 +23,14 @@
 }
 .heading p,
 dt {
-  color: #657086;
+  color: var(--color-text-secondary);
 }
 .card {
   margin-bottom: 1.25rem;
   padding: 1.25rem;
-  border: 1px solid #dfe5ee;
+  border: 1px solid var(--color-border);
   border-radius: 0.625rem;
-  background: #fff;
+  background: var(--color-surface);
 }
 .metadata dl {
   display: grid;
@@ -49,11 +49,11 @@ dt {
 .badge {
   padding: 0.35rem 0.65rem;
   border-radius: 999px;
-  background: #eef2f6;
+  background: var(--color-surface-emphasis);
 }
 .badge.manual {
-  color: #8a4b08;
-  background: #fff1dc;
+  color: var(--color-warning);
+  background: var(--color-warning-soft);
 }
 .two-columns {
   display: grid;
@@ -72,18 +72,18 @@ button {
   padding: 0.6rem 0.9rem;
   border: 0;
   border-radius: 0.35rem;
-  color: #fff;
-  background: #2457b8;
+  color: var(--color-on-accent);
+  background: var(--color-primary);
   font-weight: 700;
   cursor: pointer;
 }
 .secondary {
-  border: 1px solid #c9d1dc;
-  color: #334057;
-  background: #fff;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
 }
 .warning {
-  color: #8a4b08;
+  color: var(--color-warning);
 }
 .editor {
   display: grid;
@@ -98,7 +98,7 @@ button {
 .editor textarea {
   width: 100%;
   padding: 0.6rem;
-  border: 1px solid #bdc7d5;
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.35rem;
   font: inherit;
 }
@@ -112,7 +112,7 @@ fieldset {
   gap: 0.65rem;
   margin: 0;
   padding: 1rem;
-  border: 1px solid #dfe5ee;
+  border: 1px solid var(--color-border);
   border-radius: 0.4rem;
 }
 legend {
@@ -125,14 +125,14 @@ legend {
   gap: 0.5rem;
 }
 .remove {
-  color: #b42318;
-  background: #fff;
-  border: 1px solid #e1a7a2;
+  color: var(--color-danger);
+  background: var(--color-surface);
+  border: 1px solid var(--color-danger-border);
 }
 .notice {
   padding: 0.75rem;
-  color: #334057;
-  background: #edf3fc;
+  color: var(--color-text-secondary);
+  background: var(--color-primary-soft);
   border-radius: 0.35rem;
 }
 .state {
@@ -140,7 +140,7 @@ legend {
   padding: 3rem;
 }
 .error {
-  color: #b42318;
+  color: var(--color-danger);
 }
 @media (max-width: 42rem) {
   .two-columns {

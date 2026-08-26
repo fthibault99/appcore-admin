@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { AdminThemeService } from './core/theme/admin-theme.service';
 
 @Component({
   selector: 'app-root',
@@ -8,4 +9,7 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './app.scss'
 })
 export class App {
+  constructor() {
+    inject(AdminThemeService);
+  }
 }

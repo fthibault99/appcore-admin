@@ -20,14 +20,14 @@ pre {
   padding: 1rem;
   overflow: auto;
   border-radius: 0.5rem;
-  color: #e9eef7;
-  background: #172033;
+  color: var(--color-code-text);
+  background: var(--color-code-background);
   font: 0.82rem/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
   white-space: pre;
 }
 
 .empty-json {
-  color: #657086;
+  color: var(--color-text-secondary);
 }
 
 .cache-badges {
@@ -38,8 +38,8 @@ pre {
 }
 
 .badge.available {
-  color: #176b3a;
-  background: #e8f7ee;
+  color: var(--color-success);
+  background: var(--color-success-soft);
 }
 
 @media (max-width: 64rem) {

@@ -6,6 +6,23 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="assets/appcore-logo.png">
+  <script>
+    (() => {
+      let storedTheme;
+      try {
+        storedTheme = localStorage.getItem('appcore-admin-theme');
+      } catch {
+        storedTheme = null;
+      }
+      const preference = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'system';
+      const theme = preference === 'system'
+        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : preference;
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.dataset.themePreference = preference;
+      document.documentElement.style.colorScheme = theme;
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

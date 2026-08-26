@@ -18,7 +18,17 @@
     <a routerLink="/openai/dish-recreation" routerLinkActive="active">Dish Recreation</a>
     <a routerLink="/openai/recipe-discovery" routerLinkActive="active">Recipe Discovery</a>
   </nav>
-  <button type="button" class="logout" (click)="logout()" [disabled]="isLoggingOut()">
-    {{ isLoggingOut() ? 'Signing out…' : 'Logout' }}
-  </button>
+  <div class="header-actions">
+    <label class="theme-picker">
+      <span>Theme</span>
+      <select [value]="theme.preference()" (change)="setTheme($event)" aria-label="Color theme">
+        <option value="system">System</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </label>
+    <button type="button" class="logout" (click)="logout()" [disabled]="isLoggingOut()">
+      {{ isLoggingOut() ? 'Signing out…' : 'Logout' }}
+    </button>
+  </div>
 </header>
