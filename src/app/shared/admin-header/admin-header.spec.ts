@@ -26,6 +26,7 @@ describe('AdminHeaderComponent', () => {
       'Dashboard',
       'Analytics',
       'App Store',
+      'MealAgain',
       'Recipes',
       'Extraction Domains',
       'Barcodes',

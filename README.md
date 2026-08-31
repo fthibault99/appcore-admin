@@ -57,3 +57,20 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+
+## MealAgain administration
+
+The shared header links to `/mealagain` (admin session required). The account list is paginated and supports
+an exact UUID filter; `/mealagain/:userId` shows identity metadata and the balances for every stored environment.
+Production and sandbox rights are kept separate. UNCLASSIFIED balances remain visible with a warning and do not
+represent usable app rights. Legacy account Lifetime flags are shown separately as audit-only values.
+
+Purchase and consumption histories have independent server pagination and an environment filter (including
+UNCLASSIFIED). Purchase revocation includes administrative invalidation; historical grant amounts are not balances.
+No mutation controls or application API keys are included in these pages. Failed requests never appear as empty
+results, and expired admin sessions return to login.
+
+Backend prerequisites: the MealAgain migrations and the read-only session-authenticated endpoints
+`GET /api/admin/mealagain/users`, `GET /api/admin/mealagain/users/{userId}`,
+`GET /api/admin/mealagain/users/{userId}/purchase-history` and `/usage-history`.

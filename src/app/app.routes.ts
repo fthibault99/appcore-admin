@@ -1,3 +1,5 @@
+import { MealAgainComponent } from './features/mealagain/mealagain';
+import { MealAgainDetailComponent } from './features/mealagain-detail/mealagain-detail';
 import { Routes } from '@angular/router';
 import { DashboardComponent } from './features/dashboard/dashboard';
 import { LoginComponent } from './features/login/login';
@@ -25,6 +27,8 @@ import { BricksetSetDetailComponent } from './features/brickset-set-detail/brick
 import { BricksetUsageComponent } from './features/brickset-usage/brickset-usage';
 
 export const routes: Routes = [
+  { path: 'mealagain', component: MealAgainComponent, canActivate: [adminAuthGuard] },
+  { path: 'mealagain/:userId', component: MealAgainDetailComponent, canActivate: [adminAuthGuard] },
   { path: 'login', component: LoginComponent },
   { path: 'dashboard', component: DashboardComponent, canActivate: [adminAuthGuard] },
   { path: 'analytics/events', component: AnalyticsEventsComponent, canActivate: [adminAuthGuard] },

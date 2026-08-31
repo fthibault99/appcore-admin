@@ -1,0 +1,74 @@
+<app-admin-header />
+<main class="page-shell">
+  <header>
+    <h1>MealAgain</h1>
+    <p>Browse user accounts and inspect credits, Lifetime rights and history.</p>
+  </header>
+  <section class="panel">
+    <form class="search" (submit)="$event.preventDefault(); search()">
+      <fieldset [disabled]="isLoading()">
+        <label
+          >User UUID<input
+            [formControl]="userId"
+            placeholder="All accounts, or an exact UUID"
+            aria-describedby="uuid-help"
+        /></label>
+        <button type="submit">Search</button
+        ><button type="button" class="secondary" (click)="reset()">Reset</button>
+      </fieldset>
+    </form>
+    @if (userId.touched && userId.invalid) {
+      <p id="uuid-help" class="error" role="alert">Enter a complete user UUID.</p>
+    }
+  </section>
+  <section class="panel" aria-live="polite" [attr.aria-busy]="isLoading()">
+    @if (isLoading()) {
+      <p class="state">Loading MealAgain accounts…</p>
+    } @else if (hasError()) {
+      <div class="state error">
+        <p>Unable to load MealAgain accounts.</p>
+        <button (click)="retry()">Retry</button>
+      </div>
+    } @else if (page(); as result) {
+      <div class="results-heading">
+        <h2>User accounts</h2>
+        <span>{{ result.totalElements }} accounts</span>
+      </div>
+      @if (!result.content.length) {
+        <p class="state">No MealAgain account found.</p>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>User UUID</th>
+                <th>Created</th>
+                <th>Account updated</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (account of result.content; track account.userId) {
+                <tr>
+                  <td class="identifier">{{ account.userId }}</td>
+                  <td>{{ account.createdAt | date: 'medium' }}</td>
+                  <td>{{ account.updatedAt | date: 'medium' }}</td>
+                  <td><a [routerLink]="['/mealagain', account.userId]">View account</a></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <div class="pagination">
+        <span>Page {{ result.totalPages ? result.number + 1 : 0 }} of {{ result.totalPages }}</span>
+        <button type="button" class="secondary" [disabled]="result.first" (click)="previous()">
+          Previous
+        </button>
+        <button type="button" class="secondary" [disabled]="result.last" (click)="next()">
+          Next
+        </button>
+      </div>
+    }
+  </section>
+</main>

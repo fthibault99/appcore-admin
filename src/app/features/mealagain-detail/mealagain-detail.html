@@ -1,0 +1,207 @@
+<app-admin-header />
+<main class="page-shell">
+  <a routerLink="/mealagain">← MealAgain accounts</a>
+  <header>
+    <h1>MealAgain account</h1>
+    <p>Identity is shared. Credits and Lifetime rights belong to each environment.</p>
+  </header>
+  @if (isLoading()) {
+    <section class="panel state" role="status">Loading account…</section>
+  } @else if (error()) {
+    <section class="panel error" role="alert">
+      <p>{{ error() }}</p>
+      <button (click)="retry()">Retry</button>
+    </section>
+  } @else if (detail(); as data) {
+    <section class="panel">
+      <h2>Identity</h2>
+      <dl class="metadata">
+        <div>
+          <dt>User UUID</dt>
+          <dd class="identifier">{{ data.account.userId }}</dd>
+        </div>
+        <div>
+          <dt>Created</dt>
+          <dd>{{ data.account.createdAt | date: 'medium' }}</dd>
+        </div>
+        <div>
+          <dt>Account updated</dt>
+          <dd>{{ data.account.updatedAt | date: 'medium' }}</dd>
+        </div>
+      </dl>
+      <p class="hint">
+        This date describes the identity record. Balance changes have their own update dates below.
+      </p>
+    </section>
+    <section>
+      <h2>Balances and rights</h2>
+      @if (!data.balances.length) {
+        <p class="panel state">No environment balance exists for this account.</p>
+      }
+      <div class="balances">
+        @for (balance of data.balances; track balance.environment) {
+          <article
+            class="panel balance"
+            [class.unclassified]="balance.environment === 'UNCLASSIFIED'"
+          >
+            <h3>{{ balance.environment }}</h3>
+            @if (balance.environment === 'UNCLASSIFIED') {
+              <p class="warning">
+                Historical data awaiting classification. These rights are not available to the app.
+              </p>
+            }
+            <dl class="metadata">
+              <div>
+                <dt>Free credits</dt>
+                <dd>{{ balance.freeRemaining }}</dd>
+              </div>
+              <div>
+                <dt>Purchased credits</dt>
+                <dd>{{ balance.purchasedRemaining }}</dd>
+              </div>
+              <div>
+                <dt>Lifetime</dt>
+                <dd>{{ balance.lifetimeAccess ? 'Enabled' : 'Disabled' }}</dd>
+              </div>
+              <div>
+                <dt>Manual Lifetime grant</dt>
+                <dd>{{ balance.manualLifetime ? 'Yes' : 'No' }}</dd>
+              </div>
+              <div>
+                <dt>Balance version</dt>
+                <dd>{{ balance.balanceVersion }}</dd>
+              </div>
+              <div>
+                <dt>Last sandbox reset</dt>
+                <dd>{{ balance.resetAt ? (balance.resetAt | date: 'medium') : 'Never' }}</dd>
+              </div>
+              <div>
+                <dt>Balance updated</dt>
+                <dd>{{ balance.updatedAt | date: 'medium' }}</dd>
+              </div>
+            </dl>
+          </article>
+        }
+      </div>
+    </section>
+    <section class="panel">
+      <details>
+        <summary>Legacy account flags (audit only)</summary>
+        <p>These historical user_account values do not determine current access.</p>
+        <p>
+          Lifetime: {{ data.legacyLifetimeAccess ? 'Yes' : 'No' }} · Manual grant:
+          {{ data.legacyManualLifetime ? 'Yes' : 'No' }}
+        </p>
+      </details>
+    </section>
+    <section class="panel" aria-label="Account history">
+      <div class="history-controls">
+        <div class="tabs" aria-label="History type">
+          <button
+            type="button"
+            [attr.aria-pressed]="historyKind() === 'purchases'"
+            (click)="selectHistory('purchases')"
+          >
+            Purchases
+          </button>
+          <button
+            type="button"
+            [attr.aria-pressed]="historyKind() === 'usages'"
+            (click)="selectHistory('usages')"
+          >
+            Consumptions
+          </button>
+        </div>
+        <label
+          >Environment<select [value]="environment()" (change)="selectEnvironment($event)">
+            <option value="">All environments</option>
+            <option value="PRODUCTION">Production</option>
+            <option value="SANDBOX">Sandbox</option>
+            <option value="UNCLASSIFIED">Unclassified</option>
+          </select></label
+        >
+      </div>
+      <div aria-live="polite" [attr.aria-busy]="historyLoading()">
+        @if (historyLoading()) {
+          <p class="state">Loading history…</p>
+        } @else if (historyError()) {
+          <div class="state error">
+            <p>Unable to load history.</p>
+            <button (click)="loadHistory()">Retry history</button>
+          </div>
+        } @else if (historyPage(); as page) {
+          <p>
+            {{ page.totalElements }}
+            {{ historyKind() === 'purchases' ? 'purchases' : 'consumptions' }}
+          </p>
+          @if (!page.content.length) {
+            <p class="state">No records for this environment.</p>
+          } @else if (purchases(); as result) {
+            <p class="hint">
+              Revoked includes administrative invalidation. A credit grant in history is not the
+              current balance.
+            </p>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Environment</th>
+                    <th>Transaction</th>
+                    <th>Product</th>
+                    <th>Credits granted</th>
+                    <th>Revoked / invalidated</th>
+                    <th>Purchased</th>
+                    <th>Recorded</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (purchase of result.content; track purchase.id) {
+                    <tr>
+                      <td>{{ purchase.environment }}</td>
+                      <td class="identifier">{{ purchase.transactionId }}</td>
+                      <td>{{ purchase.productId }}</td>
+                      <td>{{ purchase.creditsGranted }}</td>
+                      <td>{{ purchase.revoked ? 'Yes' : 'No' }}</td>
+                      <td>
+                        {{ purchase.purchasedAt ? (purchase.purchasedAt | date: 'medium') : '—' }}
+                      </td>
+                      <td>{{ purchase.createdAt | date: 'medium' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else if (usages(); as result) {
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Environment</th>
+                    <th>Recreation UUID</th>
+                    <th>Credit source</th>
+                    <th>Recorded</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (usage of result.content; track usage.id) {
+                    <tr>
+                      <td>{{ usage.environment }}</td>
+                      <td class="identifier">{{ usage.recreationId ?? 'Not supplied' }}</td>
+                      <td>{{ usage.creditSource }}</td>
+                      <td>{{ usage.createdAt | date: 'medium' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+          <div class="pagination">
+            <span>Page {{ page.totalPages ? page.number + 1 : 0 }} of {{ page.totalPages }}</span>
+            <button class="secondary" [disabled]="page.first" (click)="previous()">Previous</button>
+            <button class="secondary" [disabled]="page.last" (click)="next()">Next</button>
+          </div>
+        }
+      </div>
+    </section>
+  }
+</main>
