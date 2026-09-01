@@ -34,6 +34,7 @@
         <div><dt>Notification UUID</dt><dd>{{ detail.notification.notificationUuid }}</dd></div>
         <div><dt>Transaction ID</dt><dd>{{ detail.notification.transactionId || '—' }}</dd></div>
         <div><dt>Original transaction ID</dt><dd>{{ detail.notification.originalTransactionId || '—' }}</dd></div>
+        <div><dt>App account token</dt><dd>{{ detail.notification.appAccountToken || '—' }}</dd></div>
         <div><dt>Purchase date</dt><dd>{{ detail.notification.purchaseDate ? (detail.notification.purchaseDate | date: 'medium') : '—' }}</dd></div>
         <div><dt>Expiration date</dt><dd>{{ detail.notification.expiresDate ? (detail.notification.expiresDate | date: 'medium') : '—' }}</dd></div>
         <div><dt>Revocation date</dt><dd>{{ detail.notification.revocationDate ? (detail.notification.revocationDate | date: 'medium') : '—' }}</dd></div>

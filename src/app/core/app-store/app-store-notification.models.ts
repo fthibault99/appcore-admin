@@ -9,6 +9,7 @@ export interface AppStoreNotificationSummary {
   bundleId: string;
   transactionId: string | null;
   originalTransactionId: string | null;
+  appAccountToken: string | null;
   productId: string | null;
   signedDate: string | null;
   purchaseDate: string | null;
