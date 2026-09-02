@@ -1,10 +1,5 @@
 export type DeepResearchStatus =
-  | 'QUEUED'
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'CANCELLED'
-  | 'INCOMPLETE';
+  'QUEUED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'INCOMPLETE';
 
 export interface DeepResearchSource {
   title: string;
@@ -23,4 +18,14 @@ export interface DeepResearchJob {
   createdAt: string;
   updatedAt: string;
   completedAt: string | null;
+}
+
+export type DeepResearchJobSummary = Omit<DeepResearchJob, 'report' | 'sources' | 'errorMessage'>;
+
+export interface DeepResearchPage {
+  content: DeepResearchJobSummary[];
+  number: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
 }

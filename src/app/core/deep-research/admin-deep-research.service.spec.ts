@@ -10,7 +10,9 @@ describe('AdminDeepResearchService', () => {
   const url = `${environment.apiBaseUrl}/api/admin/openai/deep-research`;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     service = TestBed.inject(AdminDeepResearchService);
     http = TestBed.inject(HttpTestingController);
   });
@@ -24,6 +26,15 @@ describe('AdminDeepResearchService', () => {
     expect(request.request.method).toBe('GET');
     expect(request.request.withCredentials).toBe(true);
     request.flush({});
+  });
+
+  it('lists research jobs with pagination', () => {
+    service.list(2, 20).subscribe();
+
+    const request = http.expectOne(`${url}?page=2&size=20`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.withCredentials).toBe(true);
+    request.flush({ content: [], number: 2, size: 20, totalElements: 0, totalPages: 0 });
   });
 
   it('obtains CSRF before starting a job', () => {

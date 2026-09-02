@@ -5,7 +5,9 @@
     <div>
       <p class="eyebrow">OpenAI</p>
       <h1>Deep Research</h1>
-      <p>Start a new research job or retrieve an existing report without creating another request.</p>
+      <p>
+        Start a new research job or retrieve an existing report without creating another request.
+      </p>
     </div>
   </header>
 
@@ -14,19 +16,31 @@
       <h2>New research</h2>
       <p class="help">Starting a job incurs OpenAI usage. Check for an existing job ID first.</p>
       <label for="research-query">Research query</label>
-      <textarea id="research-query" rows="6" formControlName="query"
-        placeholder="Compare AWS RDS, Supabase and Neon…"></textarea>
+      <textarea
+        id="research-query"
+        rows="6"
+        formControlName="query"
+        placeholder="Compare AWS RDS, Supabase and Neon…"
+      ></textarea>
       @if (queryForm.controls.query.invalid && queryForm.controls.query.touched) {
         <p class="field-error">Enter a query of at most 4,000 characters.</p>
       }
       <button type="submit" [disabled]="isStarting() || hasActiveResearch()">
-        {{ isStarting() ? 'Starting…' : hasActiveResearch() ? 'Research in progress…' : 'Start research' }}
+        {{
+          isStarting()
+            ? 'Starting…'
+            : hasActiveResearch()
+              ? 'Research in progress…'
+              : 'Start research'
+        }}
       </button>
     </form>
 
     <form class="panel" [formGroup]="jobForm" (ngSubmit)="load()">
       <h2>Existing job</h2>
-      <p class="help">Loading by ID only retrieves the existing job. It does not start a new search.</p>
+      <p class="help">
+        Loading by ID only retrieves the existing job. It does not start a new search.
+      </p>
       <label for="job-id">Job ID</label>
       <input id="job-id" formControlName="id" placeholder="00000000-0000-0000-0000-000000000000" />
       @if (jobForm.controls.id.invalid && jobForm.controls.id.touched) {
@@ -42,6 +56,86 @@
     <section class="panel error" aria-live="assertive">{{ errorMessage() }}</section>
   }
 
+  <section class="panel research-list" aria-live="polite">
+    <div class="list-heading">
+      <div>
+        <p class="eyebrow">History</p>
+        <h2>Research jobs</h2>
+      </div>
+      <button
+        type="button"
+        class="secondary"
+        [disabled]="isLoadingList()"
+        (click)="loadList(jobsPage()?.number ?? 0)"
+      >
+        {{ isLoadingList() ? 'Loading…' : 'Refresh list' }}
+      </button>
+    </div>
+
+    @if (jobsPage(); as page) {
+      @if (page.content.length) {
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Created</th>
+                <th>Query</th>
+                <th>Status</th>
+                <th>Model</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of page.content; track item.id) {
+                <tr>
+                  <td>{{ item.createdAt | date: 'medium' }}</td>
+                  <td class="query-cell">{{ item.query }}</td>
+                  <td>
+                    <span
+                      class="status"
+                      [class.pending]="item.status === 'QUEUED' || item.status === 'IN_PROGRESS'"
+                      >{{ item.status }}</span
+                    >
+                  </td>
+                  <td>{{ item.model }}</td>
+                  <td>
+                    <button type="button" class="secondary" (click)="openJob(item.id)">Open</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <span>{{ page.totalElements }} job{{ page.totalElements === 1 ? '' : 's' }}</span>
+          <div>
+            <button
+              type="button"
+              class="secondary"
+              [disabled]="page.number === 0 || isLoadingList()"
+              (click)="loadList(page.number - 1)"
+            >
+              Previous
+            </button>
+            <span>Page {{ page.number + 1 }} of {{ page.totalPages }}</span>
+            <button
+              type="button"
+              class="secondary"
+              [disabled]="page.number + 1 >= page.totalPages || isLoadingList()"
+              (click)="loadList(page.number + 1)"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      } @else {
+        <p class="empty">No research jobs have been created yet.</p>
+      }
+    } @else if (isLoadingList()) {
+      <p class="empty">Loading research jobs…</p>
+    }
+  </section>
+
   @if (job(); as current) {
     <section class="panel job-panel" aria-live="polite">
       <div class="job-heading">
@@ -49,22 +143,40 @@
           <p class="eyebrow">Job</p>
           <h2>{{ current.id }}</h2>
         </div>
-        <span class="status" [class.pending]="current.status === 'QUEUED' || current.status === 'IN_PROGRESS'">
+        <span
+          class="status"
+          [class.pending]="current.status === 'QUEUED' || current.status === 'IN_PROGRESS'"
+        >
           {{ current.status }}
         </span>
       </div>
       <dl class="metadata">
-        <div><dt>Model</dt><dd>{{ current.model }}</dd></div>
-        <div><dt>Maximum searches</dt><dd>{{ current.maxSearches }}</dd></div>
-        <div><dt>Created</dt><dd>{{ current.createdAt | date: 'medium' }}</dd></div>
-        <div><dt>Updated</dt><dd>{{ current.updatedAt | date: 'medium' }}</dd></div>
+        <div>
+          <dt>Model</dt>
+          <dd>{{ current.model }}</dd>
+        </div>
+        <div>
+          <dt>Maximum searches</dt>
+          <dd>{{ current.maxSearches }}</dd>
+        </div>
+        <div>
+          <dt>Created</dt>
+          <dd>{{ current.createdAt | date: 'medium' }}</dd>
+        </div>
+        <div>
+          <dt>Updated</dt>
+          <dd>{{ current.updatedAt | date: 'medium' }}</dd>
+        </div>
       </dl>
       <p class="query"><strong>Query:</strong> {{ current.query }}</p>
 
       @if (waitingMessage()) {
         <div class="waiting">
           <span class="spinner" aria-hidden="true"></span>
-          <div><strong>{{ waitingMessage() }}</strong><small>Job ID saved above. This page checks its status every 3 seconds.</small></div>
+          <div>
+            <strong>{{ waitingMessage() }}</strong
+            ><small>Job ID saved above. This page checks its status every 3 seconds.</small>
+          </div>
         </div>
       }
 
@@ -78,7 +190,9 @@
           <button type="button" class="secondary" (click)="print()">Print / Save as PDF</button>
         </div>
         @if (current.status === 'INCOMPLETE') {
-          <p class="notice">OpenAI marked this job incomplete, but the available report is shown below.</p>
+          <p class="notice">
+            OpenAI marked this job incomplete, but the available report is shown below.
+          </p>
         }
         <div class="report markdown" [innerHTML]="reportHtml()"></div>
       } @else if (!waitingMessage()) {
@@ -90,7 +204,11 @@
           <h2>Sources</h2>
           <ol>
             @for (source of current.sources; track source.url) {
-              <li><a [href]="source.url" target="_blank" rel="noopener noreferrer">{{ source.title || source.url }}</a></li>
+              <li>
+                <a [href]="source.url" target="_blank" rel="noopener noreferrer">{{
+                  source.title || source.url
+                }}</a>
+              </li>
             }
           </ol>
         </section>

@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { DeepResearchJob } from './deep-research.models';
+import { DeepResearchJob, DeepResearchPage } from './deep-research.models';
 
 @Injectable({ providedIn: 'root' })
 export class AdminDeepResearchService {
@@ -12,15 +12,26 @@ export class AdminDeepResearchService {
 
   start(query: string): Observable<DeepResearchJob> {
     return this.withCsrf((headers) =>
-      this.http.post<DeepResearchJob>(this.url, { query: query.trim() }, {
-        headers,
-        withCredentials: true,
-      }),
+      this.http.post<DeepResearchJob>(
+        this.url,
+        { query: query.trim() },
+        {
+          headers,
+          withCredentials: true,
+        },
+      ),
     );
   }
 
   get(id: string): Observable<DeepResearchJob> {
     return this.http.get<DeepResearchJob>(`${this.url}/${encodeURIComponent(id.trim())}`, {
+      withCredentials: true,
+    });
+  }
+
+  list(page = 0, size = 20): Observable<DeepResearchPage> {
+    return this.http.get<DeepResearchPage>(this.url, {
+      params: { page, size },
       withCredentials: true,
     });
   }

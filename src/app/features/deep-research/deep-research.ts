@@ -1,12 +1,20 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize, Subscription, switchMap, takeWhile, timer } from 'rxjs';
 import { marked } from 'marked';
 import { AdminDeepResearchService } from '../../core/deep-research/admin-deep-research.service';
-import { DeepResearchJob } from '../../core/deep-research/deep-research.models';
+import { DeepResearchJob, DeepResearchPage } from '../../core/deep-research/deep-research.models';
 import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
 
 @Component({
@@ -16,7 +24,7 @@ import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
   styleUrl: './deep-research.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DeepResearchComponent implements OnDestroy {
+export class DeepResearchComponent implements OnInit, OnDestroy {
   private readonly service = inject(AdminDeepResearchService);
   private readonly router = inject(Router);
   private polling?: Subscription;
@@ -25,24 +33,37 @@ export class DeepResearchComponent implements OnDestroy {
   readonly isStarting = signal(false);
   readonly isLoadingJob = signal(false);
   readonly isPolling = signal(false);
+  readonly isLoadingList = signal(false);
+  readonly jobsPage = signal<DeepResearchPage | null>(null);
   readonly errorMessage = signal('');
   readonly hasActiveResearch = computed(() => {
     const job = this.job();
-    return job !== null && !job.report && ['QUEUED', 'IN_PROGRESS', 'INCOMPLETE'].includes(job.status);
+    return (
+      job !== null && !job.report && ['QUEUED', 'IN_PROGRESS', 'INCOMPLETE'].includes(job.status)
+    );
   });
   readonly queryForm = new FormGroup({
-    query: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(4000)] }),
+    query: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(4000)],
+    }),
   });
   readonly jobForm = new FormGroup({
     id: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)],
+      validators: [
+        Validators.required,
+        Validators.pattern(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+        ),
+      ],
     }),
   });
   readonly waitingMessage = computed(() => {
     const status = this.job()?.status;
     if (status === 'QUEUED') return 'Research queued. Waiting for OpenAI to begin…';
-    if (status === 'IN_PROGRESS') return 'Research in progress. Sources are being searched and the report is being prepared…';
+    if (status === 'IN_PROGRESS')
+      return 'Research in progress. Sources are being searched and the report is being prepared…';
     if (status === 'INCOMPLETE' && !this.job()?.report) {
       return 'OpenAI ended before its final status, so AppCore is retrieving any available report…';
     }
@@ -52,6 +73,10 @@ export class DeepResearchComponent implements OnDestroy {
     const report = this.job()?.report;
     return report ? marked.parse(report, { async: false, gfm: true }) : '';
   });
+
+  ngOnInit(): void {
+    this.loadList(0);
+  }
 
   ngOnDestroy(): void {
     this.polling?.unsubscribe();
@@ -63,12 +88,14 @@ export class DeepResearchComponent implements OnDestroy {
     this.stopPolling();
     this.errorMessage.set('');
     this.isStarting.set(true);
-    this.service.start(this.queryForm.controls.query.value)
+    this.service
+      .start(this.queryForm.controls.query.value)
       .pipe(finalize(() => this.isStarting.set(false)))
       .subscribe({
         next: (job) => {
           this.job.set(job);
           this.jobForm.controls.id.setValue(job.id);
+          this.loadList(0);
           if (!this.isTerminal(job)) this.poll(job.id, 3000);
         },
         error: (error: unknown) => this.handleError(error, 'Unable to start the research.'),
@@ -84,6 +111,23 @@ export class DeepResearchComponent implements OnDestroy {
   refresh(): void {
     const id = this.job()?.id;
     if (id) this.poll(id, 0);
+  }
+
+  loadList(page: number): void {
+    if (page < 0 || this.isLoadingList()) return;
+    this.isLoadingList.set(true);
+    this.service
+      .list(page)
+      .pipe(finalize(() => this.isLoadingList.set(false)))
+      .subscribe({
+        next: (jobsPage) => this.jobsPage.set(jobsPage),
+        error: (error: unknown) => this.handleError(error, 'Unable to load the research list.'),
+      });
+  }
+
+  openJob(id: string): void {
+    this.jobForm.controls.id.setValue(id);
+    this.poll(id, 0);
   }
 
   print(): void {
@@ -130,8 +174,10 @@ export class DeepResearchComponent implements OnDestroy {
       void this.router.navigate(['/login']);
       return;
     }
-    this.errorMessage.set(error instanceof HttpErrorResponse && error.status === 404
-      ? 'No research job was found for this ID.'
-      : fallback);
+    this.errorMessage.set(
+      error instanceof HttpErrorResponse && error.status === 404
+        ? 'No research job was found for this ID.'
+        : fallback,
+    );
   }
 }
