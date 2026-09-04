@@ -2,7 +2,12 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { DeepResearchJob, DeepResearchPage } from './deep-research.models';
+import {
+  DeepResearchJob,
+  DeepResearchPage,
+  DeepResearchProfile,
+  DeepResearchQualityRating,
+} from './deep-research.models';
 
 @Injectable({ providedIn: 'root' })
 export class AdminDeepResearchService {
@@ -10,11 +15,11 @@ export class AdminDeepResearchService {
   private readonly url = `${environment.apiBaseUrl}/api/admin/openai/deep-research`;
   private readonly csrfUrl = `${environment.apiBaseUrl}/api/admin/auth/csrf`;
 
-  start(query: string): Observable<DeepResearchJob> {
+  start(query: string, profile: DeepResearchProfile): Observable<DeepResearchJob> {
     return this.withCsrf((headers) =>
       this.http.post<DeepResearchJob>(
         this.url,
-        { query: query.trim() },
+        { query: query.trim(), profile },
         {
           headers,
           withCredentials: true,
@@ -34,6 +39,20 @@ export class AdminDeepResearchService {
       params: { page, size },
       withCredentials: true,
     });
+  }
+
+  updateEvaluation(
+    id: string,
+    qualityRating: DeepResearchQualityRating | null,
+    qualityNotes: string,
+  ): Observable<DeepResearchJob> {
+    return this.withCsrf((headers) =>
+      this.http.patch<DeepResearchJob>(
+        `${this.url}/${encodeURIComponent(id.trim())}/evaluation`,
+        { qualityRating, qualityNotes: qualityNotes.trim() || null },
+        { headers, withCredentials: true },
+      ),
+    );
   }
 
   private withCsrf<T>(request: (headers: HttpHeaders) => Observable<T>): Observable<T> {

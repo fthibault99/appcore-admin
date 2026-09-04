@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -14,12 +14,17 @@ import { Router } from '@angular/router';
 import { finalize, Subscription, switchMap, takeWhile, timer } from 'rxjs';
 import { marked } from 'marked';
 import { AdminDeepResearchService } from '../../core/deep-research/admin-deep-research.service';
-import { DeepResearchJob, DeepResearchPage } from '../../core/deep-research/deep-research.models';
+import {
+  DeepResearchJob,
+  DeepResearchPage,
+  DeepResearchProfile,
+  DeepResearchQualityRating,
+} from '../../core/deep-research/deep-research.models';
 import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
 
 @Component({
   selector: 'app-deep-research',
-  imports: [DatePipe, ReactiveFormsModule, AdminHeaderComponent],
+  imports: [DatePipe, DecimalPipe, ReactiveFormsModule, AdminHeaderComponent],
   templateUrl: './deep-research.html',
   styleUrl: './deep-research.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,18 +39,27 @@ export class DeepResearchComponent implements OnInit, OnDestroy {
   readonly isLoadingJob = signal(false);
   readonly isPolling = signal(false);
   readonly isLoadingList = signal(false);
+  readonly isSavingEvaluation = signal(false);
   readonly jobsPage = signal<DeepResearchPage | null>(null);
   readonly errorMessage = signal('');
   readonly hasActiveResearch = computed(() => {
     const job = this.job();
     return (
-      job !== null && !job.report && ['QUEUED', 'IN_PROGRESS', 'INCOMPLETE'].includes(job.status)
+      job !== null && ['QUEUED', 'IN_PROGRESS'].includes(job.status)
     );
   });
   readonly queryForm = new FormGroup({
     query: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(4000)],
+      validators: [Validators.required, Validators.maxLength(20000)],
+    }),
+    profile: new FormControl<DeepResearchProfile>('STANDARD', { nonNullable: true }),
+  });
+  readonly evaluationForm = new FormGroup({
+    qualityRating: new FormControl<DeepResearchQualityRating | null>(null),
+    qualityNotes: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(4000)],
     }),
   });
   readonly jobForm = new FormGroup({
@@ -64,9 +78,6 @@ export class DeepResearchComponent implements OnInit, OnDestroy {
     if (status === 'QUEUED') return 'Research queued. Waiting for OpenAI to begin…';
     if (status === 'IN_PROGRESS')
       return 'Research in progress. Sources are being searched and the report is being prepared…';
-    if (status === 'INCOMPLETE' && !this.job()?.report) {
-      return 'OpenAI ended before its final status, so AppCore is retrieving any available report…';
-    }
     return '';
   });
   readonly reportHtml = computed(() => {
@@ -89,11 +100,11 @@ export class DeepResearchComponent implements OnInit, OnDestroy {
     this.errorMessage.set('');
     this.isStarting.set(true);
     this.service
-      .start(this.queryForm.controls.query.value)
+      .start(this.queryForm.controls.query.value, this.queryForm.controls.profile.value)
       .pipe(finalize(() => this.isStarting.set(false)))
       .subscribe({
         next: (job) => {
-          this.job.set(job);
+          this.setJob(job);
           this.jobForm.controls.id.setValue(job.id);
           this.loadList(0);
           if (!this.isTerminal(job)) this.poll(job.id, 3000);
@@ -134,6 +145,48 @@ export class DeepResearchComponent implements OnInit, OnDestroy {
     window.print();
   }
 
+  saveEvaluation(): void {
+    const job = this.job();
+    this.evaluationForm.markAllAsTouched();
+    if (!job || this.evaluationForm.invalid || this.isSavingEvaluation()) return;
+    this.errorMessage.set('');
+    this.isSavingEvaluation.set(true);
+    this.service
+      .updateEvaluation(
+        job.id,
+        this.evaluationForm.controls.qualityRating.value,
+        this.evaluationForm.controls.qualityNotes.value,
+      )
+      .pipe(finalize(() => this.isSavingEvaluation.set(false)))
+      .subscribe({
+        next: (updated) => {
+          this.setJob(updated);
+          this.loadList(this.jobsPage()?.number ?? 0);
+        },
+        error: (error: unknown) => this.handleError(error, 'Unable to save the evaluation.'),
+      });
+  }
+
+  profileDescription(profile: DeepResearchProfile): string {
+    if (profile === 'QUICK')
+      return 'Fast, low-cost research. Luna / up to 3 target searches / low reasoning / 10 min timeout.';
+    if (profile === 'DEEP')
+      return 'More extensive research. Terra / up to 20 target searches / high reasoning / 30 min timeout.';
+    if (profile === 'EXPERT')
+      return 'Expert-grade research. Sol / up to 30 target searches / high reasoning / 45 min timeout.';
+    if (profile === 'ULTRA')
+      return 'Maximum-depth research. Astra / up to 50 target searches / high reasoning / 60 min timeout.';
+    return 'Balanced research. Luna / up to 8 target searches / medium reasoning / 15 min timeout.';
+  }
+
+  durationLabel(durationMs: number | null): string {
+    if (durationMs === null) return '—';
+    const seconds = Math.round(durationMs / 1000);
+    if (seconds < 60) return `${seconds} sec`;
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes} min ${seconds % 60} sec`;
+  }
+
   private poll(id: string, initialDelay: number): void {
     this.stopPolling();
     this.errorMessage.set('');
@@ -150,7 +203,7 @@ export class DeepResearchComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (job) => {
-          this.job.set(job);
+          this.setJob(job);
           this.jobForm.controls.id.setValue(job.id);
         },
         error: (error: unknown) => this.handleError(error, 'Unable to load this research job.'),
@@ -164,9 +217,16 @@ export class DeepResearchComponent implements OnInit, OnDestroy {
     this.isLoadingJob.set(false);
   }
 
+  private setJob(job: DeepResearchJob): void {
+    this.job.set(job);
+    this.evaluationForm.setValue({
+      qualityRating: job.qualityRating,
+      qualityNotes: job.qualityNotes ?? '',
+    });
+  }
+
   private isTerminal(job: DeepResearchJob): boolean {
-    if (job.status === 'INCOMPLETE') return Boolean(job.report);
-    return ['COMPLETED', 'FAILED', 'CANCELLED'].includes(job.status);
+    return ['COMPLETED', 'FAILED', 'CANCELLED', 'INCOMPLETE', 'TIMED_OUT'].includes(job.status);
   }
 
   private handleError(error: unknown, fallback: string): void {

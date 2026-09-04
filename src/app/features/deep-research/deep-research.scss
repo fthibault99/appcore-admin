@@ -56,7 +56,8 @@ label {
   font-weight: 700;
 }
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   box-sizing: border-box;
   padding: 0.65rem 0.75rem;
@@ -65,6 +66,11 @@ textarea {
   color: var(--color-text);
   background: var(--color-surface);
   font: inherit;
+}
+.profile-description {
+  margin: -0.35rem 0 0.25rem;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
 }
 textarea {
   resize: vertical;
@@ -167,6 +173,20 @@ th {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
   margin: 0;
+}
+.detail-section {
+  display: grid;
+  gap: 0.75rem;
+}
+.detail-section h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.cost-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.evaluation form {
+  max-width: 48rem;
 }
 .metadata div {
   padding: 0.8rem;

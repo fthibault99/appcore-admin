@@ -23,8 +23,17 @@
         placeholder="Compare AWS RDS, Supabase and Neon…"
       ></textarea>
       @if (queryForm.controls.query.invalid && queryForm.controls.query.touched) {
-        <p class="field-error">Enter a query of at most 4,000 characters.</p>
+        <p class="field-error">Enter a query of at most 20,000 characters.</p>
       }
+      <label for="research-profile">Research profile</label>
+      <select id="research-profile" formControlName="profile">
+        <option value="QUICK">QUICK</option>
+        <option value="STANDARD">STANDARD</option>
+        <option value="DEEP">DEEP</option>
+        <option value="EXPERT">EXPERT</option>
+        <option value="ULTRA">ULTRA</option>
+      </select>
+      <p class="profile-description">{{ profileDescription(queryForm.controls.profile.value) }}</p>
       <button type="submit" [disabled]="isStarting() || hasActiveResearch()">
         {{
           isStarting()
@@ -80,8 +89,12 @@
               <tr>
                 <th>Created</th>
                 <th>Query</th>
+                <th>Profile</th>
                 <th>Status</th>
                 <th>Model</th>
+                <th>Web searches</th>
+                <th>Total cost</th>
+                <th>Quality</th>
                 <th></th>
               </tr>
             </thead>
@@ -90,6 +103,7 @@
                 <tr>
                   <td>{{ item.createdAt | date: 'medium' }}</td>
                   <td class="query-cell">{{ item.query }}</td>
+                  <td>{{ item.profile ?? 'Legacy' }}</td>
                   <td>
                     <span
                       class="status"
@@ -98,6 +112,13 @@
                     >
                   </td>
                   <td>{{ item.model }}</td>
+                  <td>{{ item.actualWebSearches ?? '—' }}</td>
+                  <td>
+                    {{
+                      item.totalCostUsd === null ? '—' : '$' + (item.totalCostUsd | number: '1.2-8')
+                    }}
+                  </td>
+                  <td>{{ item.qualityRating ?? '—' }}</td>
                   <td>
                     <button type="button" class="secondary" (click)="openJob(item.id)">Open</button>
                   </td>
@@ -150,24 +171,140 @@
           {{ current.status }}
         </span>
       </div>
-      <dl class="metadata">
-        <div>
-          <dt>Model</dt>
-          <dd>{{ current.model }}</dd>
-        </div>
-        <div>
-          <dt>Maximum searches</dt>
-          <dd>{{ current.maxSearches }}</dd>
-        </div>
-        <div>
-          <dt>Created</dt>
-          <dd>{{ current.createdAt | date: 'medium' }}</dd>
-        </div>
-        <div>
-          <dt>Updated</dt>
-          <dd>{{ current.updatedAt | date: 'medium' }}</dd>
-        </div>
-      </dl>
+      <section class="detail-section">
+        <h3>Research configuration</h3>
+        <dl class="metadata">
+          <div>
+            <dt>Profile</dt>
+            <dd>{{ current.profile ?? 'Legacy' }}</dd>
+          </div>
+          <div>
+            <dt>Model</dt>
+            <dd>{{ current.model }}</dd>
+          </div>
+          <div>
+            <dt>Reasoning</dt>
+            <dd>{{ current.reasoningEffort }}</dd>
+          </div>
+          <div>
+            <dt>Target searches</dt>
+            <dd>{{ current.maxSearches }}</dd>
+          </div>
+          <div>
+            <dt>Max tool calls</dt>
+            <dd>{{ current.maxToolCalls }}</dd>
+          </div>
+          <div>
+            <dt>Timeout</dt>
+            <dd>{{ durationLabel(current.timeoutSeconds * 1000) }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="detail-section">
+        <h3>Execution</h3>
+        <dl class="metadata">
+          <div>
+            <dt>Actual Web Searches</dt>
+            <dd>{{ current.usage?.actualWebSearches ?? '—' }}</dd>
+          </div>
+          <div>
+            <dt>Duration</dt>
+            <dd>{{ durationLabel(current.durationMs) }}</dd>
+          </div>
+          <div>
+            <dt>Sources</dt>
+            <dd>{{ current.sourceCount }}</dd>
+          </div>
+          <div>
+            <dt>Created</dt>
+            <dd>{{ current.createdAt | date: 'medium' }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      @if (current.usage; as usage) {
+        <section class="detail-section">
+          <h3>Tokens</h3>
+          <dl class="metadata">
+            <div>
+              <dt>Input</dt>
+              <dd>{{ usage.inputTokens ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Cached input</dt>
+              <dd>{{ usage.cachedInputTokens ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Cache write</dt>
+              <dd>{{ usage.cacheWriteTokens ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Output</dt>
+              <dd>{{ usage.outputTokens ?? '—' }}</dd>
+            </div>
+          </dl>
+        </section>
+        <section class="detail-section">
+          <h3>Cost</h3>
+          <dl class="metadata cost-grid">
+            <div>
+              <dt>Input</dt>
+              <dd>
+                {{
+                  usage.inputCostUsd === null ? '—' : '$' + (usage.inputCostUsd | number: '1.2-8')
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt>Cached input</dt>
+              <dd>
+                {{
+                  usage.cachedInputCostUsd === null
+                    ? '—'
+                    : '$' + (usage.cachedInputCostUsd | number: '1.2-8')
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt>Cache write</dt>
+              <dd>
+                {{
+                  usage.cacheWriteCostUsd === null
+                    ? '—'
+                    : '$' + (usage.cacheWriteCostUsd | number: '1.2-8')
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt>Output</dt>
+              <dd>
+                {{
+                  usage.outputCostUsd === null ? '—' : '$' + (usage.outputCostUsd | number: '1.2-8')
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt>Web Search</dt>
+              <dd>
+                {{
+                  usage.webSearchCostUsd === null
+                    ? '—'
+                    : '$' + (usage.webSearchCostUsd | number: '1.2-8')
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt>Total</dt>
+              <dd>
+                {{
+                  usage.totalCostUsd === null ? '—' : '$' + (usage.totalCostUsd | number: '1.2-8')
+                }}
+              </dd>
+            </div>
+          </dl>
+        </section>
+      }
       <p class="query"><strong>Query:</strong> {{ current.query }}</p>
 
       @if (waitingMessage()) {
@@ -181,7 +318,9 @@
       }
 
       @if (current.errorMessage) {
-        <p class="provider-error">OpenAI: {{ current.errorMessage }}</p>
+        <p class="provider-error">
+          {{ current.status === 'TIMED_OUT' ? 'AppCore' : 'OpenAI' }}: {{ current.errorMessage }}
+        </p>
       }
 
       @if (current.report) {
@@ -213,6 +352,30 @@
           </ol>
         </section>
       }
+      <section class="detail-section evaluation">
+        <h3>Evaluation</h3>
+        <form [formGroup]="evaluationForm" (ngSubmit)="saveEvaluation()">
+          <label for="quality-rating">Quality rating</label>
+          <select id="quality-rating" formControlName="qualityRating">
+            <option [ngValue]="null">Not rated</option>
+            <option value="POOR">POOR</option>
+            <option value="ACCEPTABLE">ACCEPTABLE</option>
+            <option value="GOOD">GOOD</option>
+            <option value="EXCELLENT">EXCELLENT</option>
+          </select>
+          <label for="quality-notes">Notes</label>
+          <textarea id="quality-notes" rows="4" formControlName="qualityNotes"></textarea>
+          @if (
+            evaluationForm.controls.qualityNotes.invalid &&
+            evaluationForm.controls.qualityNotes.touched
+          ) {
+            <p class="field-error">Notes must not exceed 4,000 characters.</p>
+          }
+          <button type="submit" [disabled]="isSavingEvaluation()">
+            {{ isSavingEvaluation() ? 'Saving…' : 'Save evaluation' }}
+          </button>
+        </form>
+      </section>
       @if (!isPolling() && (current.status === 'QUEUED' || current.status === 'IN_PROGRESS')) {
         <button type="button" class="secondary" (click)="refresh()">Resume status checks</button>
       }

@@ -12,6 +12,7 @@ describe('DeepResearchComponent', () => {
     list: ReturnType<typeof vi.fn>;
     get: ReturnType<typeof vi.fn>;
     start: ReturnType<typeof vi.fn>;
+    updateEvaluation: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
@@ -21,8 +22,12 @@ describe('DeepResearchComponent', () => {
           id: 'f8854820-d070-46e2-824b-7cdbc5ef6d08',
           status: 'COMPLETED',
           query: 'Compare database platforms',
-          model: 'gpt-5.6-sol',
-          maxSearches: 7,
+          profile: 'STANDARD',
+          model: 'gpt-5.6-luna',
+          maxSearches: 8,
+          actualWebSearches: 6,
+          totalCostUsd: 0.12,
+          qualityRating: 'GOOD',
           createdAt: '2026-09-02T12:00:00Z',
           updatedAt: '2026-09-02T12:05:00Z',
           completedAt: '2026-09-02T12:05:00Z',
@@ -37,6 +42,7 @@ describe('DeepResearchComponent', () => {
       list: vi.fn(() => of(page)),
       get: vi.fn(),
       start: vi.fn(),
+      updateEvaluation: vi.fn(),
     };
     await TestBed.configureTestingModule({
       imports: [DeepResearchComponent],
@@ -56,5 +62,11 @@ describe('DeepResearchComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Compare database platforms');
     expect(fixture.nativeElement.textContent).toContain('COMPLETED');
     expect(fixture.nativeElement.textContent).toContain('1 job');
+  });
+
+  it('describes the ULTRA profile limits', () => {
+    expect(fixture.componentInstance.profileDescription('ULTRA')).toContain(
+      'Astra / up to 50 target searches / high reasoning / 60 min timeout',
+    );
   });
 });
