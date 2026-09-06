@@ -32,6 +32,7 @@
         <option value="DEEP">DEEP</option>
         <option value="EXPERT">EXPERT</option>
         <option value="ULTRA">ULTRA</option>
+        <option value="ULTRA_ADAPTIVE">ULTRA_ADAPTIVE</option>
       </select>
       <p class="profile-description">{{ profileDescription(queryForm.controls.profile.value) }}</p>
       <button type="submit" [disabled]="isStarting() || hasActiveResearch()">
@@ -213,6 +214,14 @@
             <dd>{{ durationLabel(current.durationMs) }}</dd>
           </div>
           <div>
+            <dt>Current phase</dt>
+            <dd>{{ current.currentPhase ?? '—' }}</dd>
+          </div>
+          <div>
+            <dt>Responses API calls</dt>
+            <dd>{{ current.responsesApiCalls ?? '—' }}</dd>
+          </div>
+          <div>
             <dt>Sources</dt>
             <dd>{{ current.sourceCount }}</dd>
           </div>
@@ -222,6 +231,50 @@
           </div>
         </dl>
       </section>
+
+      @if (current.phaseMetrics?.length) {
+        <section class="detail-section">
+          <h3>Adaptive phases</h3>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Phase</th><th>Reasoning</th><th>Input</th><th>Cached input</th><th>Output</th><th>Web searches</th><th>Sources</th><th>Cost</th><th>Duration</th></tr></thead>
+              <tbody>
+                @for (phase of current.phaseMetrics ?? []; track phase.phase) {
+                  <tr>
+                    <td>{{ phase.phase }}</td><td>{{ phase.reasoningEffort }}</td>
+                    <td>{{ phase.inputTokens ?? '—' }}</td><td>{{ phase.cachedInputTokens ?? '—' }}</td>
+                    <td>{{ phase.outputTokens ?? '—' }}</td><td>{{ phase.webSearches ?? '—' }}</td>
+                    <td>
+                      @if (phase.sources?.length) {
+                        <details>
+                          <summary>{{ phase.sources?.length ?? 0 }}</summary>
+                          <ul>
+                            @for (source of phase.sources ?? []; track source.url) {
+                              <li><a [href]="source.url" target="_blank" rel="noopener noreferrer">{{ source.title || source.url }}</a></li>
+                            }
+                          </ul>
+                        </details>
+                      } @else { — }
+                    </td>
+                    <td>{{ phase.costUsd === null ? '—' : '$' + (phase.costUsd | number: '1.2-8') }}</td>
+                    <td>{{ durationLabel(phase.durationMs) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <h4>Pipeline totals</h4>
+          <dl class="metadata">
+            <div><dt>Responses API calls</dt><dd>{{ current.responsesApiCalls ?? '—' }}</dd></div>
+            <div><dt>Total input</dt><dd>{{ current.usage?.inputTokens ?? '—' }}</dd></div>
+            <div><dt>Total cached input</dt><dd>{{ current.usage?.cachedInputTokens ?? '—' }}</dd></div>
+            <div><dt>Total output</dt><dd>{{ current.usage?.outputTokens ?? '—' }}</dd></div>
+            <div><dt>Total Web searches</dt><dd>{{ current.usage?.actualWebSearches ?? '—' }}</dd></div>
+            <div><dt>Total cost</dt><dd>{{ current.totalPipelineCostUsd == null ? '—' : '$' + (current.totalPipelineCostUsd | number: '1.2-8') }}</dd></div>
+            <div><dt>Total duration</dt><dd>{{ durationLabel(current.durationMs) }}</dd></div>
+          </dl>
+        </section>
+      }
 
       @if (current.usage; as usage) {
         <section class="detail-section">
@@ -325,9 +378,18 @@
 
       @if (current.report) {
         <div class="report-heading">
-          <h2>Report</h2>
+          <h2>{{ current.reportTitle || 'Report' }}</h2>
           <button type="button" class="secondary" (click)="print()">Print / Save as PDF</button>
         </div>
+        @if (reviewPeriodLabel(current); as period) {
+          <p class="report-metadata"><strong>Review period:</strong> {{ period }}</p>
+        }
+        @if (current.scope; as scope) {
+          <p class="report-metadata"><strong>Scope:</strong> {{ scope }}</p>
+        }
+        @if (current.sourcePolicy; as sourcePolicy) {
+          <p class="report-metadata"><strong>Source policy:</strong> {{ sourcePolicy }}</p>
+        }
         @if (current.status === 'INCOMPLETE') {
           <p class="notice">
             OpenAI marked this job incomplete, but the available report is shown below.

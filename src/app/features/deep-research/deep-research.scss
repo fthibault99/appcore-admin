@@ -151,6 +151,13 @@ th {
   justify-content: space-between;
   gap: 1rem;
 }
+.report-metadata {
+  margin: 0.35rem 0;
+  color: var(--color-text-muted);
+}
+.report-metadata strong {
+  color: var(--color-text);
+}
 .job-heading h2 {
   overflow-wrap: anywhere;
 }

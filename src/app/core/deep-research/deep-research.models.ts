@@ -1,12 +1,15 @@
 export type DeepResearchStatus =
-  | 'QUEUED'
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'CANCELLED'
-  | 'INCOMPLETE'
-  | 'TIMED_OUT';
-export type DeepResearchProfile = 'QUICK' | 'STANDARD' | 'DEEP' | 'EXPERT' | 'ULTRA';
+  'QUEUED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'INCOMPLETE' | 'TIMED_OUT';
+export type DeepResearchProfile = 'QUICK' | 'STANDARD' | 'DEEP' | 'EXPERT' | 'ULTRA' | 'ULTRA_ADAPTIVE';
+export type DeepResearchPhase =
+  | 'RESEARCH'
+  | 'REVIEW_AND_REPORT'
+  | 'ORIENTATION'
+  | 'DISCOVERY'
+  | 'INVESTIGATION'
+  | 'CRITICAL_REVIEW'
+  | 'ANALYSIS'
+  | 'SYNTHESIS';
 export type DeepResearchQualityRating = 'POOR' | 'ACCEPTABLE' | 'GOOD' | 'EXCELLENT';
 
 export interface DeepResearchUsage {
@@ -28,6 +31,11 @@ export interface DeepResearchSource {
   url: string;
 }
 
+export interface DeepResearchReviewPeriod {
+  start: string;
+  end: string;
+}
+
 export interface DeepResearchJob {
   id: string;
   status: DeepResearchStatus;
@@ -39,6 +47,10 @@ export interface DeepResearchJob {
   reasoningEffort: string;
   timeoutSeconds: number;
   report: string | null;
+  reportTitle: string | null;
+  reviewPeriod: DeepResearchReviewPeriod | null;
+  scope: string | null;
+  sourcePolicy: string | null;
   sources: DeepResearchSource[];
   errorMessage: string | null;
   createdAt: string;
@@ -49,6 +61,22 @@ export interface DeepResearchJob {
   usage: DeepResearchUsage | null;
   qualityRating: DeepResearchQualityRating | null;
   qualityNotes: string | null;
+  currentPhase?: DeepResearchPhase | null;
+  responsesApiCalls?: number;
+  phaseMetrics?: DeepResearchPhaseMetrics[];
+  totalPipelineCostUsd?: number | null;
+}
+
+export interface DeepResearchPhaseMetrics {
+  phase: DeepResearchPhase;
+  reasoningEffort: string;
+  inputTokens: number | null;
+  cachedInputTokens: number | null;
+  outputTokens: number | null;
+  webSearches: number | null;
+  sources?: DeepResearchSource[];
+  costUsd: number | null;
+  durationMs: number;
 }
 
 export interface DeepResearchJobSummary {

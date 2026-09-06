@@ -44,9 +44,7 @@ export class DeepResearchComponent implements OnInit, OnDestroy {
   readonly errorMessage = signal('');
   readonly hasActiveResearch = computed(() => {
     const job = this.job();
-    return (
-      job !== null && ['QUEUED', 'IN_PROGRESS'].includes(job.status)
-    );
+    return job !== null && ['QUEUED', 'IN_PROGRESS'].includes(job.status);
   });
   readonly queryForm = new FormGroup({
     query: new FormControl('', {
@@ -84,6 +82,23 @@ export class DeepResearchComponent implements OnInit, OnDestroy {
     const report = this.job()?.report;
     return report ? marked.parse(report, { async: false, gfm: true }) : '';
   });
+  reviewPeriodLabel(job: DeepResearchJob): string | null {
+    if (!job.reviewPeriod) return null;
+    const start = new Date(`${job.reviewPeriod.start}T00:00:00Z`);
+    const end = new Date(`${job.reviewPeriod.end}T00:00:00Z`);
+    const startLabel = new Intl.DateTimeFormat('en', {
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'UTC',
+    }).format(start);
+    const endLabel = new Intl.DateTimeFormat('en', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(end);
+    return `${startLabel}–${endLabel}`;
+  }
 
   ngOnInit(): void {
     this.loadList(0);
@@ -176,6 +191,8 @@ export class DeepResearchComponent implements OnInit, OnDestroy {
       return 'Expert-grade research. Sol / up to 30 target searches / high reasoning / 45 min timeout.';
     if (profile === 'ULTRA')
       return 'Maximum-depth research. Astra / up to 50 target searches / high reasoning / 60 min timeout.';
+    if (profile === 'ULTRA_ADAPTIVE')
+      return 'Experimental two-phase research. Astra / low then high reasoning / 50 target searches / 60 min timeout.';
     return 'Balanced research. Luna / up to 8 target searches / medium reasoning / 15 min timeout.';
   }
 
