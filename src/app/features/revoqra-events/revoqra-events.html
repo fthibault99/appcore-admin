@@ -1,0 +1,73 @@
+<app-admin-header />
+<main class="page-shell">
+  <header>
+    <h1>Revoqra Billing Events</h1>
+    <p>Verified Stripe webhook audit events.</p>
+  </header>
+  <section class="panel">
+    <form class="search" (submit)="$event.preventDefault(); search()">
+      <label
+        >Event type<input [formControl]="type" placeholder="customer.subscription.updated" /></label
+      ><label
+        >Processed<select [formControl]="processed">
+          <option value="">All</option>
+          <option value="true">Processed</option>
+          <option value="false">Failed</option>
+        </select></label
+      ><button>Filter</button>
+    </form>
+  </section>
+  <section class="panel">
+    @if (deleteError()) {
+      <p class="state error" role="alert">Unable to delete the billing event.</p>
+    }
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Received</th>
+            <th>Event type</th>
+            <th>User</th>
+            <th>Customer</th>
+            <th>Subscription</th>
+            <th>Processed</th>
+            <th>Error</th>
+            <th><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (event of page()?.content || []; track event.id) {
+            <tr>
+              <td>{{ event.receivedAt | date: 'medium' }}</td>
+              <td>
+                <a [routerLink]="['/revoqra/billing-events', event.id]">{{ event.eventType }}</a>
+              </td>
+              <td>{{ event.userId || '—' }}</td>
+              <td>{{ event.providerCustomerId || '—' }}</td>
+              <td>{{ event.providerSubscriptionId || '—' }}</td>
+              <td>{{ event.processed ? 'Yes' : 'No' }}</td>
+              <td>{{ event.processingError || '—' }}</td>
+              <td>
+                <button
+                  class="danger"
+                  type="button"
+                  [disabled]="deletingEventId() !== null"
+                  (click)="deleteEvent(event)"
+                >
+                  {{ deletingEventId() === event.id ? 'Deleting…' : 'Delete' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (page(); as result) {
+      <div class="pagination">
+        <span>Page {{ result.totalPages ? result.number + 1 : 0 }} of {{ result.totalPages }}</span
+        ><button class="secondary" [disabled]="result.first" (click)="previous()">Previous</button
+        ><button class="secondary" [disabled]="result.last" (click)="next()">Next</button>
+      </div>
+    }
+  </section>
+</main>

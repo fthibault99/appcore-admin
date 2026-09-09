@@ -1,0 +1,83 @@
+<app-admin-header />
+<main class="page-shell">
+  <header>
+    <h1>Revoqra Users</h1>
+    <p>Accounts and synchronized Stripe subscription state.</p>
+    <p><a routerLink="/revoqra/entitlements">Manage plan entitlements →</a></p>
+    <p><a routerLink="/revoqra/billing-events">View billing events →</a></p>
+  </header>
+  <section class="panel">
+    <form class="search" (submit)="$event.preventDefault(); search()">
+      <label>Email search<input [formControl]="email" placeholder="Search email" /></label>
+      <label
+        >Stripe subscription ID<input [formControl]="providerSubscriptionId" placeholder="sub_..."
+      /></label>
+      <button type="submit">Search</button>
+    </form>
+  </section>
+  <section class="panel" aria-live="polite">
+    @if (loading()) {
+      <p class="state">Loading Revoqra users…</p>
+    } @else if (error()) {
+      <p class="state error">Unable to load users. <button (click)="search()">Retry</button></p>
+    } @else if (page(); as result) {
+      <div class="results-heading">
+        <h2>Users</h2>
+        <span>{{ result.totalElements }} users</span>
+      </div>
+      @if (deleteError()) {
+        <p class="state error" role="alert">{{ deleteError() }}</p>
+      }
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Subscription</th>
+              <th>Stripe subscription ID</th>
+              <th>Plan</th>
+              <th>Status</th>
+              <th>Billing</th>
+              <th>Created</th>
+              <th><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of result.content; track user.id) {
+              <tr>
+                <td>
+                  <a [routerLink]="['/revoqra/users', user.id, 'credits']">{{
+                    user.email || '—'
+                  }}</a>
+                </td>
+                <td>{{ user.subscription ? 'Subscribed' : 'No subscription' }}</td>
+                <td class="identifier">{{ user.subscription?.providerSubscriptionId || '—' }}</td>
+                <td>{{ user.subscription?.plan || '—' }}</td>
+                <td>{{ statusLabel(user.subscription?.status) }}</td>
+                <td [class]="billingClass(user.subscription)">
+                  {{ billingLabel(user.subscription) }}
+                </td>
+                <td>{{ user.createdAt | date: 'medium' }}</td>
+                <td>
+                  <button
+                    class="danger"
+                    type="button"
+                    [disabled]="deletingUserId() !== null"
+                    (click)="deleteUser(user)"
+                  >
+                    {{ deletingUserId() === user.id ? 'Deleting…' : 'Delete' }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span>Page {{ result.totalPages ? result.number + 1 : 0 }} of {{ result.totalPages }}</span
+        ><button class="secondary" [disabled]="result.first" (click)="previous()">Previous</button
+        ><button class="secondary" [disabled]="result.last" (click)="next()">Next</button>
+      </div>
+    }
+  </section>
+</main>

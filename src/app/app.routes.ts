@@ -25,6 +25,12 @@ import { RecipeExtractionDomainsComponent } from './features/recipe-extraction-d
 import { BricksetSetsComponent } from './features/brickset-sets/brickset-sets';
 import { BricksetSetDetailComponent } from './features/brickset-set-detail/brickset-set-detail';
 import { BricksetUsageComponent } from './features/brickset-usage/brickset-usage';
+import { RevoqraUsersComponent } from './features/revoqra-users/revoqra-users';
+import { RevoqraEventsComponent } from './features/revoqra-events/revoqra-events';
+import { RevoqraEventDetailComponent } from './features/revoqra-event-detail/revoqra-event-detail';
+import { RevoqraEntitlementsComponent } from './features/revoqra-entitlements/revoqra-entitlements';
+import { RevoqraProfilesComponent } from './features/revoqra-profiles/revoqra-profiles';
+import { RevoqraCreditsComponent } from './features/revoqra-credits/revoqra-credits';
 
 export const routes: Routes = [
   { path: 'mealagain', component: MealAgainComponent, canActivate: [adminAuthGuard] },
@@ -52,6 +58,12 @@ export const routes: Routes = [
   { path: 'brickset', component: BricksetSetsComponent, canActivate: [adminAuthGuard] },
   { path: 'brickset/usage', component: BricksetUsageComponent, canActivate: [adminAuthGuard] },
   { path: 'brickset/:setId', component: BricksetSetDetailComponent, canActivate: [adminAuthGuard] },
+  { path: 'revoqra', component: RevoqraUsersComponent, canActivate: [adminAuthGuard] },
+  { path: 'revoqra/entitlements', component: RevoqraEntitlementsComponent, canActivate: [adminAuthGuard] },
+  { path: 'revoqra/research-profiles', component: RevoqraProfilesComponent, canActivate: [adminAuthGuard] },
+  { path: 'revoqra/users/:userId/credits', component: RevoqraCreditsComponent, canActivate: [adminAuthGuard] },
+  { path: 'revoqra/billing-events', component: RevoqraEventsComponent, canActivate: [adminAuthGuard] },
+  { path: 'revoqra/billing-events/:eventId', component: RevoqraEventDetailComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/usage', component: OpenAIUsageComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/usage/:usageId', component: OpenAIUsageDetailComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/prices', component: OpenAIPricesComponent, canActivate: [adminAuthGuard] },

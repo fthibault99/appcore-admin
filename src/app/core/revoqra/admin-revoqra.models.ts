@@ -1,0 +1,9 @@
+export interface RevoqraSubscription { provider: string; plan: string; status: string; providerCustomerId: string; providerSubscriptionId: string; providerPriceId: string; currentPeriodStart: string | null; currentPeriodEnd: string | null; cancelAtPeriodEnd: boolean; cancelAt: string | null; canceledAt: string | null; cancellationScheduled: boolean; updatedAt: string; }
+export interface RevoqraUser { id: string; email: string; createdAt: string; updatedAt: string; subscription: RevoqraSubscription | null; }
+export interface BillingEvent { id: string; provider: string; providerEventId: string; eventType: string; userId: string | null; providerCustomerId: string | null; providerSubscriptionId: string | null; processed: boolean; processingError: string | null; receivedAt: string; processedAt: string | null; }
+export interface BillingEventDetail extends BillingEvent { payloadJson: string; }
+export interface RevoqraEntitlement { plan: string; monthlyCredits: number; maxScheduledResearches: number; maxUltraRunsPerPeriod: number | null; apiAccess: boolean; allowedProfiles: string[]; }
+export interface RevoqraResearchProfile { profile: string; title: string; shortDescription: string; longDescription: string; creditCost: number; enabled: boolean; displayOrder: number; updatedAt: string; }
+export interface RevoqraCreditGrant { id:string; source:string; originalCredits:number; remainingCredits:number; validFrom:string; expiresAt:string|null; description:string; }
+export interface RevoqraCreditTransaction { id:string; createdAt:string; type:string; amount:number; researchRunId:string|null; profile:string|null; description:string|null; grantId:string|null; grantSource:string|null; }
+export interface RevoqraPage<T> { content: T[]; number: number; totalPages: number; totalElements: number; first: boolean; last: boolean; }
