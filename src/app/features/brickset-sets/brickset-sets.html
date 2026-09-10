@@ -5,7 +5,10 @@
       <h1>Brickset</h1>
       <p>Inspect the raw Brickset responses cached for Brick Collector.</p>
     </div>
-    <a class="usage-link" routerLink="/brickset/usage">View API usage</a>
+    <div class="page-actions">
+      <a class="usage-link" routerLink="/brickset/descriptions">View generated descriptions</a>
+      <a class="usage-link secondary-link" routerLink="/brickset/usage">View API usage</a>
+    </div>
   </header>
   <section class="panel">
     <form (ngSubmit)="search()" class="search">
@@ -56,13 +59,25 @@
                   <td>{{ set.setName || '—' }}</td>
                   <td class="identifier">{{ set.ean || '—' }}</td>
                   <td class="identifier">{{ set.upc || '—' }}</td>
-                  <td><span class="badge" [class.available]="set.hasAdditionalImages">{{ set.hasAdditionalImages ? 'Cached' : 'None' }}</span></td>
-                  <td><span class="badge" [class.available]="set.hasInstructions">{{ set.hasInstructions ? 'Cached' : 'None' }}</span></td>
+                  <td>
+                    <span class="badge" [class.available]="set.hasAdditionalImages">{{
+                      set.hasAdditionalImages ? 'Cached' : 'None'
+                    }}</span>
+                  </td>
+                  <td>
+                    <span class="badge" [class.available]="set.hasInstructions">{{
+                      set.hasInstructions ? 'Cached' : 'None'
+                    }}</span>
+                  </td>
                   <td>{{ set.requestCount }}</td>
-                  <td>{{ set.lastRequestedAt ? (set.lastRequestedAt | date: 'medium') : 'Never' }}</td>
+                  <td>
+                    {{ set.lastRequestedAt ? (set.lastRequestedAt | date: 'medium') : 'Never' }}
+                  </td>
                   <td>{{ set.fetchedAt | date: 'medium' }}</td>
                   <td>{{ set.updatedAt | date: 'medium' }}</td>
-                  <td><button type="button" class="link-button" (click)="view(set.id)">View</button></td>
+                  <td>
+                    <button type="button" class="link-button" (click)="view(set.id)">View</button>
+                  </td>
                 </tr>
               }
             </tbody>
@@ -70,9 +85,16 @@
         </div>
       }
       <div class="pagination">
-        <span>Page {{ setPage.totalPages === 0 ? 0 : setPage.number + 1 }} of {{ setPage.totalPages }}</span>
-        <button type="button" class="secondary" (click)="previous()" [disabled]="setPage.first">Previous</button>
-        <button type="button" class="secondary" (click)="next()" [disabled]="setPage.last">Next</button>
+        <span
+          >Page {{ setPage.totalPages === 0 ? 0 : setPage.number + 1 }} of
+          {{ setPage.totalPages }}</span
+        >
+        <button type="button" class="secondary" (click)="previous()" [disabled]="setPage.first">
+          Previous
+        </button>
+        <button type="button" class="secondary" (click)="next()" [disabled]="setPage.last">
+          Next
+        </button>
       </div>
     }
   </section>

@@ -6,6 +6,7 @@ import {
   AdminBricksetSetDetail,
   AdminBricksetUsageDay,
   AdminBricksetUsageSyncResponse,
+  BrickSetDescriptionPage,
   BricksetSetPage,
 } from './admin-brickset.models';
 
@@ -14,6 +15,7 @@ export class AdminBricksetService {
   private readonly http = inject(HttpClient);
   private readonly setsUrl = `${environment.apiBaseUrl}/api/admin/brickset/sets`;
   private readonly usageUrl = `${environment.apiBaseUrl}/api/admin/brickset/usage`;
+  private readonly descriptionsUrl = `${environment.apiBaseUrl}/api/admin/brickset/descriptions`;
   private readonly csrfUrl = `${environment.apiBaseUrl}/api/admin/auth/csrf`;
 
   getSets(setNumber: string, page: number, size: number): Observable<BricksetSetPage> {
@@ -24,6 +26,15 @@ export class AdminBricksetService {
 
   getSet(id: number): Observable<AdminBricksetSetDetail> {
     return this.http.get<AdminBricksetSetDetail>(`${this.setsUrl}/${id}`, {
+      withCredentials: true,
+    });
+  }
+
+  getDescriptions(setNum: string, page: number, size: number): Observable<BrickSetDescriptionPage> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (setNum.trim()) params = params.set('setNum', setNum.trim());
+    return this.http.get<BrickSetDescriptionPage>(this.descriptionsUrl, {
+      params,
       withCredentials: true,
     });
   }

@@ -25,6 +25,7 @@ import { RecipeExtractionDomainsComponent } from './features/recipe-extraction-d
 import { BricksetSetsComponent } from './features/brickset-sets/brickset-sets';
 import { BricksetSetDetailComponent } from './features/brickset-set-detail/brickset-set-detail';
 import { BricksetUsageComponent } from './features/brickset-usage/brickset-usage';
+import { BrickSetDescriptionsComponent } from './features/brick-set-descriptions/brick-set-descriptions';
 import { RevoqraUsersComponent } from './features/revoqra-users/revoqra-users';
 import { RevoqraEventsComponent } from './features/revoqra-events/revoqra-events';
 import { RevoqraEventDetailComponent } from './features/revoqra-event-detail/revoqra-event-detail';
@@ -38,8 +39,16 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'dashboard', component: DashboardComponent, canActivate: [adminAuthGuard] },
   { path: 'analytics/events', component: AnalyticsEventsComponent, canActivate: [adminAuthGuard] },
-  { path: 'app-store/notifications', component: AppStoreNotificationsComponent, canActivate: [adminAuthGuard] },
-  { path: 'app-store/applications', component: AppStoreApplicationsComponent, canActivate: [adminAuthGuard] },
+  {
+    path: 'app-store/notifications',
+    component: AppStoreNotificationsComponent,
+    canActivate: [adminAuthGuard],
+  },
+  {
+    path: 'app-store/applications',
+    component: AppStoreApplicationsComponent,
+    canActivate: [adminAuthGuard],
+  },
   {
     path: 'app-store/notifications/:notificationId',
     component: AppStoreNotificationDetailComponent,
@@ -52,26 +61,67 @@ export const routes: Routes = [
   },
   { path: 'recipes', component: RecipesComponent, canActivate: [adminAuthGuard] },
   { path: 'recipes/:recipeId', component: RecipeDetailComponent, canActivate: [adminAuthGuard] },
-  { path: 'recipe-extraction-domains', component: RecipeExtractionDomainsComponent, canActivate: [adminAuthGuard] },
+  {
+    path: 'recipe-extraction-domains',
+    component: RecipeExtractionDomainsComponent,
+    canActivate: [adminAuthGuard],
+  },
   { path: 'barcodes', component: BarcodesComponent, canActivate: [adminAuthGuard] },
   { path: 'barcodes/:barcodeId', component: BarcodeDetailComponent, canActivate: [adminAuthGuard] },
   { path: 'brickset', component: BricksetSetsComponent, canActivate: [adminAuthGuard] },
   { path: 'brickset/usage', component: BricksetUsageComponent, canActivate: [adminAuthGuard] },
+  {
+    path: 'brickset/descriptions',
+    component: BrickSetDescriptionsComponent,
+    canActivate: [adminAuthGuard],
+  },
   { path: 'brickset/:setId', component: BricksetSetDetailComponent, canActivate: [adminAuthGuard] },
   { path: 'revoqra', component: RevoqraUsersComponent, canActivate: [adminAuthGuard] },
-  { path: 'revoqra/entitlements', component: RevoqraEntitlementsComponent, canActivate: [adminAuthGuard] },
-  { path: 'revoqra/research-profiles', component: RevoqraProfilesComponent, canActivate: [adminAuthGuard] },
-  { path: 'revoqra/users/:userId/credits', component: RevoqraCreditsComponent, canActivate: [adminAuthGuard] },
-  { path: 'revoqra/billing-events', component: RevoqraEventsComponent, canActivate: [adminAuthGuard] },
-  { path: 'revoqra/billing-events/:eventId', component: RevoqraEventDetailComponent, canActivate: [adminAuthGuard] },
+  {
+    path: 'revoqra/entitlements',
+    component: RevoqraEntitlementsComponent,
+    canActivate: [adminAuthGuard],
+  },
+  {
+    path: 'revoqra/research-profiles',
+    component: RevoqraProfilesComponent,
+    canActivate: [adminAuthGuard],
+  },
+  {
+    path: 'revoqra/users/:userId/credits',
+    component: RevoqraCreditsComponent,
+    canActivate: [adminAuthGuard],
+  },
+  {
+    path: 'revoqra/billing-events',
+    component: RevoqraEventsComponent,
+    canActivate: [adminAuthGuard],
+  },
+  {
+    path: 'revoqra/billing-events/:eventId',
+    component: RevoqraEventDetailComponent,
+    canActivate: [adminAuthGuard],
+  },
   { path: 'openai/usage', component: OpenAIUsageComponent, canActivate: [adminAuthGuard] },
-  { path: 'openai/usage/:usageId', component: OpenAIUsageDetailComponent, canActivate: [adminAuthGuard] },
+  {
+    path: 'openai/usage/:usageId',
+    component: OpenAIUsageDetailComponent,
+    canActivate: [adminAuthGuard],
+  },
   { path: 'openai/prices', component: OpenAIPricesComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/deep-research', component: DeepResearchComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/chat', component: ChatComponent, canActivate: [adminAuthGuard] },
   { path: 'openai/voice-inbox', component: VoiceInboxComponent, canActivate: [adminAuthGuard] },
-  { path: 'openai/dish-recreation', component: DishRecreationComponent, canActivate: [adminAuthGuard] },
-  { path: 'openai/recipe-discovery', component: RecipeDiscoveryComponent, canActivate: [adminAuthGuard] },
+  {
+    path: 'openai/dish-recreation',
+    component: DishRecreationComponent,
+    canActivate: [adminAuthGuard],
+  },
+  {
+    path: 'openai/recipe-discovery',
+    component: RecipeDiscoveryComponent,
+    canActivate: [adminAuthGuard],
+  },
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: '**', redirectTo: 'login' },
 ];

@@ -9,6 +9,7 @@ describe('AdminBricksetService', () => {
   let http: HttpTestingController;
   const url = `${environment.apiBaseUrl}/api/admin/brickset/sets`;
   const usageUrl = `${environment.apiBaseUrl}/api/admin/brickset/usage`;
+  const descriptionsUrl = `${environment.apiBaseUrl}/api/admin/brickset/descriptions`;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -47,6 +48,26 @@ describe('AdminBricksetService', () => {
     expect(request.request.method).toBe('GET');
     expect(request.request.withCredentials).toBe(true);
     request.flush({ id: 7 });
+  });
+
+  it('searches generated descriptions by trimmed set number with pagination', () => {
+    service.getDescriptions(' 10307 ', 2, 25).subscribe();
+
+    const request = http.expectOne((candidate) => candidate.url === descriptionsUrl);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('setNum')).toBe('10307');
+    expect(request.request.params.get('page')).toBe('2');
+    expect(request.request.params.get('size')).toBe('25');
+    expect(request.request.withCredentials).toBe(true);
+    request.flush({
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      size: 25,
+      number: 2,
+      first: false,
+      last: true,
+    });
   });
 
   it('loads the last 30 days of Brickset API usage', () => {

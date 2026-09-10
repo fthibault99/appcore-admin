@@ -45,6 +45,25 @@ export interface BricksetSetPage {
   last: boolean;
 }
 
+export interface AdminBrickSetDescription {
+  id: number;
+  setNum: string;
+  language: string;
+  description: string;
+  model: string;
+  generatedAt: string;
+}
+
+export interface BrickSetDescriptionPage {
+  content: AdminBrickSetDescription[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
 export interface AdminBricksetUsageDay {
   date: string;
   count: number;
