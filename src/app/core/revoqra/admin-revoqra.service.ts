@@ -34,6 +34,15 @@ export class AdminRevoqraService {
       }),
     );
   }
+  updateAccountType(id: string, accountType: 'STANDARD' | 'INTERNAL') {
+    return this.withCsrf((headers) =>
+      this.http.put<RevoqraUser>(
+        `${this.base}/users/${encodeURIComponent(id)}/account-type`,
+        { accountType },
+        { headers, withCredentials: true },
+      ),
+    );
+  }
   getEvents(eventType = '', processed: boolean | null = null, page = 0) {
     let params = new HttpParams().set('page', page).set('size', 25);
     if (eventType.trim()) params = params.set('eventType', eventType.trim());

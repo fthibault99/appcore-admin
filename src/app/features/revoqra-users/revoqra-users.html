@@ -33,6 +33,8 @@
           <thead>
             <tr>
               <th>Email</th>
+              <th>Account</th>
+              <th>Credits</th>
               <th>Subscription</th>
               <th>Stripe subscription ID</th>
               <th>Plan</th>
@@ -50,6 +52,18 @@
                     user.email || '—'
                   }}</a>
                 </td>
+                <td>
+                  <select
+                    aria-label="Account type"
+                    [ngModel]="user.accountType"
+                    [disabled]="savingAccountTypeId() !== null"
+                    (ngModelChange)="updateAccountType(user, $event)"
+                  >
+                    <option value="STANDARD">Standard</option>
+                    <option value="INTERNAL">Internal</option>
+                  </select>
+                </td>
+                <td>{{ user.unlimitedUsage ? 'Unlimited' : 'Metered' }}</td>
                 <td>{{ user.subscription ? 'Subscribed' : 'No subscription' }}</td>
                 <td class="identifier">{{ user.subscription?.providerSubscriptionId || '—' }}</td>
                 <td>{{ user.subscription?.plan || '—' }}</td>

@@ -37,6 +37,7 @@ export class RevoqraUsersComponent implements OnInit {
   readonly error = signal(false);
   readonly deleteError = signal<string | null>(null);
   readonly deletingUserId = signal<string | null>(null);
+  readonly savingAccountTypeId = signal<string | null>(null);
   readonly entitlements = signal<RevoqraEntitlement[]>([]);
   readonly entitlementError = signal(false);
   readonly savingPlan = signal<string | null>(null);
@@ -114,6 +115,26 @@ export class RevoqraUsersComponent implements OnInit {
               ? 'Cancel the active Stripe subscription before deleting this user.'
               : 'Unable to delete the Revoqra user.',
           ),
+      });
+  }
+  updateAccountType(user: RevoqraUser, accountType: 'STANDARD' | 'INTERNAL') {
+    if (user.accountType === accountType) return;
+    this.savingAccountTypeId.set(user.id);
+    this.deleteError.set(null);
+    this.service
+      .updateAccountType(user.id, accountType)
+      .pipe(finalize(() => this.savingAccountTypeId.set(null)))
+      .subscribe({
+        next: (updated) =>
+          this.page.update((page) =>
+            page
+              ? { ...page, content: page.content.map((value) => (value.id === updated.id ? updated : value)) }
+              : page,
+          ),
+        error: () => {
+          this.deleteError.set('Unable to update the Revoqra account type.');
+          this.load();
+        },
       });
   }
   statusLabel(status: string | null | undefined): string {

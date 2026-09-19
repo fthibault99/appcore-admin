@@ -39,6 +39,17 @@ describe('AdminRevoqraService', () => {
     request.flush(null, { status: 204, statusText: 'No Content' });
   });
 
+  it('gets CSRF before changing an account type', () => {
+    service.updateAccountType('user/id', 'INTERNAL').subscribe();
+    flushCsrf();
+
+    const request = http.expectOne(`${base}/users/user%2Fid/account-type`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ accountType: 'INTERNAL' });
+    expect(request.request.headers.get('X-XSRF-TOKEN')).toBe('token');
+    request.flush({});
+  });
+
   function flushCsrf(): void {
     const csrf = http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`);
     csrf.flush(null, {
