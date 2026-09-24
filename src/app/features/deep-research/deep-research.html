@@ -27,15 +27,15 @@
       }
       <label for="research-profile">Research profile</label>
       <select id="research-profile" formControlName="profile">
-        <option value="QUICK">QUICK</option>
-        <option value="STANDARD">STANDARD</option>
-        <option value="DEEP">DEEP</option>
-        <option value="EXPERT">EXPERT</option>
-        <option value="ULTRA">ULTRA</option>
-        <option value="ULTRA_ADAPTIVE">ULTRA_ADAPTIVE</option>
+        @for (configuration of profileConfigurations(); track configuration.profile) {
+          <option [value]="configuration.profile">{{ configuration.profile }}</option>
+        }
       </select>
       <p class="profile-description">{{ profileDescription(queryForm.controls.profile.value) }}</p>
-      <button type="submit" [disabled]="isStarting() || hasActiveResearch()">
+      <button
+        type="submit"
+        [disabled]="profileConfigurations().length === 0 || isStarting() || hasActiveResearch()"
+      >
         {{
           isStarting()
             ? 'Starting…'
@@ -184,8 +184,12 @@
             <dd>{{ current.model }}</dd>
           </div>
           <div>
-            <dt>Reasoning</dt>
+            <dt>Reasoning effort</dt>
             <dd>{{ current.reasoningEffort }}</dd>
+          </div>
+          <div>
+            <dt>Reasoning mode</dt>
+            <dd>{{ current.reasoningMode }}</dd>
           </div>
           <div>
             <dt>Target searches</dt>

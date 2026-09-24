@@ -37,6 +37,15 @@ describe('AdminDeepResearchService', () => {
     request.flush({ content: [], number: 2, size: 20, totalElements: 0, totalPages: 0 });
   });
 
+  it('loads profile configurations from AppCore', () => {
+    service.profiles().subscribe();
+
+    const request = http.expectOne(`${url}/profiles`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.withCredentials).toBe(true);
+    request.flush([]);
+  });
+
   it('obtains CSRF before starting a job', () => {
     service.start('Research this', 'DEEP').subscribe();
 

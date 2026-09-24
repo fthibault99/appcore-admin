@@ -12,6 +12,7 @@ describe('DeepResearchComponent', () => {
     list: ReturnType<typeof vi.fn>;
     get: ReturnType<typeof vi.fn>;
     start: ReturnType<typeof vi.fn>;
+    profiles: ReturnType<typeof vi.fn>;
     updateEvaluation: ReturnType<typeof vi.fn>;
   };
 
@@ -42,6 +43,64 @@ describe('DeepResearchComponent', () => {
       list: vi.fn(() => of(page)),
       get: vi.fn(),
       start: vi.fn(),
+      profiles: vi.fn(() =>
+        of([
+          {
+            profile: 'QUICK',
+            model: 'gpt-6-luna',
+            maxSearches: 3,
+            maxToolCalls: 10,
+            reasoningMode: 'standard',
+            reasoningEffort: 'low',
+            timeoutSeconds: 600,
+          },
+          {
+            profile: 'STANDARD',
+            model: 'gpt-6-luna',
+            maxSearches: 8,
+            maxToolCalls: 30,
+            reasoningMode: 'standard',
+            reasoningEffort: 'medium',
+            timeoutSeconds: 900,
+          },
+          {
+            profile: 'DEEP',
+            model: 'gpt-6-sol',
+            maxSearches: 20,
+            maxToolCalls: 80,
+            reasoningMode: 'standard',
+            reasoningEffort: 'high',
+            timeoutSeconds: 1800,
+          },
+          {
+            profile: 'EXPERT',
+            model: 'gpt-6-sol',
+            maxSearches: 30,
+            maxToolCalls: 120,
+            reasoningMode: 'pro',
+            reasoningEffort: 'xhigh',
+            timeoutSeconds: 2700,
+          },
+          {
+            profile: 'ULTRA',
+            model: 'gpt-6-astra',
+            maxSearches: 50,
+            maxToolCalls: 200,
+            reasoningMode: 'pro',
+            reasoningEffort: 'high',
+            timeoutSeconds: 3600,
+          },
+          {
+            profile: 'ULTRA_ADAPTIVE',
+            model: 'gpt-6-astra',
+            maxSearches: 50,
+            maxToolCalls: 200,
+            reasoningMode: 'pro',
+            reasoningEffort: 'low',
+            timeoutSeconds: 3600,
+          },
+        ]),
+      ),
       updateEvaluation: vi.fn(),
     };
     await TestBed.configureTestingModule({
@@ -65,16 +124,18 @@ describe('DeepResearchComponent', () => {
   });
 
   it('describes the ULTRA profile limits', () => {
+    fixture.detectChanges();
     expect(fixture.componentInstance.profileDescription('ULTRA')).toContain(
-      'Astra / up to 50 target searches / high reasoning / 60 min timeout',
+      'gpt-6-astra / up to 50 target searches / 200 max tool calls',
     );
+    expect(fixture.componentInstance.profileDescription('ULTRA')).toContain('pro reasoning mode');
   });
 
-  it('describes the adaptive Astra profile separately from ULTRA', () => {
-    expect(fixture.componentInstance.profileDescription('ULTRA_ADAPTIVE')).toContain(
-      'low then high reasoning',
-    );
-    expect(fixture.componentInstance.profileDescription('ULTRA')).toContain('high reasoning');
+  it('uses the current AppCore values in profile descriptions', () => {
+    fixture.detectChanges();
+    expect(fixture.componentInstance.profileDescription('DEEP')).toContain('gpt-6-sol');
+    expect(fixture.componentInstance.profileDescription('EXPERT')).toContain('xhigh reasoning effort');
+    expect(fixture.componentInstance.profileDescription('EXPERT')).toContain('pro reasoning mode');
   });
 
   it('displays structured report metadata while keeping report as Markdown', async () => {
@@ -88,6 +149,7 @@ describe('DeepResearchComponent', () => {
       maxSearches: 8,
       maxToolCalls: 30,
       reasoningEffort: 'medium',
+      reasoningMode: 'standard',
       timeoutSeconds: 900,
       report: '## Executive summary\nFindings.',
       reportTitle: 'Java AI-agent ecosystem',
@@ -123,6 +185,10 @@ describe('DeepResearchComponent', () => {
       'Source policy: Official and primary sources were prioritized',
     );
     expect(fixture.nativeElement.textContent).toContain('Executive summary');
+    expect(fixture.nativeElement.textContent).toContain('Reasoning effort');
+    expect(fixture.nativeElement.textContent).toContain('medium');
+    expect(fixture.nativeElement.textContent).toContain('Reasoning mode');
+    expect(fixture.nativeElement.textContent).toContain('standard');
     vi.useRealTimers();
   });
 });

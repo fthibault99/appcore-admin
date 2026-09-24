@@ -12,6 +12,16 @@ export type DeepResearchPhase =
   | 'SYNTHESIS';
 export type DeepResearchQualityRating = 'POOR' | 'ACCEPTABLE' | 'GOOD' | 'EXCELLENT';
 
+export interface DeepResearchProfileConfiguration {
+  profile: DeepResearchProfile;
+  model: string;
+  maxSearches: number;
+  maxToolCalls: number;
+  reasoningMode: string;
+  reasoningEffort: string;
+  timeoutSeconds: number;
+}
+
 export interface DeepResearchUsage {
   actualWebSearches: number | null;
   inputTokens: number | null;
@@ -45,6 +55,7 @@ export interface DeepResearchJob {
   maxSearches: number;
   maxToolCalls: number;
   reasoningEffort: string;
+  reasoningMode: string;
   timeoutSeconds: number;
   report: string | null;
   reportTitle: string | null;

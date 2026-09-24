@@ -6,6 +6,7 @@ import {
   DeepResearchJob,
   DeepResearchPage,
   DeepResearchProfile,
+  DeepResearchProfileConfiguration,
   DeepResearchQualityRating,
 } from './deep-research.models';
 
@@ -37,6 +38,12 @@ export class AdminDeepResearchService {
   list(page = 0, size = 20): Observable<DeepResearchPage> {
     return this.http.get<DeepResearchPage>(this.url, {
       params: { page, size },
+      withCredentials: true,
+    });
+  }
+
+  profiles(): Observable<DeepResearchProfileConfiguration[]> {
+    return this.http.get<DeepResearchProfileConfiguration[]>(`${this.url}/profiles`, {
       withCredentials: true,
     });
   }

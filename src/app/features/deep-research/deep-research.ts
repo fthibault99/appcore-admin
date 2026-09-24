@@ -18,6 +18,7 @@ import {
   DeepResearchJob,
   DeepResearchPage,
   DeepResearchProfile,
+  DeepResearchProfileConfiguration,
   DeepResearchQualityRating,
 } from '../../core/deep-research/deep-research.models';
 import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
@@ -41,6 +42,7 @@ export class DeepResearchComponent implements OnInit, OnDestroy {
   readonly isLoadingList = signal(false);
   readonly isSavingEvaluation = signal(false);
   readonly jobsPage = signal<DeepResearchPage | null>(null);
+  readonly profileConfigurations = signal<DeepResearchProfileConfiguration[]>([]);
   readonly errorMessage = signal('');
   readonly hasActiveResearch = computed(() => {
     const job = this.job();
@@ -101,6 +103,7 @@ export class DeepResearchComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loadProfiles();
     this.loadList(0);
   }
 
@@ -110,7 +113,13 @@ export class DeepResearchComponent implements OnInit, OnDestroy {
 
   start(): void {
     this.queryForm.markAllAsTouched();
-    if (this.queryForm.invalid || this.isStarting() || this.hasActiveResearch()) return;
+    if (
+      this.queryForm.invalid ||
+      this.profileConfigurations().length === 0 ||
+      this.isStarting() ||
+      this.hasActiveResearch()
+    )
+      return;
     this.stopPolling();
     this.errorMessage.set('');
     this.isStarting.set(true);
@@ -183,17 +192,16 @@ export class DeepResearchComponent implements OnInit, OnDestroy {
   }
 
   profileDescription(profile: DeepResearchProfile): string {
-    if (profile === 'QUICK')
-      return 'Fast, low-cost research. Luna / up to 3 target searches / low reasoning / 10 min timeout.';
-    if (profile === 'DEEP')
-      return 'More extensive research. Terra / up to 20 target searches / high reasoning / 30 min timeout.';
-    if (profile === 'EXPERT')
-      return 'Expert-grade research. Sol / up to 30 target searches / high reasoning / 45 min timeout.';
-    if (profile === 'ULTRA')
-      return 'Maximum-depth research. Astra / up to 50 target searches / high reasoning / 60 min timeout.';
-    if (profile === 'ULTRA_ADAPTIVE')
-      return 'Experimental two-phase research. Astra / low then high reasoning / 50 target searches / 60 min timeout.';
-    return 'Balanced research. Luna / up to 8 target searches / medium reasoning / 15 min timeout.';
+    const configuration = this.profileConfigurations().find((value) => value.profile === profile);
+    if (!configuration) return 'Loading profile configuration…';
+    return `${configuration.model} / up to ${configuration.maxSearches} target searches / ${configuration.maxToolCalls} max tool calls / ${configuration.reasoningEffort} reasoning effort / ${configuration.reasoningMode} reasoning mode / ${this.durationLabel(configuration.timeoutSeconds * 1000)} timeout.`;
+  }
+
+  private loadProfiles(): void {
+    this.service.profiles().subscribe({
+      next: (profiles) => this.profileConfigurations.set(profiles),
+      error: (error: unknown) => this.handleError(error, 'Unable to load research profiles.'),
+    });
   }
 
   durationLabel(durationMs: number | null): string {
