@@ -13,7 +13,8 @@
         <label>Display name<input formControlName="displayName" placeholder="Do It Tomorrow" /></label>
         <label>Bundle ID<input formControlName="bundleId" placeholder="com.example.app" /></label>
         <label>App Apple ID<input type="number" formControlName="appAppleId" /></label>
-        @if (editing()) { <label class="checkbox"><input type="checkbox" formControlName="enabled" /> Enabled</label> }
+        @if (editing()) { <label class="checkbox"><input type="checkbox" formControlName="enabled" /> Notifications enabled</label> }
+        <label class="checkbox"><input type="checkbox" formControlName="ratingsEnabled" /> Ratings enabled</label>
       </div>
       @if (form.controls.applicationKey.invalid && form.controls.applicationKey.touched) {
         <p class="error">Use lowercase letters, numbers, and single hyphens for the application key.</p>
@@ -42,6 +43,7 @@
               <div><dt>Application key</dt><dd>{{ application.applicationKey }}</dd></div>
               <div><dt>Bundle ID</dt><dd>{{ application.bundleId }}</dd></div>
               <div><dt>App Apple ID</dt><dd>{{ application.appAppleId }}</dd></div>
+              <div><dt>Ratings tracking</dt><dd>{{ application.ratingsEnabled ? 'Enabled' : 'Disabled' }}</dd></div>
               <div><dt>Updated</dt><dd>{{ application.updatedAt | date: 'medium' }}</dd></div>
             </dl>
             <div class="urls">

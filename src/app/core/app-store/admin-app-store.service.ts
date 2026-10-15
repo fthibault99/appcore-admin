@@ -1,6 +1,7 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, switchMap } from 'rxjs';
+import { AppStoreRatings, AppStoreRatingsRefreshAccepted } from './app-store-ratings.models';
 import { environment } from '../../../environments/environment';
 import {
   AppStoreApplication,
@@ -18,6 +19,21 @@ export class AdminAppStoreService {
   private readonly applicationsUrl = `${environment.apiBaseUrl}/api/admin/app-store/applications`;
   private readonly notificationTypesUrl = `${this.notificationsUrl}/filter-options/types`;
   private readonly csrfUrl = `${environment.apiBaseUrl}/api/admin/auth/csrf`;
+
+  getRatings(): Observable<AppStoreRatings[]> {
+    return this.http.get<AppStoreRatings[]>(`${environment.apiBaseUrl}/api/admin/app-store/ratings`, {
+      withCredentials: true,
+    });
+  }
+
+  refreshRatings(id: string): Observable<AppStoreRatingsRefreshAccepted> {
+    return this.withCsrf((headers) =>
+      this.http.post<AppStoreRatingsRefreshAccepted>(
+        `${this.applicationsUrl}/${encodeURIComponent(id)}/ratings/refresh`, null,
+        { headers, withCredentials: true },
+      ),
+    );
+  }
 
   getApplications(): Observable<AppStoreApplication[]> {
     return this.http.get<AppStoreApplication[]>(this.applicationsUrl, { withCredentials: true });

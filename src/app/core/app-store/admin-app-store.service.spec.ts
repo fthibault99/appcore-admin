@@ -16,6 +16,37 @@ describe('AdminAppStoreService', () => {
 
   afterEach(() => http.verify());
 
+  it('loads ratings using the admin session', () => {
+    service.getRatings().subscribe(result => expect(result).toEqual([]));
+    const request = http.expectOne(`${environment.apiBaseUrl}/api/admin/app-store/ratings`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.withCredentials).toBe(true);
+    request.flush([]);
+  });
+
+  it('requests ratings collection with CSRF and the admin session', () => {
+    const accepted = { runId: 'run-1', applicationId: 'app/1', country: null };
+    service.refreshRatings('app/1').subscribe(result => expect(result).toEqual(accepted));
+    http.expectNone(`${environment.apiBaseUrl}/api/admin/app-store/applications/app%2F1/ratings/refresh`);
+    const csrf = http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`);
+    expect(csrf.request.withCredentials).toBe(true);
+    csrf.flush('', { headers: { 'X-XSRF-TOKEN': 'csrf-token' } });
+    const request = http.expectOne(`${environment.apiBaseUrl}/api/admin/app-store/applications/app%2F1/ratings/refresh`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toBeNull();
+    expect(request.request.withCredentials).toBe(true);
+    expect(request.request.headers.get('X-XSRF-TOKEN')).toBe('csrf-token');
+    request.flush(accepted, { status: 202, statusText: 'Accepted' });
+  });
+
+  it('does not send a collection request without a CSRF token', () => {
+    let error: unknown;
+    service.refreshRatings('app-1').subscribe({ error: value => error = value });
+    http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`).flush('');
+    expect(error).toBeInstanceOf(Error);
+    http.expectNone(`${environment.apiBaseUrl}/api/admin/app-store/applications/app-1/ratings/refresh`);
+  });
+
   it('loads filtered notifications with the admin session', () => {
     service.getNotifications({ environment: 'Sandbox', page: 0, size: 50, sort: 'receivedAt,desc' }).subscribe();
 
@@ -43,13 +74,14 @@ describe('AdminAppStoreService', () => {
   it('gets CSRF before registering an application', () => {
     service.createApplication({
       applicationKey: 'do-it-tomorrow', displayName: 'Do It Tomorrow',
-      bundleId: 'com.fstt.doit', appAppleId: 123456789,
+      bundleId: 'com.fstt.doit', appAppleId: 123456789, ratingsEnabled: true,
     }).subscribe();
 
     const csrf = http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`);
     csrf.flush('', { headers: { 'X-XSRF-TOKEN': 'csrf-token' } });
     const request = http.expectOne(`${environment.apiBaseUrl}/api/admin/app-store/applications`);
     expect(request.request.headers.get('X-XSRF-TOKEN')).toBe('csrf-token');
+    expect(request.request.body.ratingsEnabled).toBe(true);
     request.flush({});
   });
 });

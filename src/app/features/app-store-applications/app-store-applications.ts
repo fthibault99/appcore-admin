@@ -36,6 +36,7 @@ export class AppStoreApplicationsComponent implements OnInit {
     bundleId: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(255)] }),
     appAppleId: new FormControl<number | null>(null, { validators: [Validators.required, Validators.min(1)] }),
     enabled: new FormControl(true, { nonNullable: true }),
+    ratingsEnabled: new FormControl(false, { nonNullable: true }),
   });
 
   ngOnInit(): void {
@@ -51,6 +52,7 @@ export class AppStoreApplicationsComponent implements OnInit {
       bundleId: application.bundleId,
       appAppleId: application.appAppleId,
       enabled: application.enabled,
+      ratingsEnabled: application.ratingsEnabled,
     });
     this.form.controls.applicationKey.disable();
   }
@@ -58,7 +60,7 @@ export class AppStoreApplicationsComponent implements OnInit {
   cancel(): void {
     this.editing.set(null);
     this.form.controls.applicationKey.enable();
-    this.form.reset({ applicationKey: '', displayName: '', bundleId: '', appAppleId: null, enabled: true });
+    this.form.reset({ applicationKey: '', displayName: '', bundleId: '', appAppleId: null, enabled: true, ratingsEnabled: false });
     this.errorMessage.set(null);
   }
 
@@ -74,6 +76,7 @@ export class AppStoreApplicationsComponent implements OnInit {
           displayName: value.displayName.trim(),
           bundleId: value.bundleId.trim(),
           appAppleId: value.appAppleId!,
+          ratingsEnabled: value.ratingsEnabled,
           enabled: value.enabled,
           version: current.version,
         })
@@ -82,6 +85,7 @@ export class AppStoreApplicationsComponent implements OnInit {
           displayName: value.displayName.trim(),
           bundleId: value.bundleId.trim(),
           appAppleId: value.appAppleId!,
+          ratingsEnabled: value.ratingsEnabled,
         });
     operation.pipe(finalize(() => this.isSaving.set(false))).subscribe({
       next: () => { this.cancel(); this.load(); },

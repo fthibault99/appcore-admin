@@ -33,6 +33,7 @@ export interface AppStoreApplication {
   displayName: string;
   bundleId: string;
   appAppleId: number;
+  ratingsEnabled: boolean;
   enabled: boolean;
   version: number;
   createdAt: string;
@@ -44,12 +45,14 @@ export interface CreateAppStoreApplication {
   displayName: string;
   bundleId: string;
   appAppleId: number;
+  ratingsEnabled: boolean;
 }
 
 export interface UpdateAppStoreApplication {
   displayName: string;
   bundleId: string;
   appAppleId: number;
+  ratingsEnabled: boolean;
   enabled: boolean;
   version: number;
 }

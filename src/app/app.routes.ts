@@ -33,6 +33,8 @@ import { RevoqraEntitlementsComponent } from './features/revoqra-entitlements/re
 import { RevoqraProfilesComponent } from './features/revoqra-profiles/revoqra-profiles';
 import { RevoqraCreditsComponent } from './features/revoqra-credits/revoqra-credits';
 
+import { AppStoreRatingsComponent } from './features/app-store-ratings/app-store-ratings';
+
 export const routes: Routes = [
   { path: 'mealagain', component: MealAgainComponent, canActivate: [adminAuthGuard] },
   { path: 'mealagain/:userId', component: MealAgainDetailComponent, canActivate: [adminAuthGuard] },
@@ -42,6 +44,11 @@ export const routes: Routes = [
   {
     path: 'app-store/notifications',
     component: AppStoreNotificationsComponent,
+    canActivate: [adminAuthGuard],
+  },
+  {
+    path: 'app-store/ratings',
+    component: AppStoreRatingsComponent,
     canActivate: [adminAuthGuard],
   },
   {

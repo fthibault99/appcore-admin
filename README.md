@@ -74,3 +74,24 @@ results, and expired admin sessions return to login.
 Backend prerequisites: the MealAgain migrations and the read-only session-authenticated endpoints
 `GET /api/admin/mealagain/users`, `GET /api/admin/mealagain/users/{userId}`,
 `GET /api/admin/mealagain/users/{userId}/purchase-history` and `/usage-history`.
+
+## App Store ratings
+
+`/app-store/ratings` is available from the shared header for authenticated administrators.
+It loads saved observations through `GET /api/admin/app-store/ratings`, lets the administrator
+select a tracked application, and displays the server's total and weighted average alongside
+country flags, counts, averages and collection dates. Sorting supports count, mean and country.
+The layout follows the current light/dark theme and adapts to narrow screens.
+
+Coverage and observation dates remain visible because countries may have different collection
+dates. The aggregate is an estimate from available observations, not an official Apple worldwide
+statistic. Missing means are displayed as a dash, including countries with zero ratings.
+“Reload saved ratings” reloads stored data; it does not trigger an Apple collection.
+“Collect from App Store” requests a background collection for the selected application across
+all supported countries through the existing session/CSRF-protected POST endpoint. Acceptance
+is not completion; reload saved ratings to see available observations. A conflicting collection
+or unavailable worker is reported without implying a new run started.
+The application management form includes an independent “Ratings enabled” checkbox for
+creation and editing; save the form to persist tracking changes. Each application card shows
+the saved tracking status. Manual collection is available on the ratings page.
+Backend prerequisite: AppCore's ratings module and its V92 migration.
