@@ -16,6 +16,14 @@ describe('AdminAppStoreService', () => {
 
   afterEach(() => http.verify());
 
+  it('loads App Store Connect connections using the admin session', () => {
+    service.getConnections().subscribe(result => expect(result).toEqual([]));
+    const request = http.expectOne(`${environment.apiBaseUrl}/api/admin/app-store-connect/connections`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.withCredentials).toBe(true);
+    request.flush([]);
+  });
+
   it('loads ratings using the admin session', () => {
     service.getRatings().subscribe(result => expect(result).toEqual([]));
     const request = http.expectOne(`${environment.apiBaseUrl}/api/admin/app-store/ratings`);

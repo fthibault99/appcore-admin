@@ -35,7 +35,10 @@ import { RevoqraCreditsComponent } from './features/revoqra-credits/revoqra-cred
 
 import { AppStoreRatingsComponent } from './features/app-store-ratings/app-store-ratings';
 
+import { AppStoreConnectionsComponent } from './features/app-store-connections/app-store-connections';
+
 export const routes: Routes = [
+  { path: 'app-store/connections', component: AppStoreConnectionsComponent, canActivate: [adminAuthGuard] },
   { path: 'mealagain', component: MealAgainComponent, canActivate: [adminAuthGuard] },
   { path: 'mealagain/:userId', component: MealAgainDetailComponent, canActivate: [adminAuthGuard] },
   { path: 'login', component: LoginComponent },

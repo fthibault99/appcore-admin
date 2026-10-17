@@ -95,3 +95,16 @@ The application management form includes an independent “Ratings enabled” ch
 creation and editing; save the form to persist tracking changes. Each application card shows
 the saved tracking status. Manual collection is available on the ratings page.
 Backend prerequisite: AppCore's ratings module and its V92 migration.
+
+## App Store Connect connections
+
+`/app-store/connections` is available from the shared header for authenticated
+administrators. It calls `GET /api/admin/app-store-connect/connections` with the
+existing admin session and shows non-revoked connections for the configured OAuth
+client, their application identity, creation time in UTC and allowlist status.
+Use “Copy subject” to obtain the subject for `APPCORE_APP_STORE_CONNECT_ALLOWED_SUBJECTS`.
+Apply that configuration to all backend instances before retrying ChatGPT.
+The page does not modify the allowlist, and allowlist status does not prove token
+validity or Apple access. Loading, empty and error states are separate; expired
+admin sessions return to login. The backend endpoint must be deployed and the
+App Store Connect integration enabled.

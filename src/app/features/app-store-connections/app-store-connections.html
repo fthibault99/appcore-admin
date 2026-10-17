@@ -1,0 +1,98 @@
+<app-admin-header />
+<main class="page-shell">
+  <header class="page-heading">
+    <div>
+      <h1>App Store Connect</h1>
+      <p>Find the OAuth subject for your paired connection.</p>
+    </div>
+    <button type="button" (click)="load()" [disabled]="isLoading()">
+      {{ isLoading() ? 'Loading…' : 'Reload connections' }}
+    </button>
+  </header>
+  <section class="panel setup" aria-label="Connection setup">
+    <h2>Authorize a paired connection</h2>
+    <p>
+      Identify your connection using its client and application identity, then copy its OAuth
+      subject into <code>APPCORE_APP_STORE_CONNECT_ALLOWED_SUBJECTS</code>. Apply the configuration
+      to every AppCore instance and retry the ChatGPT connection.
+    </p>
+    <p class="muted">
+      Allowlisted reflects the configuration of the responding server. It does not confirm that an
+      OAuth token is current or that Apple access works.
+    </p>
+  </section>
+  <section class="panel" aria-label="App Store Connect connections" [attr.aria-busy]="isLoading()">
+    @if (errorMessage()) {
+      <p class="error" role="alert">{{ errorMessage() }}</p>
+    }
+    @if (copyMessage()) {
+      <p class="success" role="status">{{ copyMessage() }}</p>
+    }
+    @if (copyError()) {
+      <p class="error" role="alert">{{ copyError() }}</p>
+    }
+    @if (isLoading()) {
+      <p class="state" role="status">Loading connections…</p>
+    }
+    @if (connections().length) {
+      <div class="metrics">
+        <div>
+          <strong>{{ connections().length }}</strong
+          ><span>Non-revoked connections</span>
+        </div>
+        <div>
+          <strong>{{ allowlistedCount() }}</strong
+          ><span>Allowlisted</span>
+        </div>
+      </div>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Connections table">
+        <table>
+          <caption>
+            Connections for the configured App Store Connect OAuth client
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">OAuth subject</th>
+              <th scope="col">Client</th>
+              <th scope="col">Application identity</th>
+              <th scope="col">Created (UTC)</th>
+              <th scope="col">Allowlist</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (connection of connections(); track connection.subject) {
+              <tr>
+                <th scope="row">
+                  <code>{{ connection.subject }}</code
+                  ><button
+                    type="button"
+                    class="copy"
+                    [attr.aria-label]="'Copy OAuth subject ' + connection.subject"
+                    (click)="copySubject(connection.subject)"
+                  >
+                    Copy subject
+                  </button>
+                </th>
+                <td>{{ connection.clientId }}</td>
+                <td>
+                  <code>{{ connection.applicationIdentityId }}</code>
+                </td>
+                <td>{{ connection.createdAt | date: 'medium' : 'UTC' }}</td>
+                <td>
+                  <span class="badge" [class.allowed]="connection.allowlisted">{{
+                    connection.allowlisted ? 'Allowlisted' : 'Not allowlisted'
+                  }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else if (!isLoading() && !errorMessage()) {
+      <p class="state">
+        No non-revoked connections were found for the configured OAuth client. Complete pairing,
+        then reload connections.
+      </p>
+    }
+  </section>
+</main>
