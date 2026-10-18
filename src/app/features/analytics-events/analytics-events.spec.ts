@@ -26,6 +26,7 @@ describe('AnalyticsEventsComponent', () => {
   let component: AnalyticsEventsComponent;
   let results: Subject<PageResponse<AnalyticsEventSummary>>;
   let service: {
+    getStatistics: ReturnType<typeof vi.fn>;
     getEvents: ReturnType<typeof vi.fn>;
     getEventFilterOptions: ReturnType<typeof vi.fn>;
   };
@@ -52,6 +53,22 @@ describe('AnalyticsEventsComponent', () => {
     });
     results = new Subject();
     service = {
+      getStatistics: vi.fn(() =>
+        of({
+          totals: {
+            events: 12,
+            users: 3,
+            sessions: 5,
+            eventsWithoutUser: 2,
+            eventsWithoutSession: 1,
+          },
+          byApplication: [
+            { key: 'key-1', label: 'AppCore Live', counts: { events: 12, users: 3, sessions: 5 } },
+          ],
+          byRegion: [{ key: null, label: null, counts: { events: 2, users: 1, sessions: 1 } }],
+          byLanguage: [{ key: 'fr', label: 'fr', counts: { events: 10, users: 2, sessions: 4 } }],
+        }),
+      ),
       getEvents: vi.fn((): Observable<PageResponse<AnalyticsEventSummary>> =>
         results.asObservable(),
       ),
@@ -75,6 +92,46 @@ describe('AnalyticsEventsComponent', () => {
     component = fixture.componentInstance;
     router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
+  });
+
+  it('renders distinct statistics, missing data, and all three breakdowns', () => {
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Anonymous users');
+    expect(text).toContain('2 events without a user ID');
+    expect(text).toContain('Not provided');
+    expect(text).toContain('By application');
+    expect(text).toContain('By region');
+    expect(text).toContain('By language');
+    expect(service.getStatistics).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes applied language and region filters to statistics and resets them', () => {
+    fixture.detectChanges();
+    results.next(emptyPage());
+    results.complete();
+    component.filterForm.patchValue({ language: ' fr ', region: ' CA ' });
+    component.search();
+    expect(service.getStatistics).toHaveBeenLastCalledWith(
+      expect.objectContaining({ language: 'fr', region: 'CA' }),
+    );
+    component.reset();
+    expect(service.getStatistics).toHaveBeenLastCalledWith({
+      page: 0,
+      size: 25,
+      sort: 'receivedAt,desc',
+    });
+  });
+
+  it('shows statistics failures and clears stale values', () => {
+    fixture.detectChanges();
+    const pending = new Subject();
+    service.getStatistics.mockReturnValue(pending);
+    component.loadStatistics();
+    expect(component.statistics()).toBeNull();
+    pending.error(new HttpErrorResponse({ status: 500 }));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Unable to load statistics');
   });
 
   it('loads the first page and exposes loading and empty states', () => {
@@ -237,11 +294,7 @@ describe('AnalyticsEventsComponent', () => {
     const applicationOptions = Array.from<HTMLOptionElement>(
       fixture.nativeElement.querySelectorAll('select[formControlName="apiKeyName"] option'),
     ).map((option) => option.textContent?.trim());
-    expect(applicationOptions).toEqual([
-      'All applications',
-      'AppCore Live',
-      'Meal Master Live',
-    ]);
+    expect(applicationOptions).toEqual(['All applications', 'AppCore Live', 'Meal Master Live']);
 
     results = new Subject();
     service.getEvents.mockImplementation(() => results.asObservable());

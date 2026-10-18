@@ -93,6 +93,15 @@ describe('AppStoreRatingsComponent', () => {
     expect(component.comparisonError()).toContain('Unable to load comparison');
   });
 
+  it('explains a missing comparison endpoint without suggesting reload alone will fix it', () => {
+    service.compareRatings.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('HTTP 404');
+    expect(component.comparisonError()).toContain('AppCore has been updated');
+    expect(component.selected()?.totalRatings).toBe(104);
+    expect(component.comparisonLoading()).toBe(false);
+  });
+
   it('uses the server weighted aggregate and sorts countries by count', () => {
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;

@@ -80,6 +80,28 @@ describe('AdminAnalyticsService', () => {
     });
   });
 
+  it('gets statistics for all matching events without pagination parameters', () => {
+    service
+      .getStatistics({
+        page: 3,
+        size: 25,
+        sort: 'receivedAt,desc',
+        region: 'CA',
+        language: 'fr',
+        sessionId: 's1',
+      })
+      .subscribe();
+    const request = http.expectOne((candidate) => candidate.url.endsWith('/analytics/statistics'));
+    expect(request.request.withCredentials).toBe(true);
+    expect(request.request.params.get('region')).toBe('CA');
+    expect(request.request.params.get('language')).toBe('fr');
+    expect(request.request.params.get('sessionId')).toBe('s1');
+    expect(request.request.params.has('page')).toBe(false);
+    expect(request.request.params.has('size')).toBe(false);
+    expect(request.request.params.has('sort')).toBe(false);
+    request.flush({});
+  });
+
   it('gets an event detail with credentials', () => {
     service.getEvent('event/id').subscribe();
     const request = http.expectOne(`${eventsUrl}/event%2Fid`);

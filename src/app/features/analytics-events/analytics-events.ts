@@ -1,6 +1,13 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  OnInit,
+  OnDestroy,
+  signal,
+} from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -9,10 +16,11 @@ import {
   ValidatorFn,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, Subscription } from 'rxjs';
 import { AdminAnalyticsService } from '../../core/analytics/admin-analytics.service';
 import {
   AnalyticsEventProperties,
+  AnalyticsStatistics,
   AnalyticsEventFilters,
   AnalyticsEventSummary,
   PageResponse,
@@ -29,6 +37,8 @@ const analyticsEventsStateKey = 'appcore-admin.analytics-events.state';
 const analyticsEventsSavedFiltersKey = 'appcore-admin.analytics-events.saved-filters';
 
 interface AnalyticsEventsFormValue {
+  language: string;
+  region: string;
   eventType: string;
   clientId: string;
   apiKeyName: string;
@@ -57,10 +67,15 @@ interface SavedAnalyticsFilter {
   styleUrl: './analytics-events.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AnalyticsEventsComponent implements OnInit {
+export class AnalyticsEventsComponent implements OnInit, OnDestroy {
   private readonly analyticsService = inject(AdminAnalyticsService);
   private readonly router = inject(Router);
   private activeFilters: AnalyticsEventFilters = { page: 0, size: 25, sort: 'receivedAt,desc' };
+
+  readonly statistics = signal<AnalyticsStatistics | null>(null);
+  readonly statisticsLoading = signal(false);
+  readonly statisticsError = signal(false);
+  private statisticsRequest?: Subscription;
 
   readonly eventsPage = signal<PageResponse<AnalyticsEventSummary> | null>(null);
   readonly clientNames = signal<string[]>([]);
@@ -72,6 +87,8 @@ export class AnalyticsEventsComponent implements OnInit {
   readonly savedFilterName = new FormControl('', { nonNullable: true });
   readonly filterForm = new FormGroup(
     {
+      language: new FormControl('', { nonNullable: true }),
+      region: new FormControl('', { nonNullable: true }),
       eventType: new FormControl('', { nonNullable: true }),
       clientId: new FormControl('', { nonNullable: true }),
       apiKeyName: new FormControl('', { nonNullable: true }),
@@ -90,6 +107,7 @@ export class AnalyticsEventsComponent implements OnInit {
     this.restoreState();
     this.loadFilterOptions();
     this.loadEvents();
+    this.loadStatistics();
   }
 
   search(): void {
@@ -106,6 +124,7 @@ export class AnalyticsEventsComponent implements OnInit {
     };
     this.persistState();
     this.loadEvents();
+    this.loadStatistics();
   }
 
   reset(): void {
@@ -113,6 +132,7 @@ export class AnalyticsEventsComponent implements OnInit {
     this.activeFilters = { page: 0, size: this.activeFilters.size, sort: 'receivedAt,desc' };
     this.persistState();
     this.loadEvents();
+    this.loadStatistics();
   }
 
   retry(): void {
@@ -141,7 +161,8 @@ export class AnalyticsEventsComponent implements OnInit {
   }
 
   propertyInfo(properties: AnalyticsEventProperties): string {
-    if (properties === null || Array.isArray(properties) || typeof properties !== 'object') return '—';
+    if (properties === null || Array.isArray(properties) || typeof properties !== 'object')
+      return '—';
     const info = properties['info'];
     if (info === null || info === undefined) return '—';
     if (typeof info === 'object') {
@@ -163,7 +184,9 @@ export class AnalyticsEventsComponent implements OnInit {
     if (!name) return;
     const savedFilter: SavedAnalyticsFilter = { name, form: this.filterForm.getRawValue() };
     const filters = this.savedFilters().filter((filter) => filter.name !== name);
-    this.savedFilters.set([...filters, savedFilter].sort((left, right) => left.name.localeCompare(right.name)));
+    this.savedFilters.set(
+      [...filters, savedFilter].sort((left, right) => left.name.localeCompare(right.name)),
+    );
     this.selectedSavedFilter.set(name);
     this.savedFilterName.setValue('');
     this.persistSavedFilters();
@@ -178,7 +201,8 @@ export class AnalyticsEventsComponent implements OnInit {
       (filter) => filter.name === this.selectedSavedFilter(),
     );
     if (!savedFilter || this.isLoading()) return;
-    this.filterForm.setValue(savedFilter.form);
+    this.filterForm.reset();
+    this.filterForm.patchValue(savedFilter.form);
     this.search();
   }
 
@@ -261,9 +285,35 @@ export class AnalyticsEventsComponent implements OnInit {
       filter.name.trim().length > 0 &&
       filter.form !== null &&
       typeof filter.form === 'object' &&
-      Object.values(filter.form).length === 9 &&
+      [9, 11].includes(Object.values(filter.form).length) &&
       Object.values(filter.form).every((value) => typeof value === 'string')
     );
+  }
+
+  loadStatistics(): void {
+    this.statisticsRequest?.unsubscribe();
+    this.statistics.set(null);
+    this.statisticsLoading.set(true);
+    this.statisticsError.set(false);
+    this.statisticsRequest = this.analyticsService
+      .getStatistics({ ...this.activeFilters })
+      .pipe(finalize(() => this.statisticsLoading.set(false)))
+      .subscribe({
+        next: (statistics) => this.statistics.set(statistics),
+        error: (error: unknown) => {
+          if (
+            error instanceof HttpErrorResponse &&
+            (error.status === 401 || error.status === 403)
+          ) {
+            void this.router.navigate(['/login']);
+          }
+          this.statisticsError.set(true);
+        },
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.statisticsRequest?.unsubscribe();
   }
 
   private loadEvents(): void {
@@ -295,10 +345,7 @@ export class AnalyticsEventsComponent implements OnInit {
         this.applicationNames.set(options.applicationNames);
       },
       error: (error: unknown) => {
-        if (
-          error instanceof HttpErrorResponse &&
-          (error.status === 401 || error.status === 403)
-        ) {
+        if (error instanceof HttpErrorResponse && (error.status === 401 || error.status === 403)) {
           void this.router.navigate(['/login']);
         }
       },

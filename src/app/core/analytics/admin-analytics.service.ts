@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
+  AnalyticsStatistics,
   AnalyticsEventDetail,
   AnalyticsEventFilters,
   AnalyticsEventFilterOptions,
@@ -30,6 +31,27 @@ export class AdminAnalyticsService {
       params,
       withCredentials: true,
     });
+  }
+
+  getStatistics(filters: AnalyticsEventFilters): Observable<AnalyticsStatistics> {
+    let params = new HttpParams();
+    for (const [name, value] of Object.entries(filters)) {
+      if (
+        !['page', 'size', 'sort'].includes(name) &&
+        value !== undefined &&
+        value !== null &&
+        String(value).trim()
+      ) {
+        params = params.set(name, String(value));
+      }
+    }
+    return this.http.get<AnalyticsStatistics>(
+      `${environment.apiBaseUrl}/api/admin/analytics/statistics`,
+      {
+        params,
+        withCredentials: true,
+      },
+    );
   }
 
   getEvent(eventId: string): Observable<AnalyticsEventDetail> {

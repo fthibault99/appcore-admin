@@ -104,7 +104,9 @@ export class AppStoreRatingsComponent implements OnInit {
       error: (error: unknown) => {
         if (error instanceof HttpErrorResponse && (error.status === 401 || error.status === 403)) {
           void this.router.navigate(['/login']);
-        } else this.comparisonError.set('Unable to load comparison. Reload to try again.');
+        } else this.comparisonError.set(error instanceof HttpErrorResponse && error.status === 404
+          ? 'Comparison is unavailable on the server (HTTP 404). Check that AppCore has been updated and the application still exists, then reload saved ratings.'
+          : 'Unable to load comparison. Reload to try again.');
       },
     });
   }

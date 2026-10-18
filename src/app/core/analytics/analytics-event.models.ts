@@ -37,7 +37,30 @@ export interface PageResponse<T> {
   last: boolean;
 }
 
+export interface AnalyticsCounts {
+  events: number;
+  users: number;
+  sessions: number;
+  eventsWithoutUser: number;
+  eventsWithoutSession: number;
+}
+
+export interface AnalyticsBreakdown {
+  key: string | null;
+  label: string | null;
+  counts: AnalyticsCounts;
+}
+
+export interface AnalyticsStatistics {
+  totals: AnalyticsCounts;
+  byApplication: AnalyticsBreakdown[];
+  byRegion: AnalyticsBreakdown[];
+  byLanguage: AnalyticsBreakdown[];
+}
+
 export interface AnalyticsEventFilters {
+  language?: string;
+  region?: string;
   eventType?: string;
   clientId?: string;
   apiKeyName?: string;

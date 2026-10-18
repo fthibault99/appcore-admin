@@ -241,3 +241,41 @@ th {
     justify-content: flex-start;
   }
 }
+
+.statistics-note {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.statistics-kpis,
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.statistics-kpis > div {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--color-surface-muted);
+  border-radius: 0.5rem;
+}
+.statistics-kpis strong {
+  font-size: 1.75rem;
+}
+.statistics-table {
+  max-height: 26rem;
+}
+.statistics-table caption {
+  text-align: left;
+  font-weight: 700;
+  padding: 0.75rem 0;
+}
+.statistics-table tbody tr:nth-child(even) {
+  background: var(--color-surface-muted);
+}
+.statistics-table td:first-child {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
