@@ -9,6 +9,7 @@ import { AppStoreRatings, AppStoreRatingsComparison } from '../../core/app-store
 import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
 
 type CountrySort = 'ratings' | 'average' | 'country';
+type CountryChangeFilter = 'all' | 'count' | 'average' | 'any';
 
 @Component({
   selector: 'app-store-ratings',
@@ -41,10 +42,23 @@ export class AppStoreRatingsComponent implements OnInit {
   readonly collectionError = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly sort = signal<CountrySort>('ratings');
+  readonly changeFilter = signal<CountryChangeFilter>('all');
+  readonly totalRatingsChange = computed(() => {
+    const rows = this.comparison()?.countries;
+    if (!rows?.length || rows.some(row => row.ratingCountChange === null)) return null;
+    return rows.reduce((total, row) => total + row.ratingCountChange!, 0);
+  });
   readonly selected = computed(() => this.applications().find(app => app.applicationId === this.selectedId()));
   readonly countries = computed(() => {
     const comparison = this.comparison();
-    const rows = comparison ? comparison.countries.map(row => ({
+    const filter = this.changeFilter();
+    const comparisonRows = comparison?.countries.filter(row => {
+      const countChanged = row.ratingCountChange !== null && row.ratingCountChange !== 0;
+      const averageChanged = row.averageRatingChange !== null && row.averageRatingChange !== 0;
+      return filter === 'all' || (filter === 'count' && countChanged)
+        || (filter === 'average' && averageChanged) || (filter === 'any' && (countChanged || averageChanged));
+    });
+    const rows = comparisonRows ? comparisonRows.map(row => ({
       country: row.country,
       ratingCount: row.after?.ratingCount ?? null,
       averageRating: row.after?.averageRating ?? null,
@@ -109,6 +123,10 @@ export class AppStoreRatingsComponent implements OnInit {
           : 'Unable to load comparison. Reload to try again.');
       },
     });
+  }
+
+  selectChangeFilter(event: Event): void {
+    this.changeFilter.set((event.target as HTMLSelectElement).value as CountryChangeFilter);
   }
 
   selectSort(event: Event): void {

@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { EMPTY, of, Subject, throwError } from 'rxjs';
 import { AdminAppStoreService } from '../../core/app-store/admin-app-store.service';
-import { AppStoreRatings, AppStoreRatingsRefreshAccepted } from '../../core/app-store/app-store-ratings.models';
+import { AppStoreRatings, AppStoreRatingsComparison, AppStoreRatingsRefreshAccepted } from '../../core/app-store/app-store-ratings.models';
 import { AdminAuthenticationService } from '../../core/authentication/admin-authentication.service';
 import { AppStoreRatingsComponent } from './app-store-ratings';
 
@@ -47,6 +47,105 @@ describe('AppStoreRatingsComponent', () => {
       { country: 'DE', before: null, after: ratings.countries[2], ratingCountChange: null, averageRatingChange: null },
     ],
   };
+
+  function completeComparison(): AppStoreRatingsComparison {
+    return {
+      ...comparison,
+      countries: comparison.countries.map(row => row.country === 'DE'
+        ? { ...row, before: ratings.countries[2], ratingCountChange: 0 }
+        : row),
+    };
+  }
+
+  it.each([
+    [2, '↑ +1 ratings', 'positive'],
+    [0, '↓ -1 ratings', 'negative'],
+    [1, '= 0 ratings', ''],
+  ])('shows the total net change with direction for CA change %s', (caChange, label, tone) => {
+    const data = completeComparison();
+    data.countries[0] = { ...data.countries[0], ratingCountChange: caChange as number };
+    service.compareRatings.mockReturnValue(of(data));
+    fixture.detectChanges();
+    const indicator = fixture.nativeElement.querySelector('[data-testid="total-ratings-change"]');
+    expect(indicator.textContent).toContain(label);
+    if (tone) expect(indicator.querySelector('b').classList.contains(tone)).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('Net change: 2026-10-13 → 2026-10-14 (UTC)');
+    expect(fixture.nativeElement.querySelector('[data-testid="total-ratings"]').textContent).toBe('104');
+  });
+
+  it('does not turn incomplete or empty daily observations into a total change', () => {
+    service.compareRatings.mockReturnValue(of(comparison));
+    fixture.detectChanges();
+    expect(component.totalRatingsChange()).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="total-ratings-change"]').textContent).toContain('missing daily observations');
+    component.comparison.set({ ...comparison, countries: [] });
+    expect(component.totalRatingsChange()).toBeNull();
+    component.comparison.set(null);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="total-ratings-change"]')).toBeNull();
+  });
+
+  it('filters count, average, or either changes, excluding zero and missing changes', () => {
+    const data = completeComparison();
+    data.countries[0] = { ...data.countries[0], averageRatingChange: 0 };
+    data.countries[1] = { ...data.countries[1], ratingCountChange: 0 };
+    data.countries.push({ country: 'FR', before: { ...ratings.countries[0], country: 'FR', ratingCount: 7 },
+      after: { ...ratings.countries[0], country: 'FR', ratingCount: 4 }, ratingCountChange: -3, averageRatingChange: null });
+    data.countries.push({ country: 'GB', before: null, after: { ...ratings.countries[0], country: 'GB' },
+      ratingCountChange: null, averageRatingChange: null });
+    service.compareRatings.mockReturnValue(of(data));
+    fixture.detectChanges();
+    const select = fixture.nativeElement.querySelector('#ratings-changes') as HTMLSelectElement;
+    for (const [filter, expected] of [
+      ['count', ['CA', 'FR']], ['average', ['US']], ['any', ['US', 'CA', 'FR']],
+      ['all', ['US', 'CA', 'FR', 'GB', 'DE']],
+    ] as const) {
+      select.value = filter;
+      select.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+      expect(component.countries().map(row => row.country)).toEqual(expected);
+    }
+    expect(comparison.countries).toHaveLength(3);
+  });
+
+  it('keeps filters usable with no matches and leaves the total independent of filtering', () => {
+    const data = completeComparison();
+    data.countries = data.countries.map(row => ({ ...row, averageRatingChange: 0 }));
+    service.compareRatings.mockReturnValue(of(data));
+    fixture.detectChanges();
+    const select = fixture.nativeElement.querySelector('#ratings-changes') as HTMLSelectElement;
+    select.value = 'average';
+    select.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('No countries match this change filter');
+    expect(fixture.nativeElement.querySelector('#ratings-changes')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="total-ratings-change"]').textContent).toContain('↑ +1 ratings');
+    select.value = 'all';
+    select.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('tbody tr')).toHaveLength(3);
+  });
+
+  it('updates the total with custom comparison dates and disables filtering while loading', () => {
+    service.compareRatings.mockReturnValue(of(completeComparison()));
+    fixture.detectChanges();
+    const pending = new Subject<AppStoreRatingsComparison>();
+    service.compareRatings.mockReturnValue(pending);
+    component.fromDate.set('2026-10-12');
+    component.compareDates();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#ratings-changes').disabled).toBe(true);
+    expect(component.totalRatingsChange()).toBeNull();
+    const data = completeComparison();
+    data.from = '2026-10-12';
+    data.countries[0] = { ...data.countries[0], ratingCountChange: 11 };
+    pending.next(data);
+    pending.complete();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="total-ratings-change"]').textContent).toContain('↑ +10 ratings');
+    expect(fixture.nativeElement.textContent).toContain('Net change: 2026-10-12 → 2026-10-14 (UTC)');
+    expect(fixture.nativeElement.querySelector('#ratings-changes').disabled).toBe(false);
+  });
 
   it('shows daily arrows, precise changes, net counts and missing comparisons', () => {
     service.compareRatings.mockReturnValue(of(comparison));

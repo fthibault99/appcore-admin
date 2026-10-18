@@ -27,7 +27,17 @@
     @if (errorMessage()) { <p class="error" role="alert">{{ errorMessage() }}</p> }
     @if (selected(); as app) {
       <div class="metrics">
-        <div><strong data-testid="total-ratings">{{ app.totalRatings | number }}</strong><span>Latest available ratings</span></div>
+        <div>
+          <strong data-testid="total-ratings">{{ app.totalRatings | number }}</strong><span>Latest available ratings</span>
+          @if (comparison(); as comparison) {
+            <span data-testid="total-ratings-change">
+              @if (totalRatingsChange() !== null) {
+                <b [class.positive]="totalRatingsChange()! > 0" [class.negative]="totalRatingsChange()! < 0" [attr.aria-label]="totalRatingsChange()! > 0 ? 'Total rating count increased' : totalRatingsChange()! < 0 ? 'Total rating count decreased' : 'Total rating count unchanged'">{{ totalRatingsChange()! > 0 ? '↑ +' : totalRatingsChange()! < 0 ? '↓ ' : '= ' }}{{ totalRatingsChange() | number }} ratings</b>
+              } @else { <small>Net change unavailable: missing daily observations.</small> }
+            </span>
+            @if (comparison.from && comparison.to) { <small>Net change: {{ comparison.from }} → {{ comparison.to }} (UTC)</small> }
+          }
+        </div>
         <div><strong data-testid="average-rating" [class]="ratingTone(app.averageRating)">{{ app.averageRating === null ? '—' : (app.averageRating | number: '1.2-2') }}</strong><span>Average rating <small>/ 5</small></span></div>
       </div>
       <div class="coverage">
@@ -59,9 +69,17 @@
         @if (comparisonLoading()) { <p role="status">Loading comparison…</p> }
         @if (comparisonError()) { <p class="error" role="alert">{{ comparisonError() }}</p> }
       </div>
-      @if (countries().length) {
-        <div class="table-toolbar">
+      <div class="table-toolbar">
           <h2>Ratings by country</h2>
+          <div class="toolbar-actions">
+          <label for="ratings-changes">Changes
+            <select id="ratings-changes" [value]="changeFilter()" (change)="selectChangeFilter($event)" [disabled]="!comparison() || comparisonLoading()">
+              <option value="all">All countries</option>
+              <option value="count">Rating count changed</option>
+              <option value="average">Average rating changed</option>
+              <option value="any">Count or average changed</option>
+            </select>
+          </label>
           <label for="ratings-sort">Sort by
             <select id="ratings-sort" [value]="sort()" (change)="selectSort($event)">
               <option value="ratings">Most ratings</option>
@@ -69,7 +87,9 @@
               <option value="country">Country name</option>
             </select>
           </label>
-        </div>
+          </div>
+      </div>
+      @if (countries().length) {
         <div class="table-scroll">
           <table>
             <caption class="visually-hidden">Ratings by country for {{ app.applicationName }}</caption>
@@ -103,7 +123,7 @@
           </table>
         </div>
       } @else {
-        <p class="state">No country observations have been collected for this application yet.</p>
+        <p class="state">{{ comparison()?.countries?.length ? 'No countries match this change filter for the compared dates.' : 'No country observations have been collected for this application yet.' }}</p>
       }
     } @else if (isLoading()) {
       <p class="state" role="status">Loading ratings…</p>
