@@ -45,7 +45,11 @@ describe('AnalyticsEventsComponent', () => {
     ...overrides,
   });
 
+  const defaultFrom = new Date(2026, 8, 18).toISOString();
+
   beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 9, 18, 14, 30));
     sessionStorage.clear();
     Object.defineProperty(window, 'localStorage', {
       configurable: true,
@@ -94,6 +98,45 @@ describe('AnalyticsEventsComponent', () => {
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
   });
 
+  afterEach(() => vi.useRealTimers());
+
+  it('defaults to one calendar month ago at local midnight for events and statistics', () => {
+    fixture.detectChanges();
+    expect(component.filterForm.controls.from.value).toBe('2026-09-18T00:00');
+    expect(component.filterForm.controls.to.value).toBe('');
+    expect(service.getEvents).toHaveBeenCalledWith(expect.objectContaining({ from: defaultFrom }));
+    expect(service.getStatistics).toHaveBeenCalledWith(
+      expect.objectContaining({ from: defaultFrom }),
+    );
+  });
+
+  it.each([
+    [new Date(2026, 2, 31, 12), '2026-02-28T00:00'],
+    [new Date(2028, 2, 31, 12), '2028-02-29T00:00'],
+    [new Date(2026, 0, 18, 12), '2025-12-18T00:00'],
+  ])('clamps the default start date to the previous calendar month for %s', (today, expected) => {
+    vi.setSystemTime(today);
+    fixture.detectChanges();
+    expect(component.filterForm.controls.from.value).toBe(expected);
+    expect(service.getEvents).toHaveBeenCalledWith(
+      expect.objectContaining({ from: new Date(expected).toISOString() }),
+    );
+  });
+
+  it('allows an explicitly empty start date to be restored', () => {
+    fixture.detectChanges();
+    results.next(emptyPage());
+    results.complete();
+    component.filterForm.controls.from.setValue('');
+    component.search();
+    fixture.destroy();
+    fixture = TestBed.createComponent(AnalyticsEventsComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    expect(component.filterForm.controls.from.value).toBe('');
+    expect(service.getEvents.mock.lastCall?.[0].from).toBeUndefined();
+  });
+
   it('renders distinct statistics, missing data, and all three breakdowns', () => {
     fixture.detectChanges();
     const text = fixture.nativeElement.textContent;
@@ -120,6 +163,7 @@ describe('AnalyticsEventsComponent', () => {
       page: 0,
       size: 25,
       sort: 'receivedAt,desc',
+      from: defaultFrom,
     });
   });
 
@@ -136,7 +180,12 @@ describe('AnalyticsEventsComponent', () => {
 
   it('loads the first page and exposes loading and empty states', () => {
     fixture.detectChanges();
-    expect(service.getEvents).toHaveBeenCalledWith({ page: 0, size: 25, sort: 'receivedAt,desc' });
+    expect(service.getEvents).toHaveBeenCalledWith({
+      page: 0,
+      size: 25,
+      sort: 'receivedAt,desc',
+      from: defaultFrom,
+    });
     expect(component.isLoading()).toBe(true);
     results.next(emptyPage());
     results.complete();
@@ -172,6 +221,7 @@ describe('AnalyticsEventsComponent', () => {
       page: 0,
       size: 25,
       sort: 'receivedAt,desc',
+      from: defaultFrom,
     });
   });
 

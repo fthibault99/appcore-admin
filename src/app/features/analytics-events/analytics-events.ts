@@ -103,6 +103,7 @@ export class AnalyticsEventsComponent implements OnInit, OnDestroy {
   );
 
   ngOnInit(): void {
+    this.applyDefaultFilters();
     this.restoreSavedFilters();
     this.restoreState();
     this.loadFilterOptions();
@@ -128,8 +129,7 @@ export class AnalyticsEventsComponent implements OnInit, OnDestroy {
   }
 
   reset(): void {
-    this.filterForm.reset();
-    this.activeFilters = { page: 0, size: this.activeFilters.size, sort: 'receivedAt,desc' };
+    this.applyDefaultFilters();
     this.persistState();
     this.loadEvents();
     this.loadStatistics();
@@ -218,6 +218,23 @@ export class AnalyticsEventsComponent implements OnInit, OnDestroy {
     this.activeFilters = { ...this.activeFilters, page };
     this.persistState();
     this.loadEvents();
+  }
+
+  private applyDefaultFilters(): void {
+    const today = new Date();
+    const from = new Date(today.getFullYear(), today.getMonth(), 1);
+    from.setMonth(from.getMonth() - 1);
+    const lastDay = new Date(from.getFullYear(), from.getMonth() + 1, 0).getDate();
+    from.setDate(Math.min(today.getDate(), lastDay));
+    const pad = (value: number): string => String(value).padStart(2, '0');
+    const localFrom = `${from.getFullYear()}-${pad(from.getMonth() + 1)}-${pad(from.getDate())}T00:00`;
+    this.filterForm.reset({ from: localFrom });
+    this.activeFilters = {
+      page: 0,
+      size: this.activeFilters.size,
+      sort: 'receivedAt,desc',
+      from: this.toIso(localFrom),
+    };
   }
 
   private restoreState(): void {
