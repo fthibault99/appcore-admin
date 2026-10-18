@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
+import { EMPTY, of, Subject, throwError } from 'rxjs';
 import { AdminAppStoreService } from '../../core/app-store/admin-app-store.service';
 import { AppStoreRatings, AppStoreRatingsRefreshAccepted } from '../../core/app-store/app-store-ratings.models';
 import { AdminAuthenticationService } from '../../core/authentication/admin-authentication.service';
@@ -22,10 +22,10 @@ const ratings: AppStoreRatings = {
 describe('AppStoreRatingsComponent', () => {
   let fixture: ComponentFixture<AppStoreRatingsComponent>;
   let component: AppStoreRatingsComponent;
-  let service: { getRatings: ReturnType<typeof vi.fn>; refreshRatings: ReturnType<typeof vi.fn> };
+  let service: { getRatings: ReturnType<typeof vi.fn>; compareRatings: ReturnType<typeof vi.fn>; refreshRatings: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
-    service = { getRatings: vi.fn(() => of([ratings])), refreshRatings: vi.fn(() => of({ runId: 'run-1', applicationId: 'app-1', country: null })) };
+    service = { compareRatings: vi.fn(() => EMPTY), getRatings: vi.fn(() => of([ratings])), refreshRatings: vi.fn(() => of({ runId: 'run-1', applicationId: 'app-1', country: null })) };
     await TestBed.configureTestingModule({
       imports: [AppStoreRatingsComponent],
       providers: [
@@ -36,6 +36,61 @@ describe('AppStoreRatingsComponent', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(AppStoreRatingsComponent);
     component = fixture.componentInstance;
+  });
+
+  const comparison = {
+    applicationId: 'app-1', from: '2026-10-13', to: '2026-10-14',
+    availableDates: ['2026-10-12', '2026-10-13', '2026-10-14'],
+    countries: [
+      { country: 'CA', before: { ...ratings.countries[0], ratingCount: 2, averageRating: 4.999 }, after: ratings.countries[0], ratingCountChange: 2, averageRatingChange: 0.001 },
+      { country: 'US', before: { ...ratings.countries[1], ratingCount: 101, averageRating: 4.5 }, after: { ...ratings.countries[1], collectedDate: '2026-10-14' }, ratingCountChange: -1, averageRatingChange: -0.5 },
+      { country: 'DE', before: null, after: ratings.countries[2], ratingCountChange: null, averageRatingChange: null },
+    ],
+  };
+
+  it('shows daily arrows, precise changes, net counts and missing comparisons', () => {
+    service.compareRatings.mockReturnValue(of(comparison));
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('↑ +0.001');
+    expect(text).toContain('↓ -0.500');
+    expect(text).toContain('+2 ratings');
+    expect(text).toContain('-1 ratings');
+    expect(text).toContain('Unavailable');
+    expect(text).toContain('Daily comparison: 2026-10-13 → 2026-10-14');
+    const from = fixture.nativeElement.querySelector('#ratings-from') as HTMLInputElement;
+    expect(from.min).toBe('2026-10-12');
+    expect(from.max).toBe('2026-10-14');
+  });
+
+  it('validates dates and requests a custom comparison then restores daily mode', () => {
+    service.compareRatings.mockReturnValue(of(comparison));
+    fixture.detectChanges();
+    component.fromDate.set('2026-10-11');
+    component.compareDates();
+    expect(service.compareRatings).toHaveBeenCalledTimes(1);
+    component.fromDate.set('2026-10-14');
+    expect(component.validDates()).toBe(false);
+    component.fromDate.set('2026-10-12');
+    component.compareDates();
+    expect(service.compareRatings).toHaveBeenLastCalledWith('app-1', '2026-10-12', '2026-10-14');
+    component.dailyComparison();
+    expect(service.compareRatings).toHaveBeenLastCalledWith('app-1', undefined, undefined);
+  });
+
+  it('cancels an old application comparison and reports comparison failures', () => {
+    const pending = new Subject<typeof comparison>();
+    service.compareRatings.mockReturnValue(pending);
+    service.getRatings.mockReturnValue(of([ratings, { ...ratings, applicationId: 'app-2' }]));
+    fixture.detectChanges();
+    service.compareRatings.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+    const select = fixture.nativeElement.querySelector('#ratings-application') as HTMLSelectElement;
+    select.value = 'app-2';
+    select.dispatchEvent(new Event('change'));
+    pending.next(comparison);
+    expect(component.comparison()).toBeNull();
+    expect(component.comparisonLoading()).toBe(false);
+    expect(component.comparisonError()).toContain('Unable to load comparison');
   });
 
   it('uses the server weighted aggregate and sorts countries by count', () => {

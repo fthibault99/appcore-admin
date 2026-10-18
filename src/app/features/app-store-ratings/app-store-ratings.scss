@@ -8,7 +8,7 @@ a { color: var(--color-primary); font-weight: 650; }
 .ratings-panel { overflow: hidden; border: 1px solid var(--color-border); border-radius: 1rem; background: var(--color-surface); }
 .toolbar, .table-toolbar { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding: 1.25rem; }
 label { display: grid; gap: .4rem; font-size: .8rem; font-weight: 650; color: var(--color-text-secondary); }
-select, button { min-height: 2.6rem; padding: .5rem .75rem; border: 1px solid var(--color-border-strong); border-radius: .5rem; background: var(--color-surface); color: var(--color-text); }
+select, button, input { min-height: 2.6rem; padding: .5rem .75rem; border: 1px solid var(--color-border-strong); border-radius: .5rem; background: var(--color-surface); color: var(--color-text); }
 .toolbar-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 .collect-button { background: var(--color-primary); color: var(--color-on-accent); border-color: var(--color-primary); }
 .collection-status { margin: 0; padding: 1rem 1.25rem; color: var(--color-success); background: var(--color-success-soft); }
@@ -16,7 +16,7 @@ select, button { min-height: 2.6rem; padding: .5rem .75rem; border: 1px solid va
 select { max-width: 100%; width: 100%; }
 button { cursor: pointer; font-weight: 650; color: var(--color-primary); }
 button:disabled { opacity: .6; cursor: wait; }
-button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--color-focus-ring); outline-offset: 3px; }
+input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--color-focus-ring); outline-offset: 3px; }
 .metrics { display: grid; grid-template-columns: 1fr 1fr; padding: 2rem 1rem; background: var(--color-background-subtle); }
 .metrics > div { display: grid; gap: .25rem; text-align: center; }
 .metrics strong { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.2; font-variant-numeric: tabular-nums; }
@@ -57,3 +57,7 @@ tbody td:last-child { border-radius: 0 .8rem .8rem 0; }
   tbody td.average { border-radius: 0 .8rem .8rem 0; }
   .flag { margin-right: .4rem; }
 }
+
+.comparison-controls { padding: 1.25rem; border-bottom: 1px solid var(--color-border); font-size: .8rem; }
+.comparison-controls .toolbar { padding: 1rem 0; }
+.change small { display: block; color: var(--color-text-secondary); }

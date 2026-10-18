@@ -32,6 +32,23 @@ describe('AdminAppStoreService', () => {
     request.flush([]);
   });
 
+  it('requests exact comparison dates with the admin session', () => {
+    service.compareRatings('app/1', '2026-10-12', '2026-10-14').subscribe();
+    const request = http.expectOne(candidate => candidate.url.endsWith('/app%2F1/ratings/comparison'));
+    expect(request.request.method).toBe('GET');
+    expect(request.request.withCredentials).toBe(true);
+    expect(request.request.params.get('from')).toBe('2026-10-12');
+    expect(request.request.params.get('to')).toBe('2026-10-14');
+    request.flush({});
+  });
+
+  it('lets the server choose daily comparison dates by default', () => {
+    service.compareRatings('app-1').subscribe();
+    const request = http.expectOne(`${environment.apiBaseUrl}/api/admin/app-store/applications/app-1/ratings/comparison`);
+    expect(request.request.params.keys()).toEqual([]);
+    request.flush({});
+  });
+
   it('requests ratings collection with CSRF and the admin session', () => {
     const accepted = { runId: 'run-1', applicationId: 'app/1', country: null };
     service.refreshRatings('app/1').subscribe(result => expect(result).toEqual(accepted));

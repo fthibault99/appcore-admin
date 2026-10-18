@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, switchMap } from 'rxjs';
-import { AppStoreRatings, AppStoreRatingsRefreshAccepted } from './app-store-ratings.models';
+import { AppStoreRatings, AppStoreRatingsComparison, AppStoreRatingsRefreshAccepted } from './app-store-ratings.models';
 import { AppStoreConnection } from './app-store-connection.models';
 import { environment } from '../../../environments/environment';
 import {
@@ -32,6 +32,15 @@ export class AdminAppStoreService {
     return this.http.get<AppStoreRatings[]>(`${environment.apiBaseUrl}/api/admin/app-store/ratings`, {
       withCredentials: true,
     });
+  }
+
+  compareRatings(id: string, from?: string, to?: string): Observable<AppStoreRatingsComparison> {
+    let params = new HttpParams();
+    if (from && to) params = params.set('from', from).set('to', to);
+    return this.http.get<AppStoreRatingsComparison>(
+      `${this.applicationsUrl}/${encodeURIComponent(id)}/ratings/comparison`,
+      { params, withCredentials: true },
+    );
   }
 
   refreshRatings(id: string): Observable<AppStoreRatingsRefreshAccepted> {

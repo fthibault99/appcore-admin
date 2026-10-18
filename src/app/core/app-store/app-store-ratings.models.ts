@@ -25,3 +25,17 @@ export interface AppStoreRatingsRefreshAccepted {
   applicationId: string;
   country: string | null;
 }
+
+export interface AppStoreRatingsComparison {
+  applicationId: string;
+  from: string | null;
+  to: string | null;
+  availableDates: string[];
+  countries: {
+    country: string;
+    before: AppStoreCountryRating | null;
+    after: AppStoreCountryRating | null;
+    ratingCountChange: number | null;
+    averageRatingChange: number | null;
+  }[];
+}
