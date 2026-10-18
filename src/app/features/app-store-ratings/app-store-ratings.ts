@@ -48,6 +48,25 @@ export class AppStoreRatingsComponent implements OnInit {
     if (!rows?.length || rows.some(row => row.ratingCountChange === null)) return null;
     return rows.reduce((total, row) => total + row.ratingCountChange!, 0);
   });
+  readonly totalAverageChange = computed(() => {
+    const rows = this.comparison()?.countries;
+    if (!rows?.length) return null;
+    const weightedAverage = (side: 'before' | 'after'): number | null => {
+      let total = 0;
+      let weighted = 0;
+      for (const row of rows) {
+        const observation = row[side];
+        if (!observation || (observation.ratingCount > 0 && observation.averageRating === null)) return null;
+        total += observation.ratingCount;
+        // Stored means have three decimals; integer thousandths avoid floating point rounding drift.
+        weighted += Math.round((observation.averageRating ?? 0) * 1000) * observation.ratingCount;
+      }
+      return total === 0 ? null : Math.round(weighted / total);
+    };
+    const before = weightedAverage('before');
+    const after = weightedAverage('after');
+    return before === null || after === null ? null : (after - before) / 1000;
+  });
   readonly selected = computed(() => this.applications().find(app => app.applicationId === this.selectedId()));
   readonly countries = computed(() => {
     const comparison = this.comparison();

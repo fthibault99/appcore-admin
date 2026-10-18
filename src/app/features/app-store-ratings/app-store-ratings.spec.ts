@@ -147,6 +147,62 @@ describe('AppStoreRatingsComponent', () => {
     expect(fixture.nativeElement.querySelector('#ratings-changes').disabled).toBe(false);
   });
 
+  it.each([
+    [1, 3, '↓ -2.000 points', -2],
+    [3, 1, '↑ +2.000 points', 2],
+    [1, 1, '= 0.000 points', 0],
+  ])('weights the overall average by each date counts (%s to %s)', (beforeCount, afterCount, label, delta) => {
+    const data = completeComparison();
+    data.countries = [
+      { country: 'CA', before: { ...ratings.countries[0], ratingCount: beforeCount as number, averageRating: 1 },
+        after: { ...ratings.countries[0], ratingCount: afterCount as number, averageRating: 1 }, ratingCountChange: 0, averageRatingChange: 0 },
+      { country: 'US', before: { ...ratings.countries[1], ratingCount: 4 - (beforeCount as number), averageRating: 5 },
+        after: { ...ratings.countries[1], ratingCount: 4 - (afterCount as number), averageRating: 5 }, ratingCountChange: 0, averageRatingChange: 0 },
+      data.countries[2],
+    ];
+    service.compareRatings.mockReturnValue(of(data));
+    fixture.detectChanges();
+    expect(component.totalAverageChange()).toBe(delta);
+    expect(fixture.nativeElement.querySelector('[data-testid="total-average-change"]').textContent).toContain(label);
+    expect(fixture.nativeElement.textContent).toContain('Average change: 2026-10-13 → 2026-10-14 (UTC)');
+    component.changeFilter.set('average');
+    expect(component.countries()).toHaveLength(0);
+    expect(component.totalAverageChange()).toBe(delta);
+  });
+
+  it('rounds weighted averages to three decimals before subtracting', () => {
+    const data = completeComparison();
+    data.countries = [
+      { country: 'CA', before: { ...ratings.countries[0], ratingCount: 1, averageRating: 4 },
+        after: { ...ratings.countries[0], ratingCount: 1, averageRating: 4.001 }, ratingCountChange: 0, averageRatingChange: 0.001 },
+      { country: 'US', before: { ...ratings.countries[1], ratingCount: 1, averageRating: 4 },
+        after: { ...ratings.countries[1], ratingCount: 1, averageRating: 4 }, ratingCountChange: 0, averageRatingChange: 0 },
+    ];
+    service.compareRatings.mockReturnValue(of(data));
+    fixture.detectChanges();
+    expect(component.totalAverageChange()).toBe(0.001);
+    expect(fixture.nativeElement.querySelector('[data-testid="total-average-change"]').textContent).toContain('↑ +0.001 points');
+  });
+
+  it('shows unavailable overall average changes for missing observations or zero totals', () => {
+    service.compareRatings.mockReturnValue(of(comparison));
+    fixture.detectChanges();
+    expect(component.totalAverageChange()).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="total-average-change"]').textContent).toContain('Average change unavailable');
+    const data = completeComparison();
+    data.countries = [data.countries[2]];
+    component.comparison.set(data);
+    expect(component.totalAverageChange()).toBeNull();
+    data.countries = [{ ...data.countries[0], before: { ...ratings.countries[0], ratingCount: 1, averageRating: null } }];
+    component.comparison.set({ ...data });
+    expect(component.totalAverageChange()).toBeNull();
+    component.comparison.set({ ...data, countries: [] });
+    expect(component.totalAverageChange()).toBeNull();
+    component.comparison.set(null);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="total-average-change"]')).toBeNull();
+  });
+
   it('shows daily arrows, precise changes, net counts and missing comparisons', () => {
     service.compareRatings.mockReturnValue(of(comparison));
     fixture.detectChanges();

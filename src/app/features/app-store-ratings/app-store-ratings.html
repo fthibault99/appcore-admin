@@ -38,7 +38,17 @@
             @if (comparison.from && comparison.to) { <small>Net change: {{ comparison.from }} → {{ comparison.to }} (UTC)</small> }
           }
         </div>
-        <div><strong data-testid="average-rating" [class]="ratingTone(app.averageRating)">{{ app.averageRating === null ? '—' : (app.averageRating | number: '1.2-2') }}</strong><span>Average rating <small>/ 5</small></span></div>
+        <div>
+          <strong data-testid="average-rating" [class]="ratingTone(app.averageRating)">{{ app.averageRating === null ? '—' : (app.averageRating | number: '1.2-2') }}</strong><span>Average rating <small>/ 5</small></span>
+          @if (comparison(); as comparison) {
+            <span data-testid="total-average-change">
+              @if (totalAverageChange() !== null) {
+                <b [class.positive]="totalAverageChange()! > 0" [class.negative]="totalAverageChange()! < 0" [attr.aria-label]="totalAverageChange()! > 0 ? 'Overall average rating increased' : totalAverageChange()! < 0 ? 'Overall average rating decreased' : 'Overall average rating unchanged'">{{ totalAverageChange()! > 0 ? '↑ +' : totalAverageChange()! < 0 ? '↓ ' : '= ' }}{{ totalAverageChange() | number: '1.3-3' }} points</b>
+              } @else { <small>Average change unavailable: missing observations or no ratings.</small> }
+            </span>
+            @if (comparison.from && comparison.to) { <small>Average change: {{ comparison.from }} → {{ comparison.to }} (UTC)</small> }
+          }
+        </div>
       </div>
       <div class="coverage">
         <span>{{ app.collectedCountries }} / {{ app.supportedCountries }} countries collected</span>
