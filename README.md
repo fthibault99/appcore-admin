@@ -121,7 +121,8 @@ results have distinct states; HTTP 401/403 returns to login.
 ## OpenAI usage statistics
 
 The `/openai/usage` page provides a local date/time range (last 30 days by default), summary,
-and a table grouped by every historically recorded feature/model pair. It displays execution and failure
+and a table grouped by every historically recorded feature/model pair. Previous/next period arrows shift
+both dates by the selected elapsed duration and immediately refresh statistics and history, preserving request filters. It displays execution and failure
 counts, frozen estimated USD costs, average cost per priced execution, and total/average duration.
 Missing costs are counted explicitly and partial totals are labeled. Inactive pairs appear with zero executions;
 features with no recorded usage are absent. Feature/status filters affect only the paginated request history.

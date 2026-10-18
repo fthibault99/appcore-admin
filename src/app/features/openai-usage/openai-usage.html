@@ -3,8 +3,10 @@
   <header><div><h1>OpenAI Usage</h1><p>Inspect request volume, latency and token consumption. Request and response content is never stored here.</p></div><a class="manage-link" routerLink="/openai/prices">Manage prices</a></header>
   <section class="panel">
     <form [formGroup]="period" (ngSubmit)="search()" class="search">
+      <button type="button" class="secondary period-arrow" aria-label="Previous period" title="Previous period" (click)="shiftPeriod(-1)" [disabled]="isLoading()">←</button>
       <label>From (local time)<input type="datetime-local" formControlName="from" required /></label>
       <label>To (local time)<input type="datetime-local" formControlName="to" required /></label>
+      <button type="button" class="secondary period-arrow" aria-label="Next period" title="Next period" (click)="shiftPeriod(1)" [disabled]="isLoading()">→</button>
       <button type="submit" [disabled]="isLoading()">Apply period</button>
     </form>
     @if (invalidPeriod()) { <p class="error" role="alert">Enter valid dates with From before or equal to To.</p> }

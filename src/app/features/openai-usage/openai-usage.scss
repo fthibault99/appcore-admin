@@ -13,3 +13,5 @@
 .statistics-row:nth-child(even) { background: var(--color-surface-muted); }
 .cost-warning, .partial { color: var(--color-warning); }
 .search { flex-wrap: wrap; }
+
+.period-arrow { min-width: 2.75rem; min-height: 2.75rem; font-size: 1.25rem; }

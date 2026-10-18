@@ -49,4 +49,44 @@ describe('OpenAIUsageComponent', () => {
     expect(service.getUsage).toHaveBeenLastCalledWith('recipe', 'SUCCESS', 0, 25, from, to);
     expect(service.getSummary).toHaveBeenLastCalledWith(from, to);
   });
+
+  it('moves back and forward by the full selected duration and reloads with filters', () => {
+    const component = fixture.componentInstance;
+    component.period.setValue({ from: '2026-06-01T09:00', to: '2026-07-01T09:00' });
+    component.filters.setValue({ feature: 'recipe', status: 'SUCCESS' });
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('[aria-label="Previous period"]').click();
+    fixture.detectChanges();
+    expect(component.period.getRawValue()).toEqual({ from: '2026-05-02T09:00', to: '2026-06-01T09:00' });
+    expect(service.getUsage).toHaveBeenLastCalledWith('recipe', 'SUCCESS', 0, 25,
+      new Date('2026-05-02T09:00').toISOString(), new Date('2026-06-01T09:00').toISOString());
+    fixture.nativeElement.querySelector('[aria-label="Next period"]').click();
+    expect(component.period.getRawValue()).toEqual({ from: '2026-06-01T09:00', to: '2026-07-01T09:00' });
+    component.shiftPeriod(1);
+    expect(component.period.getRawValue()).toEqual({ from: '2026-07-01T09:00', to: '2026-07-31T09:00' });
+  });
+
+  it('does not shift invalid or zero-length periods', () => {
+    const component = fixture.componentInstance;
+    component.period.setValue({ from: '', to: '2026-07-01T09:00' });
+    component.shiftPeriod(-1);
+    expect(component.invalidPeriod()).toBe(true);
+    expect(service.getStatistics).not.toHaveBeenCalled();
+    component.period.setValue({ from: '2026-07-01T09:00', to: '2026-07-01T09:00' });
+    component.shiftPeriod(1);
+    expect(service.getStatistics).not.toHaveBeenCalled();
+  });
+
+  it('disables period navigation while requests are loading', () => {
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    const initial = component.period.getRawValue();
+    component.isLoading.set(true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[aria-label="Previous period"]').disabled).toBe(true);
+    expect(fixture.nativeElement.querySelector('[aria-label="Next period"]').disabled).toBe(true);
+    component.shiftPeriod(-1);
+    expect(component.period.getRawValue()).toEqual(initial);
+    expect(service.getStatistics).toHaveBeenCalledTimes(1);
+  });
 });

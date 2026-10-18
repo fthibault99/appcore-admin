@@ -23,8 +23,10 @@ export class OpenAIUsageComponent implements OnInit {
   private defaultPeriod(): { from: string; to: string } {
     const to = new Date();
     const from = new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const local = (date: Date) => new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-    return { from: local(from), to: local(to) };
+    return { from: this.localDateTime(from), to: this.localDateTime(to) };
+  }
+  private localDateTime(date: Date): string {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   }
   readonly period = new FormGroup({
     from: new FormControl(this.defaultPeriod().from, { nonNullable: true, validators: [Validators.required] }),
@@ -50,6 +52,27 @@ export class OpenAIUsageComponent implements OnInit {
   previous(): void { if (!this.page()?.first) { this.pageNumber--; this.load(); } }
   next(): void { if (!this.page()?.last) { this.pageNumber++; this.load(); } }
   view(id: string): void { void this.router.navigate(['/openai/usage', id]); }
+
+  shiftPeriod(direction: -1 | 1): void {
+    if (this.isLoading()) return;
+    const dates = this.period.getRawValue();
+    const from = new Date(dates.from).getTime();
+    const to = new Date(dates.to).getTime();
+    const duration = to - from;
+    if (this.period.invalid || !Number.isFinite(duration) || duration < 0) {
+      this.invalidPeriod.set(true);
+      return;
+    }
+    if (duration === 0) return;
+    const shiftedFrom = new Date(from + direction * duration);
+    const shiftedTo = new Date(to + direction * duration);
+    if (!Number.isFinite(shiftedFrom.getTime()) || !Number.isFinite(shiftedTo.getTime())) {
+      this.invalidPeriod.set(true);
+      return;
+    }
+    this.period.setValue({ from: this.localDateTime(shiftedFrom), to: this.localDateTime(shiftedTo) });
+    this.search();
+  }
 
   private load(): void {
     if (this.isLoading()) return;
