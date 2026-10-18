@@ -108,3 +108,12 @@ The page does not modify the allowlist, and allowlist status does not prove toke
 validity or Apple access. Loading, empty and error states are separate; expired
 admin sessions return to login. The backend endpoint must be deployed and the
 App Store Connect integration enabled.
+
+## Brick Collector shared albums
+
+The header links to `/brick-collector/shared-albums`, guarded by the admin session.
+The read-only page lists album names, internal IDs, set counts and creation/update dates
+in UTC with server pagination (25 rows). It uses
+`GET /api/admin/brick-collector/shared-albums?page=0&size=25`.
+No capability tokens or application API keys are exposed. Loading, errors and empty
+results have distinct states; HTTP 401/403 returns to login.

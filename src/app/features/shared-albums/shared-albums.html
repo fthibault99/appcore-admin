@@ -1,0 +1,78 @@
+<app-admin-header />
+<main class="page-shell">
+  <header class="page-heading">
+    <div>
+      <h1>Shared albums</h1>
+      <p>Albums shared from Brick Collector, most recently updated first.</p>
+    </div>
+    <button type="button" (click)="load()" [disabled]="isLoading()">
+      {{ isLoading() ? 'Loading…' : 'Reload albums' }}
+    </button>
+  </header>
+  <section class="panel" aria-label="Shared albums" [attr.aria-busy]="isLoading()">
+    @if (errorMessage()) {
+      <p class="error" role="alert">{{ errorMessage() }}</p>
+    }
+    @if (isLoading()) {
+      <p class="state" role="status">Loading shared albums…</p>
+    }
+    @if (result(); as page) {
+      <div class="metrics">
+        <div>
+          <strong>{{ page.totalElements }}</strong
+          ><span>Shared albums</span>
+        </div>
+      </div>
+      @if (page.content.length) {
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Shared albums table">
+          <table>
+            <caption>
+              Persisted shared albums · dates in UTC
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Album</th>
+                <th scope="col">Sets</th>
+                <th scope="col">Created (UTC)</th>
+                <th scope="col">Updated (UTC)</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (album of page.content; track album.id) {
+                <tr>
+                  <th scope="row">
+                    {{ album.name }}<small>{{ album.id }}</small>
+                  </th>
+                  <td>{{ album.itemCount }}</td>
+                  <td>{{ album.createdAt | date: 'medium' : 'UTC' }}</td>
+                  <td>{{ album.updatedAt | date: 'medium' : 'UTC' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else if (!isLoading() && !errorMessage()) {
+        <p class="state">
+          {{
+            page.totalElements
+              ? 'No albums on this page. Go to the previous page.'
+              : 'No shared albums found.'
+          }}
+        </p>
+      }
+      <nav class="pagination" aria-label="Album pages">
+        <button
+          type="button"
+          (click)="load(page.number - 1)"
+          [disabled]="isLoading() || page.number === 0"
+        >
+          Previous
+        </button>
+        <span>Page {{ page.number + 1 }} of {{ page.totalPages || 1 }}</span>
+        <button type="button" (click)="load(page.number + 1)" [disabled]="isLoading() || page.last">
+          Next
+        </button>
+      </nav>
+    }
+  </section>
+</main>

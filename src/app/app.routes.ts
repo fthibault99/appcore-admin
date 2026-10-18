@@ -1,3 +1,4 @@
+import { SharedAlbumsComponent } from './features/shared-albums/shared-albums';
 import { MealAgainComponent } from './features/mealagain/mealagain';
 import { MealAgainDetailComponent } from './features/mealagain-detail/mealagain-detail';
 import { Routes } from '@angular/router';
@@ -38,6 +39,7 @@ import { AppStoreRatingsComponent } from './features/app-store-ratings/app-store
 import { AppStoreConnectionsComponent } from './features/app-store-connections/app-store-connections';
 
 export const routes: Routes = [
+  { path: 'brick-collector/shared-albums', component: SharedAlbumsComponent, canActivate: [adminAuthGuard] },
   { path: 'app-store/connections', component: AppStoreConnectionsComponent, canActivate: [adminAuthGuard] },
   { path: 'mealagain', component: MealAgainComponent, canActivate: [adminAuthGuard] },
   { path: 'mealagain/:userId', component: MealAgainDetailComponent, canActivate: [adminAuthGuard] },
