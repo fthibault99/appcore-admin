@@ -83,3 +83,20 @@ export interface OpenAIUsageSummary {
   averageDurationMs: number;
   estimatedCostUsd: number | null;
 }
+
+export interface OpenAIUsageStatisticsRow {
+  feature: string;
+  model: string;
+  totalRequests: number;
+  successfulRequests: number;
+  totalDurationMs: number;
+  averageDurationMs: number;
+  pricedRequests: number;
+  estimatedCostUsd: number | null;
+}
+
+export interface OpenAIUsageStatistics {
+  from: string;
+  to: string;
+  rows: OpenAIUsageStatisticsRow[];
+}

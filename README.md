@@ -117,3 +117,13 @@ in UTC with server pagination (25 rows). It uses
 `GET /api/admin/brick-collector/shared-albums?page=0&size=25`.
 No capability tokens or application API keys are exposed. Loading, errors and empty
 results have distinct states; HTTP 401/403 returns to login.
+
+## OpenAI usage statistics
+
+The `/openai/usage` page provides a local date/time range (last 30 days by default), summary,
+and a table grouped by every historically recorded feature/model pair. It displays execution and failure
+counts, frozen estimated USD costs, average cost per priced execution, and total/average duration.
+Missing costs are counted explicitly and partial totals are labeled. Inactive pairs appear with zero executions;
+features with no recorded usage are absent. Feature/status filters affect only the paginated request history.
+The backend must expose `GET /api/admin/openai/usage/statistics?from=...&to=...` alongside the existing
+history and summary routes. All calls use the existing administrator session.

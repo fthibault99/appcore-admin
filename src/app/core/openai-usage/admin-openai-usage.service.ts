@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateOpenAIModelPrice, OpenAIModelPrice, OpenAIUsage, OpenAIUsagePage, OpenAIUsageSummary } from './openai-usage.models';
+import { CreateOpenAIModelPrice, OpenAIModelPrice, OpenAIUsage, OpenAIUsagePage, OpenAIUsageSummary, OpenAIUsageStatistics } from './openai-usage.models';
 
 @Injectable({ providedIn: 'root' })
 export class AdminOpenAIUsageService {
@@ -11,15 +11,30 @@ export class AdminOpenAIUsageService {
   private readonly pricesUrl = `${environment.apiBaseUrl}/api/admin/openai/prices`;
   private readonly csrfUrl = `${environment.apiBaseUrl}/api/admin/auth/csrf`;
 
-  getUsage(feature: string, status: string, page: number, size: number): Observable<OpenAIUsagePage> {
+  getUsage(feature: string, status: string, page: number, size: number, from?: string, to?: string): Observable<OpenAIUsagePage> {
     let params = new HttpParams().set('page', page).set('size', size).set('sort', 'startedAt,desc');
     if (feature.trim()) params = params.set('feature', feature.trim());
     if (status) params = params.set('status', status);
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
     return this.http.get<OpenAIUsagePage>(this.url, { params, withCredentials: true });
   }
 
-  getSummary(): Observable<OpenAIUsageSummary> {
-    return this.http.get<OpenAIUsageSummary>(`${this.url}/summary`, { withCredentials: true });
+  getSummary(from?: string, to?: string): Observable<OpenAIUsageSummary> {
+    return this.http.get<OpenAIUsageSummary>(`${this.url}/summary`, { params: this.periodParams(from, to), withCredentials: true });
+  }
+
+  getStatistics(from: string, to: string): Observable<OpenAIUsageStatistics> {
+    return this.http.get<OpenAIUsageStatistics>(`${this.url}/statistics`, {
+      params: this.periodParams(from, to), withCredentials: true,
+    });
+  }
+
+  private periodParams(from?: string, to?: string): HttpParams {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    return params;
   }
 
   getUsageDetail(id: string): Observable<OpenAIUsage> {

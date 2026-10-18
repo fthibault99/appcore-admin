@@ -1,7 +1,17 @@
 <app-admin-header />
 <main class="page-shell">
   <header><div><h1>OpenAI Usage</h1><p>Inspect request volume, latency and token consumption. Request and response content is never stored here.</p></div><a class="manage-link" routerLink="/openai/prices">Manage prices</a></header>
+  <section class="panel">
+    <form [formGroup]="period" (ngSubmit)="search()" class="search">
+      <label>From (local time)<input type="datetime-local" formControlName="from" required /></label>
+      <label>To (local time)<input type="datetime-local" formControlName="to" required /></label>
+      <button type="submit" [disabled]="isLoading()">Apply period</button>
+    </form>
+    @if (invalidPeriod()) { <p class="error" role="alert">Enter valid dates with From before or equal to To.</p> }
+  </section>
   @if (summary(); as data) {
+    <p>Period: {{ data.from | date: 'medium' }} – {{ data.to | date: 'medium' }} (local time). Statistics include all features and statuses.</p>
+    @if (unpricedRequests() > 0) { <p class="cost-warning" role="status">Cost is partial: {{ unpricedRequests() | number }} executions have no cost estimate.</p> }
     <section class="summary-grid" aria-label="OpenAI usage summary">
       <article class="panel"><span>Requests</span><strong>{{ data.totalRequests | number }}</strong></article>
       <article class="panel"><span>Failures</span><strong>{{ data.failedRequests | number }}</strong></article>
@@ -10,11 +20,27 @@
       <article class="panel"><span>Estimated cost</span><strong>{{ data.estimatedCostUsd === null ? 'Not configured' : (data.estimatedCostUsd | currency: 'USD': 'symbol': '1.2-8') }}</strong></article>
     </section>
   }
+  @if (statistics(); as stats) {
+    <section class="panel" aria-label="Statistics by feature and model">
+      <h2>Features and models</h2>
+      <p>All previously recorded feature/model pairs, including those with no executions in this period. Costs are historical estimates in USD. Average cost uses executions with a known estimate.</p>
+      @if (stats.rows.length === 0) { <p class="state">No OpenAI usage has been recorded yet.</p> }
+      @else {
+        <div class="table-scroll"><table><thead><tr><th>Feature</th><th>Model</th><th>Executions</th><th>Failures</th><th>Estimated cost (USD)</th><th>Average cost / execution (USD)</th><th>Missing cost</th><th>Total time</th><th>Average time</th></tr></thead>
+          <tbody>@for (row of stats.rows; track row.feature + '/' + row.model) {
+            <tr class="statistics-row"><td>{{ row.feature }}</td><td>{{ row.model }}</td><td>{{ row.totalRequests | number }}</td><td>{{ row.totalRequests - row.successfulRequests | number }}</td>
+              <td>{{ row.estimatedCostUsd === null ? '—' : (row.estimatedCostUsd | currency: 'USD': 'symbol': '1.2-8') }}@if (row.pricedRequests < row.totalRequests && row.pricedRequests > 0) { <span class="partial"> (partial)</span> }</td>
+              <td>{{ row.pricedRequests === 0 || row.estimatedCostUsd === null ? '—' : (row.estimatedCostUsd / row.pricedRequests | currency: 'USD': 'symbol': '1.2-8') }}</td>
+              <td>{{ row.totalRequests - row.pricedRequests | number }}</td><td>{{ row.totalDurationMs / 1000 | number: '1.0-2' }} s</td><td>{{ row.totalRequests === 0 ? '—' : (row.averageDurationMs / 1000 | number: '1.0-3') }}@if (row.totalRequests > 0) { s }</td></tr>
+          }</tbody></table></div>
+      }
+    </section>
+  }
   <section class="panel">
     <form [formGroup]="filters" (ngSubmit)="search()" class="search">
-      <label>Feature<input formControlName="feature" placeholder="recipe-image-extraction" /></label>
+      <label>Feature<select formControlName="feature"><option value="">All features</option>@for (feature of features(); track feature) { <option [value]="feature">{{ feature }}</option> }</select></label>
       <label>Status<select formControlName="status"><option value="">All statuses</option><option value="SUCCESS">Success</option><option value="RATE_LIMITED">Rate limited</option><option value="TIMEOUT">Timeout</option><option value="UNAVAILABLE">Unavailable</option><option value="PROVIDER_ERROR">Provider error</option></select></label>
-      <button type="submit">Search</button><button type="button" class="secondary" (click)="reset()">Reset</button>
+      <button type="submit" [disabled]="isLoading()">Filter requests</button><button type="button" class="secondary" (click)="reset()" [disabled]="isLoading()">Reset</button>
     </form>
   </section>
   <section class="panel" aria-live="polite">
@@ -27,7 +53,7 @@
         <div class="table-scroll"><table><thead><tr><th>Started</th><th>Feature</th><th>Model</th><th>Status</th><th>Tokens</th><th>Web searches</th><th>Duration</th><th>Estimated cost</th><th>Action</th></tr></thead>
           <tbody>@for (usage of usagePage.content; track usage.id) { <tr><td>{{ usage.startedAt | date: 'medium' }}</td><td>{{ usage.feature }}</td><td>{{ usage.model }}</td><td><span class="badge" [class.failed]="usage.status !== 'SUCCESS'">{{ usage.status }}</span></td><td>{{ usage.totalTokens === null ? '—' : (usage.totalTokens | number) }}</td><td>{{ usage.webSearchCalls === null ? '—' : (usage.webSearchCalls | number) }}</td><td>{{ usage.durationMs | number }} ms</td><td>{{ usage.estimatedCostUsd === null ? '—' : (usage.estimatedCostUsd | currency: 'USD': 'symbol': '1.2-8') }}</td><td><button type="button" class="link-button" (click)="view(usage.id)">View</button></td></tr> }</tbody></table></div>
       }
-      <div class="pagination"><span>Page {{ usagePage.totalPages === 0 ? 0 : usagePage.number + 1 }} of {{ usagePage.totalPages }}</span><button type="button" class="secondary" (click)="previous()" [disabled]="usagePage.first">Previous</button><button type="button" class="secondary" (click)="next()" [disabled]="usagePage.last">Next</button></div>
+      <div class="pagination"><span>Page {{ usagePage.totalPages === 0 ? 0 : usagePage.number + 1 }} of {{ usagePage.totalPages }}</span><button type="button" class="secondary" (click)="previous()" [disabled]="usagePage.first || isLoading()">Previous</button><button type="button" class="secondary" (click)="next()" [disabled]="usagePage.last || isLoading()">Next</button></div>
     }
   </section>
 </main>
