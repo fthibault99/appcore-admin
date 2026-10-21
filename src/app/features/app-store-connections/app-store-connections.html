@@ -3,23 +3,48 @@
   <header class="page-heading">
     <div>
       <h1>App Store Connect</h1>
-      <p>Find the OAuth subject for your paired connection.</p>
+      <p>Reconnect ChatGPT using an authorized connection.</p>
     </div>
-    <button type="button" (click)="load()" [disabled]="isLoading()">
+    <button type="button" (click)="load()" [disabled]="isLoading() || !!generatingSubject()">
       {{ isLoading() ? 'Loading…' : 'Reload connections' }}
     </button>
   </header>
   <section class="panel setup" aria-label="Connection setup">
-    <h2>Authorize a paired connection</h2>
-    <p>
-      Identify your connection using its client and application identity, then copy its OAuth
-      subject into <code>APPCORE_APP_STORE_CONNECT_ALLOWED_SUBJECTS</code>. Apply the configuration
-      to every AppCore instance and retry the ChatGPT connection.
-    </p>
+    <h2>Reconnect in three steps</h2>
+    <ol>
+      <li>Generate a reconnection code for an authorized connection below.</li>
+      <li>
+        In
+        <a
+          href="https://chatgpt.com/settings/plugins-settings"
+          target="_blank"
+          rel="noopener noreferrer"
+          >ChatGPT plugin settings</a
+        >, select AppStoreConnect and choose Reconnect for the account you use.
+      </li>
+      <li>Enter the code on the “Connect your application” page to finish.</li>
+    </ol>
     <p class="muted">
-      Allowlisted reflects the configuration of the responding server. It does not confirm that an
-      OAuth token is current or that Apple access works.
+      Each code can be used once and expires after ten minutes. Generating another code replaces the
+      previous one.
     </p>
+    @if (pairingCode(); as pairing) {
+      <div class="pairing" role="status" aria-live="polite">
+        <p>Your reconnection code</p>
+        <strong class="pairing-code">{{ pairing.code }}</strong>
+        <button type="button" (click)="copyPairingCode()">Copy code</button>
+        <p class="muted">
+          Expires at {{ pairing.expiresAt | date: 'mediumTime' }} (local time). Keep this code
+          private.
+        </p>
+      </div>
+    }
+    @if (pairingError()) {
+      <p class="error" role="alert">{{ pairingError() }}</p>
+    }
+    @if (pairingNotice()) {
+      <p class="muted" role="status">{{ pairingNotice() }}</p>
+    }
   </section>
   <section class="panel" aria-label="App Store Connect connections" [attr.aria-busy]="isLoading()">
     @if (errorMessage()) {
@@ -57,6 +82,7 @@
               <th scope="col">Application identity</th>
               <th scope="col">Created (UTC)</th>
               <th scope="col">Allowlist</th>
+              <th scope="col">Reconnect</th>
             </tr>
           </thead>
           <tbody>
@@ -82,6 +108,25 @@
                   <span class="badge" [class.allowed]="connection.allowlisted">{{
                     connection.allowlisted ? 'Allowlisted' : 'Not allowlisted'
                   }}</span>
+                </td>
+                <td>
+                  @if (connection.allowlisted) {
+                    <button
+                      type="button"
+                      class="reconnect"
+                      [disabled]="!!generatingSubject() || isLoading()"
+                      [attr.aria-label]="'Generate reconnection code for ' + connection.subject"
+                      (click)="generateReconnectCode(connection)"
+                    >
+                      {{
+                        generatingSubject() === connection.subject
+                          ? 'Generating…'
+                          : 'Generate reconnection code'
+                      }}
+                    </button>
+                  } @else {
+                    <span class="muted">Use an authorized connection</span>
+                  }
                 </td>
               </tr>
             }

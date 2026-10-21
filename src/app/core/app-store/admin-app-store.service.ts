@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, switchMap } from 'rxjs';
 import { AppStoreRatings, AppStoreRatingsComparison, AppStoreRatingsRefreshAccepted } from './app-store-ratings.models';
-import { AppStoreConnection } from './app-store-connection.models';
+import { AppStoreConnection, AppStorePairingCode } from './app-store-connection.models';
 import { environment } from '../../../environments/environment';
 import {
   AppStoreApplication,
@@ -25,6 +25,16 @@ export class AdminAppStoreService {
     return this.http.get<AppStoreConnection[]>(
       `${environment.apiBaseUrl}/api/admin/app-store-connect/connections`,
       { withCredentials: true },
+    );
+  }
+
+  generateReconnectCode(subject: string): Observable<AppStorePairingCode> {
+    return this.withCsrf((headers) =>
+      this.http.post<AppStorePairingCode>(
+        `${environment.apiBaseUrl}/api/admin/app-store-connect/connections/${encodeURIComponent(subject)}/pairing-code`,
+        null,
+        { headers, withCredentials: true },
+      ),
     );
   }
 

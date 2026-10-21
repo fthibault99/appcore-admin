@@ -5,3 +5,8 @@ export interface AppStoreConnection {
   createdAt: string;
   allowlisted: boolean;
 }
+
+export interface AppStorePairingCode {
+  code: string;
+  expiresAt: string;
+}

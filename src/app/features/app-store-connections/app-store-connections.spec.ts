@@ -17,10 +17,18 @@ const row: AppStoreConnection = {
 
 describe('AppStoreConnectionsComponent', () => {
   let fixture: ComponentFixture<AppStoreConnectionsComponent>;
-  let service: { getConnections: ReturnType<typeof vi.fn> };
+  let service: {
+    getConnections: ReturnType<typeof vi.fn>;
+    generateReconnectCode: ReturnType<typeof vi.fn>;
+  };
   beforeEach(async () => {
     Object.defineProperty(navigator, 'clipboard', { configurable: true, get: () => undefined });
-    service = { getConnections: vi.fn(() => of([row])) };
+    service = {
+      getConnections: vi.fn(() => of([row])),
+      generateReconnectCode: vi.fn(() =>
+        of({ code: '583214', expiresAt: new Date(Date.now() + 600_000).toISOString() }),
+      ),
+    };
     await TestBed.configureTestingModule({
       imports: [AppStoreConnectionsComponent],
       providers: [
@@ -32,6 +40,7 @@ describe('AppStoreConnectionsComponent', () => {
     fixture = TestBed.createComponent(AppStoreConnectionsComponent);
   });
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
     Reflect.deleteProperty(navigator, 'clipboard');
   });
@@ -110,5 +119,65 @@ describe('AppStoreConnectionsComponent', () => {
       'manually',
     );
     expect(fixture.componentInstance.copyMessage()).toBeNull();
+  });
+
+  it('offers reconnection only for authorized rows and blocks concurrent generation', () => {
+    const allowed = { ...row, subject: 'allowed-subject', allowlisted: true };
+    service.getConnections.mockReturnValue(of([row, allowed]));
+    const pending = new Subject<{ code: string; expiresAt: string }>();
+    service.generateReconnectCode.mockReturnValue(pending);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.reconnect')).toHaveLength(1);
+    fixture.componentInstance.generateReconnectCode(row);
+    expect(service.generateReconnectCode).not.toHaveBeenCalled();
+    (fixture.nativeElement.querySelector('.reconnect') as HTMLButtonElement).click();
+    fixture.componentInstance.generateReconnectCode(allowed);
+    expect(service.generateReconnectCode).toHaveBeenCalledExactlyOnceWith('allowed-subject');
+    pending.next({ code: '583214', expiresAt: new Date(Date.now() + 600_000).toISOString() });
+    pending.complete();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.pairing-code').textContent).toContain('583214');
+  });
+
+  it('copies the reconnection code without repeating it in feedback', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.spyOn(navigator, 'clipboard', 'get').mockReturnValue({ writeText } as unknown as Clipboard);
+    fixture.detectChanges();
+    fixture.componentInstance.generateReconnectCode({ ...row, allowlisted: true });
+    await fixture.componentInstance.copyPairingCode();
+    fixture.detectChanges();
+    expect(writeText).toHaveBeenCalledWith('583214');
+    expect(fixture.nativeElement.querySelector('.success')?.textContent).toBe(
+      'Reconnection code copied.',
+    );
+  });
+
+  it('removes an expired code and prevents copying it', async () => {
+    vi.useFakeTimers();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.spyOn(navigator, 'clipboard', 'get').mockReturnValue({ writeText } as unknown as Clipboard);
+    fixture.detectChanges();
+    fixture.componentInstance.generateReconnectCode({ ...row, allowlisted: true });
+    vi.advanceTimersByTime(600_000);
+    await fixture.componentInstance.copyPairingCode();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.pairing-code')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('The code has expired');
+    expect(writeText).not.toHaveBeenCalled();
+  });
+
+  it('clears a previous code on retry and gives a useful error without exposing it', () => {
+    fixture.detectChanges();
+    const allowed = { ...row, allowlisted: true };
+    fixture.componentInstance.generateReconnectCode(allowed);
+    expect(fixture.componentInstance.pairingCode()).not.toBeNull();
+    service.generateReconnectCode.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 409 })),
+    );
+    fixture.componentInstance.generateReconnectCode(allowed);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.pairingCode()).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('no longer authorized');
+    expect(fixture.nativeElement.textContent).not.toContain('583214');
   });
 });

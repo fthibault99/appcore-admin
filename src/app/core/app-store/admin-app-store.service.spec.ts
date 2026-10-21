@@ -16,6 +16,34 @@ describe('AdminAppStoreService', () => {
 
   afterEach(() => http.verify());
 
+  it('generates a reconnect code with the admin session and CSRF', () => {
+    const result = { code: '583214', expiresAt: '2030-01-01T00:10:00Z' };
+    service
+      .generateReconnectCode('connection/id')
+      .subscribe((value) => expect(value).toEqual(result));
+    const csrf = http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`);
+    expect(csrf.request.withCredentials).toBe(true);
+    csrf.flush('', { headers: { 'X-XSRF-TOKEN': 'csrf-token' } });
+    const request = http.expectOne(
+      `${environment.apiBaseUrl}/api/admin/app-store-connect/connections/connection%2Fid/pairing-code`,
+    );
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toBeNull();
+    expect(request.request.withCredentials).toBe(true);
+    expect(request.request.headers.get('X-XSRF-TOKEN')).toBe('csrf-token');
+    request.flush(result);
+  });
+
+  it('does not request a reconnect code without CSRF', () => {
+    let error: unknown;
+    service.generateReconnectCode('subject').subscribe({ error: (value) => (error = value) });
+    http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`).flush('');
+    expect(error).toBeInstanceOf(Error);
+    http.expectNone(
+      `${environment.apiBaseUrl}/api/admin/app-store-connect/connections/subject/pairing-code`,
+    );
+  });
+
   it('loads App Store Connect connections using the admin session', () => {
     service.getConnections().subscribe(result => expect(result).toEqual([]));
     const request = http.expectOne(`${environment.apiBaseUrl}/api/admin/app-store-connect/connections`);

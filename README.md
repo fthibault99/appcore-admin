@@ -1,5 +1,18 @@
 # AppcoreAdmin
 
+## App Store Connect reconnection
+
+On `/app-store/connections`, an authenticated administrator can generate a reconnection
+code for an already authorized connection. Open ChatGPT plugin settings, reconnect the
+AppStoreConnect account you use, and enter that code on the pairing page. The existing
+identity is reused; no terminal, private identity file or AWS allowlist edit is needed.
+
+This requires the backend's session/CSRF-protected
+`POST /api/admin/app-store-connect/connections/{subject}/pairing-code` endpoint. Codes
+expire in ten minutes, are single-use, and are replaced by newly generated codes. They
+remain only in component memory, with copy feedback and explicit expiration/error states.
+The page does not authorize new identities or approve Apple writes.
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.20.
 
 ## Development server

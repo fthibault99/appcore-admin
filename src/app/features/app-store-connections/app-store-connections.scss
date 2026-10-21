@@ -47,6 +47,32 @@ caption,
 .setup p:last-child {
   margin-bottom: 0;
 }
+.setup li {
+  margin-bottom: 0.6rem;
+  line-height: 1.6;
+}
+.setup a {
+  color: var(--color-primary);
+}
+.pairing {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--color-primary);
+  border-radius: 0.5rem;
+  background: var(--color-surface-muted);
+}
+.pairing-code {
+  display: block;
+  width: fit-content;
+  margin-bottom: 1rem;
+  font-size: clamp(1.75rem, 6vw, 2.5rem);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.2em;
+  user-select: all;
+}
+.pairing .muted {
+  margin-top: 0.75rem;
+}
 code {
   overflow-wrap: anywhere;
   font-size: 0.85rem;
