@@ -16,6 +16,25 @@ describe('AdminAppStoreService', () => {
 
   afterEach(() => http.verify());
 
+  it('previews and approves exact changes with the admin session and CSRF', () => {
+    const request = { tool: 'update_app_metadata' as const, arguments: { appId: '6503181781', version: 'version-id', locale: 'fr-FR', metadata: { whatsNew: 'Correction.' } } };
+    service.previewReleaseNotes(request).subscribe();
+    http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`).flush('', { headers: { 'X-XSRF-TOKEN': 'token' } });
+    const preview = http.expectOne(`${environment.apiBaseUrl}/api/admin/app-store-connect/approvals/preview`);
+    expect(preview.request.body).toEqual(request);
+    expect(preview.request.withCredentials).toBe(true);
+    expect(preview.request.headers.get('X-XSRF-TOKEN')).toBe('token');
+    preview.flush({});
+    const approval = { ...request, subject: 'subject', clientId: 'client', expectedPlanHash: 'hash' };
+    service.approveReleaseNotes(approval).subscribe();
+    http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`).flush('', { headers: { 'X-XSRF-TOKEN': 'token2' } });
+    const write = http.expectOne(`${environment.apiBaseUrl}/api/admin/app-store-connect/approvals`);
+    expect(write.request.body).toEqual(approval);
+    expect(write.request.withCredentials).toBe(true);
+    expect(write.request.headers.get('X-XSRF-TOKEN')).toBe('token2');
+    write.flush({});
+  });
+
   it('generates a reconnect code with the admin session and CSRF', () => {
     const result = { code: '583214', expiresAt: '2030-01-01T00:10:00Z' };
     service

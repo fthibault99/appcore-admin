@@ -1,3 +1,4 @@
+import { AppStoreApprovalsComponent } from '../app-store-approvals/app-store-approvals';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
@@ -21,7 +22,7 @@ import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
 
 @Component({
   selector: 'app-store-connections',
-  imports: [DatePipe, AdminHeaderComponent],
+  imports: [DatePipe, AdminHeaderComponent, AppStoreApprovalsComponent],
   templateUrl: './app-store-connections.html',
   styleUrl: './app-store-connections.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

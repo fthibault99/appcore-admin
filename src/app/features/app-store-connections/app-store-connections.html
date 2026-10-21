@@ -3,7 +3,7 @@
   <header class="page-heading">
     <div>
       <h1>App Store Connect</h1>
-      <p>Reconnect ChatGPT using an authorized connection.</p>
+      <p>Manage ChatGPT connections and approve release-note updates.</p>
     </div>
     <button type="button" (click)="load()" [disabled]="isLoading() || !!generatingSubject()">
       {{ isLoading() ? 'Loading…' : 'Reload connections' }}
@@ -140,4 +140,5 @@
       </p>
     }
   </section>
+  <app-store-approvals [connections]="connections()" />
 </main>

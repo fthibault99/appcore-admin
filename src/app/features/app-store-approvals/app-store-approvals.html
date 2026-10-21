@@ -1,0 +1,112 @@
+<section
+  class="panel"
+  aria-labelledby="notes-approval-title"
+  [attr.aria-busy]="busy()"
+>
+  <h2 id="notes-approval-title">Approve release notes</h2>
+  <p>
+    Review the existing Apple version and the replacement text for each
+    language. Approval allows the selected connection to apply these exact
+    changes once within ten minutes.
+  </p>
+  <fieldset [disabled]="busy()">
+    <div class="fields">
+      <label
+        >Connection
+        <select [(ngModel)]="subject" (ngModelChange)="invalidate()">
+          <option value="">Choose an authorized connection</option>
+          @for (connection of connections(); track connection.subject) { @if
+          (connection.allowlisted) {
+          <option [value]="connection.subject">
+            {{ connection.subject }} ({{ connection.clientId }})
+          </option>
+          } }
+        </select>
+      </label>
+      <label
+        >Apple app ID
+        <input
+          [(ngModel)]="appId"
+          (ngModelChange)="invalidate()"
+          inputmode="numeric"
+          placeholder="e.g. 6503181781"
+      /></label>
+      <label
+        >Version or Apple version ID
+        <input
+          [(ngModel)]="version"
+          (ngModelChange)="invalidate()"
+          placeholder="e.g. 1.15.1"
+      /></label>
+    </div>
+    @for (row of rows(); track $index; let i = $index) {
+    <article class="locale">
+      <label [for]="'notes-locale-' + i">Apple language code</label>
+      <input
+        [id]="'notes-locale-' + i"
+        [(ngModel)]="row.locale"
+        (ngModelChange)="invalidate()"
+        placeholder="e.g. fr-FR"
+      />
+      <label [for]="'notes-text-' + i">New “What’s New” text</label>
+      <textarea
+        [id]="'notes-text-' + i"
+        [(ngModel)]="row.text"
+        (ngModelChange)="invalidate()"
+        rows="3"
+        maxlength="4000"
+      ></textarea>
+      <button type="button" class="secondary" (click)="removeLocale(i)">
+        Remove language
+      </button>
+      @if (row.preview; as preview) {
+      <div class="preview">
+        <h3>
+          {{ preview.plan.snapshot.current.name }} · {{
+          preview.plan.snapshot.current.locale }}
+        </h3>
+        <p>
+          App {{ preview.plan.appId }} · Version {{
+          preview.plan.snapshot.current.version }} · {{ preview.plan.platform }}
+          · {{ preview.plan.state }}
+        </p>
+        <p class="muted">Apple version ID: {{ preview.plan.versionId }}</p>
+        <h4>Current text</h4>
+        <p class="notes">
+          {{ preview.plan.snapshot.current.whatsNew ?? 'No release notes' }}
+        </p>
+        <h4>Replacement text</h4>
+        <p class="notes">{{ row.request?.arguments?.metadata?.whatsNew }}</p>
+      </div>
+      } @if (row.approval; as approval) {
+      <p class="success" role="status">
+        Approval issued · expires {{ approval.expiresAt | date: 'medium' }}.
+        This does not confirm an Apple update.
+      </p>
+      } @if (row.error) {
+      <p class="error" role="alert">{{ row.error }}</p>
+      }
+    </article>
+    }
+    <div class="actions">
+      <button type="button" class="secondary" (click)="addLocale()">
+        Add language
+      </button>
+      <button type="button" (click)="preview()" [disabled]="!canPreview()">
+        Preview Apple changes
+      </button>
+      <button type="button" (click)="approve()" [disabled]="!canApprove()">
+        Approve reviewed changes
+      </button>
+    </div>
+  </fieldset>
+  @if (busy()) {
+  <p role="status">Processing languages…</p>
+  } @if (message()) {
+  <p role="status">{{ message() }}</p>
+  }
+  <p class="muted">
+    Approval does not apply changes to Apple. Return to the chat and request the
+    update with the same connection and texts.
+  </p>
+</section>

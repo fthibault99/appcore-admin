@@ -1,3 +1,4 @@
+import { AppStoreNotesRequest, AppStoreApprovalPreview, AppStoreApprovalRequest, AppStoreWriteApproval } from './app-store-approval.models';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, switchMap } from 'rxjs';
@@ -20,6 +21,20 @@ export class AdminAppStoreService {
   private readonly applicationsUrl = `${environment.apiBaseUrl}/api/admin/app-store/applications`;
   private readonly notificationTypesUrl = `${this.notificationsUrl}/filter-options/types`;
   private readonly csrfUrl = `${environment.apiBaseUrl}/api/admin/auth/csrf`;
+
+  previewReleaseNotes(request: AppStoreNotesRequest): Observable<AppStoreApprovalPreview> {
+    return this.withCsrf((headers) => this.http.post<AppStoreApprovalPreview>(
+      `${environment.apiBaseUrl}/api/admin/app-store-connect/approvals/preview`, request,
+      { headers, withCredentials: true },
+    ));
+  }
+
+  approveReleaseNotes(request: AppStoreApprovalRequest): Observable<AppStoreWriteApproval> {
+    return this.withCsrf((headers) => this.http.post<AppStoreWriteApproval>(
+      `${environment.apiBaseUrl}/api/admin/app-store-connect/approvals`, request,
+      { headers, withCredentials: true },
+    ));
+  }
 
   getConnections(): Observable<AppStoreConnection[]> {
     return this.http.get<AppStoreConnection[]>(

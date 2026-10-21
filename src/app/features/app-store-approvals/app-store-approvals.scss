@@ -1,0 +1,116 @@
+:host {
+  display: block;
+}
+.panel {
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.625rem;
+  background: var(--color-surface);
+}
+h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+p {
+  line-height: 1.6;
+}
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.fields {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 1rem;
+}
+label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+input,
+select,
+textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.6rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.35rem;
+  font: inherit;
+}
+textarea {
+  resize: vertical;
+}
+.locale {
+  margin: 1.25rem 0;
+  padding: 1rem;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+}
+.locale > input {
+  max-width: 16rem;
+  margin-bottom: 1rem;
+}
+button {
+  min-height: 2.5rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--color-primary);
+  border-radius: 0.35rem;
+  color: var(--color-on-accent);
+  background: var(--color-primary);
+  font-weight: 700;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.secondary {
+  background: var(--color-surface);
+  color: var(--color-primary);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.preview {
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+}
+.notes {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.muted {
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+.success {
+  color: var(--color-success);
+}
+.error {
+  color: var(--color-danger);
+}
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+@media (max-width: 50rem) {
+  .fields {
+    grid-template-columns: 1fr;
+  }
+}
