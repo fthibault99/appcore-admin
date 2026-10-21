@@ -15,10 +15,15 @@
     </form>
   }
   <section class="panel" aria-live="polite">
+    <div class="price-filters">
+      <label>Model<select [value]="selectedModel()" (change)="selectedModel.set($any($event.target).value)"><option value="">All models</option>@for (model of models(); track model) { <option [value]="model">{{ model }}</option> }</select></label>
+      <label class="current-prices-filter"><input type="checkbox" [checked]="currentPricesOnly()" (change)="currentPricesOnly.set($any($event.target).checked)" /> Current prices only</label>
+    </div>
     @if (isLoading()) { <p class="state">Loading prices…</p> }
     @else if (hasError()) { <div class="state error"><p>Unable to load prices.</p><button type="button" (click)="retry()">Retry</button></div> }
     @else { <div class="table-scroll"><table><thead><tr><th>Model</th><th>Tier / context</th><th>Token range</th><th>Input</th><th>Cached</th><th>Cache write</th><th>Output</th><th>Web Search</th><th>Effective</th><th>Version</th></tr></thead><tbody>
-      @for (price of prices(); track price.id) { <tr><td>{{ price.model }}</td><td>{{ price.serviceTier }} / {{ price.contextType }}</td><td>{{ price.minInputTokens | number }} – {{ price.maxInputTokens === null ? '∞' : (price.maxInputTokens | number) }}</td><td>{{ price.inputUsdPerMillion | currency: 'USD' }}</td><td>{{ price.cachedInputUsdPerMillion === null ? '—' : (price.cachedInputUsdPerMillion | currency: 'USD') }}</td><td>{{ price.cacheWriteUsdPerMillion === null ? '—' : (price.cacheWriteUsdPerMillion | currency: 'USD') }}</td><td>{{ price.outputUsdPerMillion | currency: 'USD' }}</td><td>{{ price.webSearchUsdPerCall | currency: 'USD': 'symbol': '1.2-8' }} / call</td><td>{{ price.effectiveFrom | date: 'mediumDate' }} → {{ price.effectiveTo ? (price.effectiveTo | date: 'mediumDate') : 'current' }}</td><td>{{ price.version }}</td></tr> }
+      @for (price of visiblePrices(); track price.id) { <tr><td>{{ price.model }}</td><td>{{ price.serviceTier }} / {{ price.contextType }}</td><td>{{ price.minInputTokens | number }} – {{ price.maxInputTokens === null ? '∞' : (price.maxInputTokens | number) }}</td><td>{{ price.inputUsdPerMillion | currency: 'USD' }}</td><td>{{ price.cachedInputUsdPerMillion === null ? '—' : (price.cachedInputUsdPerMillion | currency: 'USD') }}</td><td>{{ price.cacheWriteUsdPerMillion === null ? '—' : (price.cacheWriteUsdPerMillion | currency: 'USD') }}</td><td>{{ price.outputUsdPerMillion | currency: 'USD' }}</td><td>{{ price.webSearchUsdPerCall | currency: 'USD': 'symbol': '1.2-8' }} / call</td><td>{{ price.effectiveFrom | date: 'mediumDate' }} → {{ price.effectiveTo ? (price.effectiveTo | date: 'mediumDate') : 'current' }}</td><td>{{ price.version }}</td></tr> }
+      @empty { <tr><td colspan="10" class="state">{{ currentPricesOnly() ? 'No current prices.' : 'No prices.' }}</td></tr> }
     </tbody></table></div> }
   </section>
 </main>

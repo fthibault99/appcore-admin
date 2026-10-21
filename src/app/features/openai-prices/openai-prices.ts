@@ -1,6 +1,6 @@
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -21,6 +21,19 @@ export class OpenAIPricesComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   readonly prices = signal<OpenAIModelPrice[]>([]);
+  readonly currentPricesOnly = signal(true);
+  readonly selectedModel = signal('');
+  readonly models = computed(() => [...new Set(this.prices().map(price => price.model))]
+    .sort((left, right) => right.localeCompare(left, 'en', { numeric: true })));
+  readonly visiblePrices = computed(() => {
+    const model = this.selectedModel();
+    const prices = this.prices().filter(price => !model || price.model === model)
+      .sort((left, right) => right.model.localeCompare(left.model, 'en', { numeric: true }));
+    if (!this.currentPricesOnly()) return prices;
+    const now = Date.now();
+    return prices.filter(price => Date.parse(price.effectiveFrom) <= now
+      && (price.effectiveTo === null || Date.parse(price.effectiveTo) > now));
+  });
   readonly isLoading = signal(false);
   readonly isSaving = signal(false);
   readonly hasError = signal(false);
