@@ -18,12 +18,14 @@ const row: AppStoreConnection = {
 describe('AppStoreConnectionsComponent', () => {
   let fixture: ComponentFixture<AppStoreConnectionsComponent>;
   let service: {
+    getConnectApps: ReturnType<typeof vi.fn>;
     getConnections: ReturnType<typeof vi.fn>;
     generateReconnectCode: ReturnType<typeof vi.fn>;
   };
   beforeEach(async () => {
     Object.defineProperty(navigator, 'clipboard', { configurable: true, get: () => undefined });
     service = {
+      getConnectApps: vi.fn(() => of([])),
       getConnections: vi.fn(() => of([row])),
       generateReconnectCode: vi.fn(() =>
         of({ code: '583214', expiresAt: new Date(Date.now() + 600_000).toISOString() }),

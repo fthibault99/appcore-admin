@@ -35,6 +35,18 @@ describe('AdminAppStoreService', () => {
     write.flush({});
   });
 
+  it('loads Apple apps, versions and actual localizations with the admin session', () => {
+    service.getConnectApps().subscribe();
+    const apps = http.expectOne(`${environment.apiBaseUrl}/api/admin/app-store-connect/apps`);
+    expect(apps.request.withCredentials).toBe(true); apps.flush([]);
+    service.getConnectVersions('app/1').subscribe();
+    const versions = http.expectOne(`${environment.apiBaseUrl}/api/admin/app-store-connect/apps/app%2F1/versions`);
+    expect(versions.request.withCredentials).toBe(true); versions.flush([]);
+    service.getConnectLocalizations('app/1', 'version/1').subscribe();
+    const locales = http.expectOne(`${environment.apiBaseUrl}/api/admin/app-store-connect/apps/app%2F1/versions/version%2F1/localizations`);
+    expect(locales.request.withCredentials).toBe(true); locales.flush([]);
+  });
+
   it('generates a reconnect code with the admin session and CSRF', () => {
     const result = { code: '583214', expiresAt: '2030-01-01T00:10:00Z' };
     service

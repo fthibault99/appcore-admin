@@ -22,7 +22,7 @@ const preview = {
     snapshot: {
       current: {
         name: "Brick Collector",
-        version: "1.15.1",
+        version: "version-id",
         locale: "fr-FR",
         whatsNew: "Old text",
       },
@@ -33,11 +33,40 @@ const preview = {
 
 describe("AppStoreApprovalsComponent", () => {
   const service = {
+    getConnectApps: vi.fn(),
+    getConnectVersions: vi.fn(),
+    getConnectLocalizations: vi.fn(),
     previewReleaseNotes: vi.fn(),
     approveReleaseNotes: vi.fn(),
   };
   beforeEach(() => {
     vi.resetAllMocks();
+    service.getConnectApps.mockReturnValue(
+      of([
+        {
+          id: "6503181781",
+          name: "Brick Collector",
+          bundleId: "com.brick",
+          sku: "brick",
+        },
+      ]),
+    );
+    service.getConnectVersions.mockReturnValue(
+      of([
+        {
+          id: "version-id",
+          version: "1.15.1",
+          platform: "IOS",
+          state: "PREPARE_FOR_SUBMISSION",
+        },
+      ]),
+    );
+    service.getConnectLocalizations.mockReturnValue(
+      of([
+        { locale: "fr-FR", whatsNew: null },
+        { locale: "en-US", whatsNew: null },
+      ]),
+    );
     service.previewReleaseNotes.mockReturnValue(of(preview));
     service.approveReleaseNotes.mockReturnValue(
       of({
@@ -54,19 +83,23 @@ describe("AppStoreApprovalsComponent", () => {
       ],
     });
   });
-  function setup() {
+  async function setup() {
     const fixture = TestBed.createComponent(AppStoreApprovalsComponent);
     fixture.componentRef.setInput("connections", [connection]);
+    fixture.detectChanges();
+    await fixture.whenStable();
     const component = fixture.componentInstance;
     component.appId = "6503181781";
-    component.version = "1.15.1";
+    await component.selectApp();
+    component.version = "version-id";
+    await component.selectVersion();
     component.subject = "subject";
     component.rows.set([{ locale: "fr-FR", text: "New text" }]);
     fixture.detectChanges();
     return { fixture, component };
   }
   it("requires a preview and uses its exact text, hash and selected identity", async () => {
-    const { component, fixture } = setup();
+    const { component, fixture } = await setup();
     await component.approve();
     expect(service.approveReleaseNotes).not.toHaveBeenCalled();
     await component.preview();
@@ -78,7 +111,7 @@ describe("AppStoreApprovalsComponent", () => {
       tool: "update_app_metadata",
       arguments: {
         appId: "6503181781",
-        version: "1.15.1",
+        version: "version-id",
         locale: "fr-FR",
         metadata: { whatsNew: "New text" },
       },
@@ -90,7 +123,7 @@ describe("AppStoreApprovalsComponent", () => {
     expect(service.approveReleaseNotes).toHaveBeenCalledTimes(1);
   });
   it("invalidates the reviewed plan when a form input changes", async () => {
-    const { component, fixture } = setup();
+    const { component, fixture } = await setup();
     await component.preview();
     fixture.detectChanges();
     const input = fixture.nativeElement.querySelector(
@@ -104,8 +137,8 @@ describe("AppStoreApprovalsComponent", () => {
     await component.approve();
     expect(service.approveReleaseNotes).not.toHaveBeenCalled();
   });
-  it("rejects unauthorized connections and duplicate languages", () => {
-    const { component, fixture } = setup();
+  it("rejects unauthorized connections and duplicate languages", async () => {
+    const { component, fixture } = await setup();
     component.rows.set([
       { locale: "fr-FR", text: "A" },
       { locale: "fr-FR", text: "B" },
@@ -118,10 +151,10 @@ describe("AppStoreApprovalsComponent", () => {
     expect(component.canPreview()).toBe(false);
   });
   it("prevents approval when any localization preview fails", async () => {
-    const { component } = setup();
+    const { component } = await setup();
     component.rows.set([
       { locale: "fr-FR", text: "A" },
-      { locale: "missing", text: "B" },
+      { locale: "en-US", text: "B" },
     ]);
     service.previewReleaseNotes
       .mockReturnValueOnce(of(preview))
@@ -139,7 +172,7 @@ describe("AppStoreApprovalsComponent", () => {
     expect(component.rows()[1].error).toContain("already exist");
   });
   it("preserves partial approvals and requires a new preview after Apple state changes", async () => {
-    const { component } = setup();
+    const { component } = await setup();
     component.rows.set([
       { locale: "fr-FR", text: "A" },
       { locale: "en-US", text: "B" },
@@ -169,7 +202,7 @@ describe("AppStoreApprovalsComponent", () => {
     expect(component.message()).toContain("1 of 2 approved");
   });
   it("blocks concurrent requests while the preview is loading", async () => {
-    const { component } = setup();
+    const { component } = await setup();
     const pending = new Subject<typeof preview>();
     service.previewReleaseNotes.mockReturnValue(pending);
     const request = component.preview();
@@ -182,5 +215,69 @@ describe("AppStoreApprovalsComponent", () => {
     pending.complete();
     await request;
     expect(component.busy()).toBe(false);
+  });
+  it("loads named apps, exact versions and only existing languages", async () => {
+    const { component, fixture } = await setup();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain("Brick Collector");
+    expect(fixture.nativeElement.textContent).toContain("French (France)");
+    expect(service.getConnectVersions).toHaveBeenCalledWith("6503181781");
+    expect(service.getConnectLocalizations).toHaveBeenCalledWith(
+      "6503181781",
+      "version-id",
+    );
+    component.addAllLocales();
+    expect(component.rows().map((row) => row.locale)).toEqual([
+      "fr-FR",
+      "en-US",
+    ]);
+    expect(component.availableLocales(0).map((row) => row.locale)).toEqual([
+      "fr-FR",
+    ]);
+    await component.preview();
+    component.appId = "";
+    await component.selectApp();
+    expect(component.rows()).toEqual([]);
+    expect(component.version).toBe("");
+    expect(component.canApprove()).toBe(false);
+  });
+
+  it("ignores stale catalog responses after changing the app", async () => {
+    const { component } = await setup();
+    const slow = new Subject<never[]>();
+    service.getConnectVersions
+      .mockReturnValueOnce(slow)
+      .mockReturnValueOnce(
+        of([
+          {
+            id: "new",
+            version: "2.0",
+            platform: "IOS",
+            state: "PREPARE_FOR_SUBMISSION",
+          },
+        ]),
+      );
+    component.appId = "old";
+    const first = component.selectApp();
+    component.appId = "new";
+    await component.selectApp();
+    slow.next([]);
+    slow.complete();
+    await first;
+    expect(component.versions()[0].id).toBe("new");
+    expect(component.rows()).toEqual([]);
+  });
+
+  it("keeps read errors distinct from an empty Apple catalog and supports retry", async () => {
+    const { component } = await setup();
+    service.getConnectApps.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status: 503 })),
+    );
+    await component.loadApps();
+    expect(component.catalogError()).toBeTruthy();
+    expect(component.canPreview()).toBe(false);
+    await component.loadApps();
+    expect(component.catalogError()).toBe("");
+    expect(component.apps()).toHaveLength(1);
   });
 });

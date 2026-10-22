@@ -1,3 +1,4 @@
+import { AppStoreCatalogApp, AppStoreCatalogVersion, AppStoreVersionLocalization } from './app-store-approval.models';
 import { AppStoreNotesRequest, AppStoreApprovalPreview, AppStoreApprovalRequest, AppStoreWriteApproval } from './app-store-approval.models';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
@@ -34,6 +35,18 @@ export class AdminAppStoreService {
       `${environment.apiBaseUrl}/api/admin/app-store-connect/approvals`, request,
       { headers, withCredentials: true },
     ));
+  }
+
+  getConnectApps(): Observable<AppStoreCatalogApp[]> {
+    return this.http.get<AppStoreCatalogApp[]>(`${environment.apiBaseUrl}/api/admin/app-store-connect/apps`, { withCredentials: true });
+  }
+
+  getConnectVersions(appId: string): Observable<AppStoreCatalogVersion[]> {
+    return this.http.get<AppStoreCatalogVersion[]>(`${environment.apiBaseUrl}/api/admin/app-store-connect/apps/${encodeURIComponent(appId)}/versions`, { withCredentials: true });
+  }
+
+  getConnectLocalizations(appId: string, versionId: string): Observable<AppStoreVersionLocalization[]> {
+    return this.http.get<AppStoreVersionLocalization[]>(`${environment.apiBaseUrl}/api/admin/app-store-connect/apps/${encodeURIComponent(appId)}/versions/${encodeURIComponent(versionId)}/localizations`, { withCredentials: true });
   }
 
   getConnections(): Observable<AppStoreConnection[]> {

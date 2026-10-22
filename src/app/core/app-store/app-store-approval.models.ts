@@ -38,3 +38,22 @@ export interface AppStoreWriteApproval {
   planHash: string;
   expiresAt: string;
 }
+
+export interface AppStoreCatalogApp {
+  id: string;
+  name: string;
+  bundleId: string;
+  sku: string;
+}
+export interface AppStoreCatalogVersion {
+  id: string;
+  version: string;
+  platform: string;
+  state: string;
+  appVersionState: string;
+  releaseType: string;
+}
+export interface AppStoreVersionLocalization {
+  locale: string;
+  whatsNew: string | null;
+}

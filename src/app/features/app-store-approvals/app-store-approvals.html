@@ -1,7 +1,7 @@
 <section
   class="panel"
   aria-labelledby="notes-approval-title"
-  [attr.aria-busy]="busy()"
+  [attr.aria-busy]="busy() || catalogLoading()"
 >
   <h2 id="notes-approval-title">Approve release notes</h2>
   <p>
@@ -24,30 +24,67 @@
         </select>
       </label>
       <label
-        >Apple app ID
-        <input
+        >App
+        <select
           [(ngModel)]="appId"
-          (ngModelChange)="invalidate()"
-          inputmode="numeric"
-          placeholder="e.g. 6503181781"
-      /></label>
+          (ngModelChange)="selectApp()"
+          [disabled]="catalogLoading()"
+        >
+          <option value="">Choose an app</option>
+          @for (app of apps(); track app.id) {
+          <option [value]="app.id">{{ app.name }} · {{ app.bundleId }}</option>
+          }
+        </select>
+      </label>
       <label
-        >Version or Apple version ID
-        <input
+        >Version
+        <select
           [(ngModel)]="version"
-          (ngModelChange)="invalidate()"
-          placeholder="e.g. 1.15.1"
-      /></label>
+          (ngModelChange)="selectVersion()"
+          [disabled]="!appId || catalogLoading()"
+        >
+          <option value="">Choose a version</option>
+          @for (item of versions(); track item.id) {
+          <option [value]="item.id">{{ versionLabel(item) }}</option>
+          }
+        </select>
+      </label>
     </div>
-    @for (row of rows(); track $index; let i = $index) {
+    @if (catalogLoading()) {
+    <p role="status">Loading apps, versions or languages from Apple…</p>
+    } @if (catalogError()) {
+    <p class="error" role="alert">{{ catalogError() }}</p>
+    }
+    <button
+      type="button"
+      class="secondary"
+      (click)="loadApps()"
+      [disabled]="catalogLoading()"
+    >
+      Reload Apple apps
+    </button>
+    @if (!catalogLoading() && !catalogError()) { @if (!apps().length) {
+    <p>No apps are available from the configured Apple account.</p>
+    } @else if (appId && !versions().length) {
+    <p>No versions are available for this app.</p>
+    } @else if (version && !localizations().length) {
+    <p>
+      No languages exist for this version. Add them in App Store Connect first.
+    </p>
+    } } @for (row of rows(); track $index; let i = $index) {
     <article class="locale">
-      <label [for]="'notes-locale-' + i">Apple language code</label>
-      <input
+      <label [for]="'notes-locale-' + i">Language</label>
+      <select
         [id]="'notes-locale-' + i"
         [(ngModel)]="row.locale"
         (ngModelChange)="invalidate()"
-        placeholder="e.g. fr-FR"
-      />
+      >
+        @for (locale of availableLocales(i); track locale.locale) {
+        <option [value]="locale.locale">
+          {{ languageLabel(locale.locale) }}
+        </option>
+        }
+      </select>
       <label [for]="'notes-text-' + i">New “What’s New” text</label>
       <textarea
         [id]="'notes-text-' + i"
@@ -89,7 +126,20 @@
     </article>
     }
     <div class="actions">
-      <button type="button" class="secondary" (click)="addLocale()">
+      <button
+        type="button"
+        class="secondary"
+        (click)="addAllLocales()"
+        [disabled]="catalogLoading() || rows().length >= localizations().length"
+      >
+        Add all available languages
+      </button>
+      <button
+        type="button"
+        class="secondary"
+        (click)="addLocale()"
+        [disabled]="catalogLoading() || rows().length >= localizations().length"
+      >
         Add language
       </button>
       <button type="button" (click)="preview()" [disabled]="!canPreview()">

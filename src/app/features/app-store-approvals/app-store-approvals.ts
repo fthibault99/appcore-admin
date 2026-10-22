@@ -6,6 +6,7 @@ import {
   DestroyRef,
   inject,
   input,
+  OnInit,
   signal,
 } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
@@ -15,6 +16,9 @@ import { firstValueFrom } from "rxjs";
 import { AdminAppStoreService } from "../../core/app-store/admin-app-store.service";
 import { AppStoreConnection } from "../../core/app-store/app-store-connection.models";
 import {
+  AppStoreCatalogApp,
+  AppStoreCatalogVersion,
+  AppStoreVersionLocalization,
   AppStoreApprovalPreview,
   AppStoreNotesRequest,
   AppStoreWriteApproval,
@@ -36,7 +40,7 @@ interface NotesRow {
   styleUrl: "./app-store-approvals.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppStoreApprovalsComponent {
+export class AppStoreApprovalsComponent implements OnInit {
   private readonly service = inject(AdminAppStoreService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -44,9 +48,149 @@ export class AppStoreApprovalsComponent {
   readonly rows = signal<NotesRow[]>([{ locale: "", text: "" }]);
   readonly busy = signal(false);
   readonly message = signal("");
+  readonly apps = signal<AppStoreCatalogApp[]>([]);
+  readonly versions = signal<AppStoreCatalogVersion[]>([]);
+  readonly localizations = signal<AppStoreVersionLocalization[]>([]);
+  readonly catalogLoading = signal(false);
+  readonly catalogError = signal("");
+  private catalogGeneration = 0;
+  private readonly languageNames = new Intl.DisplayNames(["en"], {
+    type: "language",
+  });
   appId = "";
   version = "";
   subject = "";
+
+  ngOnInit(): void {
+    void this.loadApps();
+  }
+
+  async loadApps(): Promise<void> {
+    const generation = ++this.catalogGeneration;
+    this.appId = "";
+    this.version = "";
+    this.apps.set([]);
+    this.versions.set([]);
+    this.localizations.set([]);
+    this.rows.set([]);
+    this.invalidate();
+    this.catalogError.set("");
+    this.catalogLoading.set(true);
+    try {
+      const apps = await firstValueFrom(
+        this.service.getConnectApps().pipe(takeUntilDestroyed(this.destroyRef)),
+      );
+      if (!this.destroyRef.destroyed && generation === this.catalogGeneration)
+        this.apps.set(apps);
+    } catch (error) {
+      if (!this.destroyRef.destroyed && generation === this.catalogGeneration)
+        this.catalogError.set(this.errorText(error));
+    } finally {
+      if (generation === this.catalogGeneration) this.catalogLoading.set(false);
+    }
+  }
+
+  async selectApp(): Promise<void> {
+    const generation = ++this.catalogGeneration;
+    this.version = "";
+    this.versions.set([]);
+    this.localizations.set([]);
+    this.rows.set([]);
+    this.invalidate();
+    this.catalogError.set("");
+    if (!this.appId) {
+      this.catalogLoading.set(false);
+      return;
+    }
+    this.catalogLoading.set(true);
+    try {
+      const versions = await firstValueFrom(
+        this.service
+          .getConnectVersions(this.appId)
+          .pipe(takeUntilDestroyed(this.destroyRef)),
+      );
+      if (!this.destroyRef.destroyed && generation === this.catalogGeneration)
+        this.versions.set(versions);
+    } catch (error) {
+      if (!this.destroyRef.destroyed && generation === this.catalogGeneration)
+        this.catalogError.set(this.errorText(error));
+    } finally {
+      if (generation === this.catalogGeneration) this.catalogLoading.set(false);
+    }
+  }
+
+  async selectVersion(): Promise<void> {
+    const generation = ++this.catalogGeneration;
+    this.localizations.set([]);
+    this.rows.set([]);
+    this.invalidate();
+    this.catalogError.set("");
+    if (!this.version) {
+      this.catalogLoading.set(false);
+      return;
+    }
+    this.catalogLoading.set(true);
+    try {
+      const localizations = await firstValueFrom(
+        this.service
+          .getConnectLocalizations(this.appId, this.version)
+          .pipe(takeUntilDestroyed(this.destroyRef)),
+      );
+      if (!this.destroyRef.destroyed && generation === this.catalogGeneration) {
+        this.localizations.set(localizations);
+        if (localizations.length)
+          this.rows.set([{ locale: localizations[0].locale, text: "" }]);
+      }
+    } catch (error) {
+      if (!this.destroyRef.destroyed && generation === this.catalogGeneration)
+        this.catalogError.set(this.errorText(error));
+    } finally {
+      if (generation === this.catalogGeneration) this.catalogLoading.set(false);
+    }
+  }
+
+  languageLabel(locale: string): string {
+    try {
+      return this.languageNames.of(locale) ?? locale;
+    } catch {
+      return locale;
+    }
+  }
+
+  availableLocales(index: number): AppStoreVersionLocalization[] {
+    return this.localizations().filter(
+      (locale) =>
+        !this.rows().some(
+          (row, i) => i !== index && row.locale === locale.locale,
+        ),
+    );
+  }
+
+  addAllLocales(): void {
+    if (this.busy() || this.catalogLoading()) return;
+    this.invalidate();
+    const selected = new Set(this.rows().map((row) => row.locale));
+    this.rows.update((rows) => [
+      ...rows,
+      ...this.localizations()
+        .filter((locale) => !selected.has(locale.locale))
+        .map((locale) => ({ locale: locale.locale, text: "" })),
+    ]);
+  }
+
+  versionLabel(version: AppStoreCatalogVersion): string {
+    const state: Record<string, string> = {
+      PREPARE_FOR_SUBMISSION: "Preparing for submission",
+      READY_FOR_SALE: "Released",
+      READY_FOR_DISTRIBUTION: "Released",
+      IN_REVIEW: "In review",
+      WAITING_FOR_REVIEW: "Waiting for review",
+      REJECTED: "Rejected",
+      DEVELOPER_REJECTED: "Developer rejected",
+      METADATA_REJECTED: "Metadata rejected",
+    };
+    return `${version.version} · ${version.platform === "IOS" ? "iOS" : version.platform} · ${state[version.state] ?? version.state}`;
+  }
 
   invalidate(): void {
     this.rows.update((rows) =>
@@ -56,9 +200,13 @@ export class AppStoreApprovalsComponent {
   }
 
   addLocale(): void {
-    if (this.busy()) return;
+    if (this.busy() || this.catalogLoading()) return;
+    const next = this.localizations().find(
+      (locale) => !this.rows().some((row) => row.locale === locale.locale),
+    );
+    if (!next) return;
     this.invalidate();
-    this.rows.update((rows) => [...rows, { locale: "", text: "" }]);
+    this.rows.update((rows) => [...rows, { locale: next.locale, text: "" }]);
   }
 
   removeLocale(index: number): void {
@@ -71,13 +219,14 @@ export class AppStoreApprovalsComponent {
     const rows = this.rows();
     return (
       !this.busy() &&
+      !this.catalogLoading() &&
       !!this.connection() &&
-      /^\d+$/.test(this.appId.trim()) &&
-      !!this.version.trim() &&
+      this.apps().some((app) => app.id === this.appId) &&
+      this.versions().some((version) => version.id === this.version) &&
       rows.length > 0 &&
       rows.every(
         (row) =>
-          !!row.locale.trim() &&
+          this.localizations().some((locale) => locale.locale === row.locale) &&
           !!row.text.trim() &&
           [...row.text].length <= 4000,
       ) &&
@@ -88,6 +237,7 @@ export class AppStoreApprovalsComponent {
   canApprove(): boolean {
     return (
       !this.busy() &&
+      !this.catalogLoading() &&
       !!this.connection() &&
       this.rows().length > 0 &&
       this.rows().every((row) => !!row.preview && !!row.request) &&
@@ -192,7 +342,7 @@ export class AppStoreApprovalsComponent {
       if (error.status === 403)
         return "Administrator access was refused. Reload your session.";
       if (error.status === 404)
-        return "Approval endpoints are unavailable. Check the deployed backend.";
+        return "App Store Connect administration is unavailable. Check that the latest backend is deployed.";
       const code = error.error?.code;
       if (code === "PLAN_CHANGED")
         return "Apple data changed. Generate and review a new preview.";
