@@ -47,6 +47,15 @@ describe('AdminAppStoreService', () => {
     expect(locales.request.withCredentials).toBe(true); locales.flush([]);
   });
 
+  it('sends one CSRF-protected batch approval with its exact reviewed hash', () => {
+    service.approveReleaseNotesBatch('batch/id', 'hash').subscribe();
+    http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`).flush('', { headers: { 'X-XSRF-TOKEN': 'token' } });
+    const request = http.expectOne(`${environment.apiBaseUrl}/api/admin/app-store-connect/release-notes/batch%2Fid/approve`);
+    expect(request.request.body).toEqual({ expectedPlanHash: 'hash' });
+    expect(request.request.withCredentials).toBe(true);
+    expect(request.request.headers.get('X-XSRF-TOKEN')).toBe('token'); request.flush({});
+  });
+
   it('generates a reconnect code with the admin session and CSRF', () => {
     const result = { code: '583214', expiresAt: '2030-01-01T00:10:00Z' };
     service

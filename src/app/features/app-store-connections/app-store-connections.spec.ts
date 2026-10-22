@@ -18,6 +18,7 @@ const row: AppStoreConnection = {
 describe('AppStoreConnectionsComponent', () => {
   let fixture: ComponentFixture<AppStoreConnectionsComponent>;
   let service: {
+    getReleaseNotesBatches: ReturnType<typeof vi.fn>;
     getConnectApps: ReturnType<typeof vi.fn>;
     getConnections: ReturnType<typeof vi.fn>;
     generateReconnectCode: ReturnType<typeof vi.fn>;
@@ -25,6 +26,7 @@ describe('AppStoreConnectionsComponent', () => {
   beforeEach(async () => {
     Object.defineProperty(navigator, 'clipboard', { configurable: true, get: () => undefined });
     service = {
+      getReleaseNotesBatches: vi.fn(() => of([])),
       getConnectApps: vi.fn(() => of([])),
       getConnections: vi.fn(() => of([row])),
       generateReconnectCode: vi.fn(() =>

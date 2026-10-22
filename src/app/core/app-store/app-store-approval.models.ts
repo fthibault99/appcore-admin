@@ -57,3 +57,49 @@ export interface AppStoreVersionLocalization {
   locale: string;
   whatsNew: string | null;
 }
+
+export interface ReleaseNotesBatch {
+  id: string;
+  subject: string;
+  clientId: string;
+  state:
+    | "PENDING_APPROVAL"
+    | "QUEUED"
+    | "RUNNING"
+    | "COMPLETED"
+    | "PARTIAL_FAILURE"
+    | "REVIEW_REQUIRED";
+  planHash: string;
+  plan: {
+    appId: string;
+    appName: string;
+    version: AppStoreCatalogVersion;
+    items: {
+      locale: string;
+      localizationId: string;
+      before: string | null;
+      after: string;
+      snapshotHash: string;
+    }[];
+  };
+  results: { locale: string; state: string; errorCode: string | null }[];
+  expiresAt: string | null;
+  updatedAt: string;
+  errorCode: string | null;
+}
+export interface ReleaseNotesBatchSummary {
+  id: string;
+  appName: string;
+  version: string;
+  state: ReleaseNotesBatch["state"];
+  total: number;
+  succeeded: number;
+  updatedAt: string;
+}
+export interface ReleaseNotesProposal {
+  appId: string;
+  version: string;
+  subject: string;
+  clientId: string;
+  localizations: Record<string, string>;
+}

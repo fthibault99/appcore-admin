@@ -3,12 +3,102 @@
   aria-labelledby="notes-approval-title"
   [attr.aria-busy]="busy() || catalogLoading()"
 >
-  <h2 id="notes-approval-title">Approve release notes</h2>
+  <h2 id="notes-approval-title">Release-note requests</h2>
   <p>
-    Review the existing Apple version and the replacement text for each
-    language. Approval allows the selected connection to apply these exact
-    changes once within ten minutes.
+    Save all translations in one proposal. Review and approve once; AppCore then
+    applies each language automatically in the background.
   </p>
+  <button
+    type="button"
+    class="secondary"
+    (click)="refreshStatus()"
+    [disabled]="polling() || busy()"
+  >
+    Reload requests
+  </button>
+  @if (batchesError()) {
+  <p class="error" role="alert">{{ batchesError() }}</p>
+  } @if (batches().length) {
+  <ul class="requests">
+    @for (request of batches(); track request.id) {
+    <li>
+      <button
+        type="button"
+        class="secondary"
+        (click)="openBatch(request.id)"
+        [disabled]="busy()"
+      >
+        {{ request.appName }} · {{ request.version }} — {{
+        stateLabel(request.state) }} · {{ request.succeeded }}/{{ request.total
+        }}
+      </button>
+    </li>
+    }
+  </ul>
+  } @else if (!polling() && !batchesError()) {
+  <p>
+    No saved requests yet. Proposals sent from the plugin appear here
+    automatically.
+  </p>
+  } @if (selectedBatch(); as batch) {
+  <section class="batch" aria-label="Saved release-note proposal">
+    <h3>
+      {{ batch.plan.appName }} · {{ batch.plan.version.version }} · {{
+      batch.plan.version.platform }}
+    </h3>
+    <p role="status">
+      {{ stateLabel(batch.state) }} — {{ completed(batch) }}/{{
+      batch.results.length }} languages saved
+    </p>
+    <progress
+      [value]="completed(batch)"
+      [max]="batch.results.length"
+      aria-label="Languages saved"
+    ></progress>
+    <p class="muted">
+      Saved request {{ batch.id }} · Updated {{ batch.updatedAt | date: 'medium'
+      }}
+    </p>
+    @if (batch.errorCode) {
+    <p class="error" role="alert">
+      {{ batch.errorCode }}. Refresh the proposal to check Apple before
+      retrying.
+    </p>
+    } @if (batch.expiresAt && (batch.state === 'QUEUED' || batch.state ===
+    'RUNNING')) {
+    <p>Execution authorized until {{ batch.expiresAt | date: 'medium' }}.</p>
+    }
+    <button type="button" (click)="approve()" [disabled]="!canApprove()">
+      Approve once and apply all languages
+    </button>
+    @if (batch.state === 'PARTIAL_FAILURE' || batch.state === 'REVIEW_REQUIRED'
+    || batch.state === 'PENDING_APPROVAL') {
+    <button
+      type="button"
+      class="secondary"
+      (click)="refreshBatch()"
+      [disabled]="busy()"
+    >
+      Refresh remaining languages for review
+    </button>
+    } @for (item of batch.plan.items; track item.locale) {
+    <article class="locale">
+      <h4>
+        {{ languageLabel(item.locale) }} — {{ resultLabel(batch, item.locale) }}
+      </h4>
+      <p class="muted">Previous text at preview</p>
+      <p class="notes">{{ item.before ?? 'No previous release notes' }}</p>
+      <p class="muted">{{ isSaved(batch, item.locale) ? 'Saved and verified text' : 'Replacement text' }}</p>
+      <p class="notes">{{ item.after }}</p>
+    </article>
+    }
+    <p class="muted">
+      Completed texts are skipped when refreshing. Failed or uncertain writes
+      are never retried without a fresh review and approval.
+    </p>
+  </section>
+  }
+  <h3>Create a proposal manually</h3>
   <fieldset [disabled]="busy()">
     <div class="fields">
       <label
@@ -96,33 +186,6 @@
       <button type="button" class="secondary" (click)="removeLocale(i)">
         Remove language
       </button>
-      @if (row.preview; as preview) {
-      <div class="preview">
-        <h3>
-          {{ preview.plan.snapshot.current.name }} · {{
-          preview.plan.snapshot.current.locale }}
-        </h3>
-        <p>
-          App {{ preview.plan.appId }} · Version {{
-          preview.plan.snapshot.current.version }} · {{ preview.plan.platform }}
-          · {{ preview.plan.state }}
-        </p>
-        <p class="muted">Apple version ID: {{ preview.plan.versionId }}</p>
-        <h4>Current text</h4>
-        <p class="notes">
-          {{ preview.plan.snapshot.current.whatsNew ?? 'No release notes' }}
-        </p>
-        <h4>Replacement text</h4>
-        <p class="notes">{{ row.request?.arguments?.metadata?.whatsNew }}</p>
-      </div>
-      } @if (row.approval; as approval) {
-      <p class="success" role="status">
-        Approval issued · expires {{ approval.expiresAt | date: 'medium' }}.
-        This does not confirm an Apple update.
-      </p>
-      } @if (row.error) {
-      <p class="error" role="alert">{{ row.error }}</p>
-      }
     </article>
     }
     <div class="actions">
@@ -143,20 +206,18 @@
         Add language
       </button>
       <button type="button" (click)="preview()" [disabled]="!canPreview()">
-        Preview Apple changes
-      </button>
-      <button type="button" (click)="approve()" [disabled]="!canApprove()">
-        Approve reviewed changes
+        Save proposal and preview all languages
       </button>
     </div>
   </fieldset>
   @if (busy()) {
-  <p role="status">Processing languages…</p>
+  <p role="status">Processing the request…</p>
   } @if (message()) {
   <p role="status">{{ message() }}</p>
   }
   <p class="muted">
-    Approval does not apply changes to Apple. Return to the chat and request the
-    update with the same connection and texts.
+    Proposals and progress are saved in AppCore. You can reload this page
+    without losing a saved request. No Apple write occurs until administrator
+    approval.
   </p>
 </section>

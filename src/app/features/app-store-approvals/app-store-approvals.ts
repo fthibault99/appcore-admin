@@ -12,25 +12,20 @@ import {
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
-import { firstValueFrom } from "rxjs";
+import { firstValueFrom, timer } from "rxjs";
 import { AdminAppStoreService } from "../../core/app-store/admin-app-store.service";
 import { AppStoreConnection } from "../../core/app-store/app-store-connection.models";
 import {
   AppStoreCatalogApp,
   AppStoreCatalogVersion,
   AppStoreVersionLocalization,
-  AppStoreApprovalPreview,
-  AppStoreNotesRequest,
-  AppStoreWriteApproval,
+  ReleaseNotesBatch,
+  ReleaseNotesBatchSummary,
 } from "../../core/app-store/app-store-approval.models";
 
 interface NotesRow {
   locale: string;
   text: string;
-  request?: AppStoreNotesRequest;
-  preview?: AppStoreApprovalPreview;
-  approval?: AppStoreWriteApproval;
-  error?: string;
 }
 
 @Component({
@@ -57,12 +52,23 @@ export class AppStoreApprovalsComponent implements OnInit {
   private readonly languageNames = new Intl.DisplayNames(["en"], {
     type: "language",
   });
+  readonly selectedBatch = signal<ReleaseNotesBatch | null>(null);
+  readonly batches = signal<ReleaseNotesBatchSummary[]>([]);
+  readonly batchesError = signal("");
+  readonly polling = signal(false);
+  private selectionGeneration = 0;
   appId = "";
   version = "";
   subject = "";
 
   ngOnInit(): void {
     void this.loadApps();
+    void this.refreshStatus();
+    timer(5000, 5000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        void this.refreshStatus();
+      });
   }
 
   async loadApps(): Promise<void> {
@@ -197,6 +203,8 @@ export class AppStoreApprovalsComponent implements OnInit {
       rows.map((row) => ({ locale: row.locale, text: row.text })),
     );
     this.message.set("");
+    this.selectedBatch.set(null);
+    this.selectionGeneration++;
   }
 
   addLocale(): void {
@@ -235,101 +243,209 @@ export class AppStoreApprovalsComponent implements OnInit {
   }
 
   canApprove(): boolean {
-    return (
-      !this.busy() &&
-      !this.catalogLoading() &&
-      !!this.connection() &&
-      this.rows().length > 0 &&
-      this.rows().every((row) => !!row.preview && !!row.request) &&
-      this.rows().some((row) => !row.approval)
-    );
+    return !this.busy() && this.selectedBatch()?.state === "PENDING_APPROVAL";
   }
 
   async preview(): Promise<void> {
-    if (!this.canPreview()) return;
-    this.invalidate();
+    const connection = this.connection();
+    if (!connection || !this.canPreview()) return;
     this.busy.set(true);
+    this.message.set("");
+    const generation = ++this.selectionGeneration;
     try {
-      for (let i = 0; i < this.rows().length; i++) {
-        const row = this.rows()[i];
-        const request: AppStoreNotesRequest = {
-          tool: "update_app_metadata",
-          arguments: {
-            appId: this.appId.trim(),
-            version: this.version.trim(),
-            locale: row.locale.trim(),
-            metadata: { whatsNew: row.text },
-          },
-        };
-        try {
-          const preview = await firstValueFrom(
-            this.service
-              .previewReleaseNotes(request)
-              .pipe(takeUntilDestroyed(this.destroyRef)),
-          );
-          if (this.destroyRef.destroyed) return;
-          this.update(i, { request, preview });
-        } catch (error) {
-          if (this.destroyRef.destroyed) return;
-          this.update(i, { error: this.errorText(error) });
-        }
+      const batch = await firstValueFrom(
+        this.service
+          .proposeReleaseNotes({
+            appId: this.appId,
+            version: this.version,
+            subject: connection.subject,
+            clientId: connection.clientId,
+            localizations: Object.fromEntries(
+              this.rows().map((row) => [row.locale, row.text]),
+            ),
+          })
+          .pipe(takeUntilDestroyed(this.destroyRef)),
+      );
+      if (
+        !this.destroyRef.destroyed &&
+        generation === this.selectionGeneration
+      ) {
+        this.selectedBatch.set(batch);
+        this.message.set(
+          "Proposal saved. Review all languages, then approve once to apply them in the background.",
+        );
       }
+    } catch (error) {
+      if (!this.destroyRef.destroyed) this.message.set(this.errorText(error));
+    } finally {
+      this.busy.set(false);
+    }
+    void this.refreshStatus();
+  }
+
+  async openBatch(id: string): Promise<void> {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.message.set("");
+    const generation = ++this.selectionGeneration;
+    try {
+      const batch = await firstValueFrom(
+        this.service
+          .getReleaseNotesBatch(id)
+          .pipe(takeUntilDestroyed(this.destroyRef)),
+      );
+      if (!this.destroyRef.destroyed && generation === this.selectionGeneration)
+        this.selectedBatch.set(batch);
+    } catch (error) {
+      if (!this.destroyRef.destroyed) this.message.set(this.errorText(error));
     } finally {
       this.busy.set(false);
     }
   }
 
   async approve(): Promise<void> {
-    const connection = this.connection();
-    if (!connection || !this.canApprove()) return;
+    const batch = this.selectedBatch();
+    if (!batch || !this.canApprove()) return;
     this.busy.set(true);
     this.message.set("");
     try {
-      for (let i = 0; i < this.rows().length; i++) {
-        const row = this.rows()[i];
-        if (row.approval) continue;
-        try {
-          const approval = await firstValueFrom(
-            this.service
-              .approveReleaseNotes({
-                ...row.request!,
-                subject: connection.subject,
-                clientId: connection.clientId,
-                expectedPlanHash: row.preview!.planHash,
-              })
-              .pipe(takeUntilDestroyed(this.destroyRef)),
-          );
-          if (this.destroyRef.destroyed) return;
-          this.update(i, { approval, error: undefined });
-        } catch (error) {
-          if (this.destroyRef.destroyed) return;
-          // A failed approval requires a fresh preview before another attempt.
-          this.update(i, {
-            preview: undefined,
-            request: undefined,
-            error: this.errorText(error),
-          });
-          break;
-        }
-      }
-      const count = this.rows().filter((row) => row.approval).length;
-      this.message.set(
-        `${count} of ${this.rows().length} approved. Return to the chat to apply the exact reviewed texts before expiry.`,
+      const queued = await firstValueFrom(
+        this.service
+          .approveReleaseNotesBatch(batch.id, batch.planHash)
+          .pipe(takeUntilDestroyed(this.destroyRef)),
       );
+      if (!this.destroyRef.destroyed) {
+        this.selectedBatch.set(queued);
+        this.message.set(
+          "Approved once for all languages. AppCore will apply the notes automatically; you can leave this page.",
+        );
+      }
+    } catch (error) {
+      if (!this.destroyRef.destroyed) {
+        this.message.set(this.errorText(error));
+        // Discard the actionable preview after an approval error; refresh before a new approval.
+        this.selectedBatch.set({ ...batch, state: "REVIEW_REQUIRED" });
+      }
     } finally {
       this.busy.set(false);
     }
   }
 
+  async refreshBatch(): Promise<void> {
+    const batch = this.selectedBatch();
+    if (
+      !batch ||
+      this.busy() ||
+      ["QUEUED", "RUNNING", "COMPLETED"].includes(batch.state)
+    )
+      return;
+    this.busy.set(true);
+    this.message.set("");
+    try {
+      const refreshed = await firstValueFrom(
+        this.service
+          .refreshReleaseNotesBatch(batch.id)
+          .pipe(takeUntilDestroyed(this.destroyRef)),
+      );
+      if (!this.destroyRef.destroyed) this.selectedBatch.set(refreshed);
+    } catch (error) {
+      if (!this.destroyRef.destroyed) this.message.set(this.errorText(error));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  async refreshStatus(): Promise<void> {
+    if (this.busy() || this.polling() || this.destroyRef.destroyed) return;
+    this.polling.set(true);
+    const id = this.selectedBatch()?.id;
+    const generation = this.selectionGeneration;
+    try {
+      const [batches, batch] = await Promise.all([
+        firstValueFrom(
+          this.service
+            .getReleaseNotesBatches()
+            .pipe(takeUntilDestroyed(this.destroyRef)),
+        ),
+        id && ["QUEUED", "RUNNING"].includes(this.selectedBatch()!.state)
+          ? firstValueFrom(
+              this.service
+                .getReleaseNotesBatch(id)
+                .pipe(takeUntilDestroyed(this.destroyRef)),
+            )
+          : Promise.resolve(null),
+      ]);
+      if (!this.destroyRef.destroyed) {
+        this.batches.set(batches);
+        this.batchesError.set("");
+        if (
+          batch &&
+          generation === this.selectionGeneration &&
+          !this.busy() &&
+          this.selectedBatch()?.id === id
+        ) {
+          this.selectedBatch.set(batch);
+          this.batches.update((rows) =>
+            rows.map((row) =>
+              row.id === batch.id
+                ? {
+                    ...row,
+                    state: batch.state,
+                    succeeded: this.completed(batch),
+                    updatedAt: batch.updatedAt,
+                  }
+                : row,
+            ),
+          );
+        }
+      }
+    } catch (error) {
+      if (!this.destroyRef.destroyed)
+        this.batchesError.set(this.errorText(error));
+    } finally {
+      this.polling.set(false);
+    }
+  }
+
+  isSaved(batch: ReleaseNotesBatch, locale: string): boolean {
+    return batch.results.some(row => row.locale === locale && ['SUCCEEDED', 'UNCHANGED'].includes(row.state));
+  }
+
+  completed(batch: ReleaseNotesBatch): number {
+    return batch.results.filter((row) =>
+      ["SUCCEEDED", "UNCHANGED"].includes(row.state),
+    ).length;
+  }
+  resultLabel(batch: ReleaseNotesBatch, locale: string): string {
+    const result = batch.results.find((row) => row.locale === locale);
+    if (!result) return "Unavailable";
+    if (result.state === "APPLYING" && batch.state !== "RUNNING")
+      return "Outcome uncertain — refresh before retrying";
+    return (
+      this.stateLabel(result.state) +
+      (result.errorCode ? ` (${result.errorCode})` : "")
+    );
+  }
+  stateLabel(state: string): string {
+    const labels: Record<string, string> = {
+      PENDING_APPROVAL: "Awaiting approval",
+      QUEUED: "Queued",
+      RUNNING: "Applying",
+      COMPLETED: "Completed",
+      PARTIAL_FAILURE: "Some languages need review",
+      REVIEW_REQUIRED: "New review required",
+      PENDING: "Waiting",
+      APPLYING: "Applying",
+      SUCCEEDED: "Saved and verified",
+      UNCHANGED: "Already up to date",
+      UNCERTAIN: "Outcome uncertain",
+    };
+    return labels[state] ?? state;
+  }
+
   private connection(): AppStoreConnection | undefined {
     return this.connections().find(
       (row) => row.subject === this.subject && row.allowlisted,
-    );
-  }
-
-  private update(index: number, patch: Partial<NotesRow>): void {
-    this.rows.update((rows) =>
-      rows.map((row, i) => (i === index ? { ...row, ...patch } : row)),
     );
   }
 
@@ -345,7 +461,7 @@ export class AppStoreApprovalsComponent implements OnInit {
         return "App Store Connect administration is unavailable. Check that the latest backend is deployed.";
       const code = error.error?.code;
       if (code === "PLAN_CHANGED")
-        return "Apple data changed. Generate and review a new preview.";
+        return "Apple data changed. Refresh the saved proposal and review it before approving again.";
       if (code === "WRITES_DISABLED")
         return "Apple writes are disabled in AppCore configuration.";
       if (code === "LOCALIZATION_NOT_FOUND")

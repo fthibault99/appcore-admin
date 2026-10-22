@@ -1,3 +1,4 @@
+import { ReleaseNotesBatch, ReleaseNotesBatchSummary, ReleaseNotesProposal } from './app-store-approval.models';
 import { AppStoreCatalogApp, AppStoreCatalogVersion, AppStoreVersionLocalization } from './app-store-approval.models';
 import { AppStoreNotesRequest, AppStoreApprovalPreview, AppStoreApprovalRequest, AppStoreWriteApproval } from './app-store-approval.models';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
@@ -47,6 +48,22 @@ export class AdminAppStoreService {
 
   getConnectLocalizations(appId: string, versionId: string): Observable<AppStoreVersionLocalization[]> {
     return this.http.get<AppStoreVersionLocalization[]>(`${environment.apiBaseUrl}/api/admin/app-store-connect/apps/${encodeURIComponent(appId)}/versions/${encodeURIComponent(versionId)}/localizations`, { withCredentials: true });
+  }
+
+  getReleaseNotesBatches(): Observable<ReleaseNotesBatchSummary[]> {
+    return this.http.get<ReleaseNotesBatchSummary[]>(`${environment.apiBaseUrl}/api/admin/app-store-connect/release-notes`, { withCredentials: true });
+  }
+  getReleaseNotesBatch(id: string): Observable<ReleaseNotesBatch> {
+    return this.http.get<ReleaseNotesBatch>(`${environment.apiBaseUrl}/api/admin/app-store-connect/release-notes/${encodeURIComponent(id)}`, { withCredentials: true });
+  }
+  proposeReleaseNotes(request: ReleaseNotesProposal): Observable<ReleaseNotesBatch> {
+    return this.withCsrf(headers => this.http.post<ReleaseNotesBatch>(`${environment.apiBaseUrl}/api/admin/app-store-connect/release-notes`, request, { headers, withCredentials: true }));
+  }
+  approveReleaseNotesBatch(id: string, expectedPlanHash: string): Observable<ReleaseNotesBatch> {
+    return this.withCsrf(headers => this.http.post<ReleaseNotesBatch>(`${environment.apiBaseUrl}/api/admin/app-store-connect/release-notes/${encodeURIComponent(id)}/approve`, { expectedPlanHash }, { headers, withCredentials: true }));
+  }
+  refreshReleaseNotesBatch(id: string): Observable<ReleaseNotesBatch> {
+    return this.withCsrf(headers => this.http.post<ReleaseNotesBatch>(`${environment.apiBaseUrl}/api/admin/app-store-connect/release-notes/${encodeURIComponent(id)}/refresh`, null, { headers, withCredentials: true }));
   }
 
   getConnections(): Observable<AppStoreConnection[]> {
