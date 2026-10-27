@@ -13,6 +13,8 @@ export interface AdminBricksetSetSummary {
   fetchedAt: string;
   imagesFetchedAt: string | null;
   instructionsFetchedAt: string | null;
+  bricksetLastSyncedAt: string | null;
+  bricksetSyncSource: 'IOS_APP' | 'AUTO_SYNC' | null;
   updatedAt: string;
 }
 
@@ -29,6 +31,8 @@ export interface AdminBricksetSetDetail {
   fetchedAt: string;
   imagesFetchedAt: string | null;
   instructionsFetchedAt: string | null;
+  bricksetLastSyncedAt: string | null;
+  bricksetSyncSource: 'IOS_APP' | 'AUTO_SYNC' | null;
   updatedAt: string;
   rawJson: unknown;
   additionalImagesRawJson: unknown | null;
@@ -72,4 +76,29 @@ export interface AdminBricksetUsageDay {
 
 export interface AdminBricksetUsageSyncResponse {
   daysSynchronized: number;
+}
+
+export interface BricksetSyncConfiguration {
+  enabled: boolean;
+  minimumAgeDays: number;
+  dailyCallLimit: number;
+  checkIntervalMinutes: number;
+  concurrency: number;
+}
+export interface BricksetSyncStatistics {
+  totalSets: number;
+  neverSynced: number;
+  staleSets: number;
+  iosAppSets: number;
+  autoSyncSets: number;
+  callsToday: number;
+  remainingBudget: number;
+  lastRunAt: string | null;
+  lastResult: string | null;
+}
+export interface BricksetOldestSet {
+  setNumber: string;
+  numberVariant: number;
+  bricksetLastSyncedAt: string | null;
+  bricksetSyncSource: string | null;
 }

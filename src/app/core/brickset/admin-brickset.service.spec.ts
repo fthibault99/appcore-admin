@@ -93,4 +93,27 @@ describe('AdminBricksetService', () => {
     expect(request.request.withCredentials).toBe(true);
     request.flush({ daysSynchronized: 30 });
   });
+  it('saves persistent synchronization configuration using the administrator CSRF token', () => {
+    const config = { enabled: false, minimumAgeDays: 90, dailyCallLimit: 20, checkIntervalMinutes: 60, concurrency: 1 };
+    service.saveSyncConfiguration(config).subscribe(result => expect(result).toEqual(config));
+    const csrf = http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`);
+    csrf.flush('', { headers: { 'X-XSRF-TOKEN': 'sync-token' } });
+    const request = http.expectOne(`${environment.apiBaseUrl}/api/admin/brickset/sync/configuration`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.headers.get('X-XSRF-TOKEN')).toBe('sync-token');
+    expect(request.request.withCredentials).toBe(true);
+    expect(request.request.body).toEqual(config);
+    request.flush(config);
+  });
+
+  it('loads sync statistics and oldest sets from authenticated administrator endpoints', () => {
+    service.getSyncStatistics().subscribe();
+    service.getOldestSets().subscribe();
+    for (const endpoint of ['statistics', 'oldest']) {
+      const request = http.expectOne(`${environment.apiBaseUrl}/api/admin/brickset/sync/${endpoint}`);
+      expect(request.request.withCredentials).toBe(true);
+      request.flush(endpoint === 'oldest' ? [] : {});
+    }
+  });
+
 });

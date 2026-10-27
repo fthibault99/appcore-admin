@@ -50,3 +50,12 @@
     text-align: center;
   }
 }
+
+.sync-settings { display: flex; flex-wrap: wrap; align-items: end; gap: 1rem; }
+.sync-settings label { display: grid; gap: .4rem; }
+.sync-settings .checkbox { display: flex; align-items: center; }
+.sync-settings input, .sync-settings select { padding: .6rem; max-width: 12rem; }
+.sync-statistics { display: flex; flex-wrap: wrap; gap: 1.5rem; }
+.sync-statistics dt { font-size: .85rem; }
+.sync-statistics dd { margin: .4rem 0; font-weight: 600; }
+.sync-panel details { margin-top: 1rem; }

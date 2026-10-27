@@ -10,6 +10,40 @@
       <a class="usage-link secondary-link" routerLink="/brickset/usage">View API usage</a>
     </div>
   </header>
+  <section class="panel sync-panel" aria-labelledby="sync-heading">
+    <h2 id="sync-heading">Automatic catalog synchronization</h2>
+    <p>Up to 10 sets per call, spread across the day. Daily automatic budget uses UTC; direct iOS calls are excluded.</p>
+    <form [formGroup]="syncForm" (ngSubmit)="saveSync()" class="sync-settings">
+      <label class="checkbox"><input type="checkbox" formControlName="enabled" /> Enabled</label>
+      <label>Minimum age (days)<input type="number" formControlName="minimumAgeDays" min="1" max="3650" step="1" required /></label>
+      <label>Maximum calls per day<input type="number" formControlName="dailyCallLimit" min="1" max="100" step="1" required /></label>
+      <label>Check interval (minutes)<input type="number" formControlName="checkIntervalMinutes" min="1" max="1440" step="1" required /></label>
+      <label>Concurrent synchronizations<select formControlName="concurrency"><option [ngValue]="1">1</option></select></label>
+      <button type="submit" [disabled]="syncForm.invalid || syncBusy() || !syncReady()">Save settings</button>
+      <button type="button" class="secondary" (click)="loadSync()" [disabled]="syncBusy()">Refresh</button>
+    </form>
+    <p role="status">{{ syncMessage() }}</p>
+    @if (syncStats(); as stats) {
+      <dl class="sync-statistics">
+        <div><dt>Total sets</dt><dd>{{ stats.totalSets }}</dd></div>
+        <div><dt>Unknown synchronization date</dt><dd>{{ stats.neverSynced }}</dd></div>
+        <div><dt>Older than threshold</dt><dd>{{ stats.staleSets }}</dd></div>
+        <div><dt>Last updated by iOS</dt><dd>{{ stats.iosAppSets }}</dd></div>
+        <div><dt>Last updated automatically</dt><dd>{{ stats.autoSyncSets }}</dd></div>
+        <div><dt>Calls reserved today / remaining</dt><dd>{{ stats.callsToday }} / {{ stats.remainingBudget }}</dd></div>
+        <div><dt>Last worker check</dt><dd>{{ stats.lastRunAt ? (stats.lastRunAt | date: 'medium') : 'Never' }}</dd></div>
+        <div><dt>Last result</dt><dd>{{ stats.lastResult || '—' }}</dd></div>
+      </dl>
+    }
+    <details>
+      <summary>Oldest sets (first 25, unknown dates first)</summary>
+      <table><thead><tr><th>Set</th><th>Last synchronized</th><th>Source</th></tr></thead><tbody>
+      @for (set of oldestSets(); track set.setNumber + '-' + set.numberVariant) {
+        <tr><td>{{ set.setNumber }}-{{ set.numberVariant }}</td><td>{{ set.bricksetLastSyncedAt ? (set.bricksetLastSyncedAt | date: 'medium') : 'Unknown' }}</td><td>{{ set.bricksetSyncSource || 'Unknown' }}</td></tr>
+      }
+      </tbody></table>
+    </details>
+  </section>
   <section class="panel">
     <form (ngSubmit)="search()" class="search">
       <label>Set number<input [formControl]="setNumber" placeholder="75313" /></label>
@@ -47,6 +81,8 @@
                 <th>Calls</th>
                 <th>Last called</th>
                 <th>Fetched</th>
+                <th>Last synchronized</th>
+                <th>Source</th>
                 <th>Updated</th>
                 <th>Action</th>
               </tr>
@@ -74,6 +110,8 @@
                     {{ set.lastRequestedAt ? (set.lastRequestedAt | date: 'medium') : 'Never' }}
                   </td>
                   <td>{{ set.fetchedAt | date: 'medium' }}</td>
+                  <td>{{ set.bricksetLastSyncedAt ? (set.bricksetLastSyncedAt | date: 'medium') : 'Unknown' }}</td>
+                  <td>{{ set.bricksetSyncSource || 'Unknown' }}</td>
                   <td>{{ set.updatedAt | date: 'medium' }}</td>
                   <td>
                     <button type="button" class="link-button" (click)="view(set.id)">View</button>

@@ -8,6 +8,9 @@ import {
   AdminBricksetUsageSyncResponse,
   BrickSetDescriptionPage,
   BricksetSetPage,
+  BricksetSyncConfiguration,
+  BricksetSyncStatistics,
+  BricksetOldestSet,
 } from './admin-brickset.models';
 
 @Injectable({ providedIn: 'root' })
@@ -55,6 +58,24 @@ export class AdminBricksetService {
         }),
       ),
     );
+  }
+
+  getSyncConfiguration(): Observable<BricksetSyncConfiguration> {
+    return this.http.get<BricksetSyncConfiguration>(`${environment.apiBaseUrl}/api/admin/brickset/sync/configuration`, { withCredentials: true });
+  }
+
+  saveSyncConfiguration(config: BricksetSyncConfiguration): Observable<BricksetSyncConfiguration> {
+    return this.csrfHeaders().pipe(switchMap(headers => this.http.put<BricksetSyncConfiguration>(
+      `${environment.apiBaseUrl}/api/admin/brickset/sync/configuration`, config,
+      { headers, withCredentials: true })));
+  }
+
+  getSyncStatistics(): Observable<BricksetSyncStatistics> {
+    return this.http.get<BricksetSyncStatistics>(`${environment.apiBaseUrl}/api/admin/brickset/sync/statistics`, { withCredentials: true });
+  }
+
+  getOldestSets(): Observable<BricksetOldestSet[]> {
+    return this.http.get<BricksetOldestSet[]>(`${environment.apiBaseUrl}/api/admin/brickset/sync/oldest`, { withCredentials: true });
   }
 
   private csrfHeaders(): Observable<HttpHeaders> {
