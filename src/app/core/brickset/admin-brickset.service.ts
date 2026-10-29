@@ -21,9 +21,9 @@ export class AdminBricksetService {
   private readonly descriptionsUrl = `${environment.apiBaseUrl}/api/admin/brickset/descriptions`;
   private readonly csrfUrl = `${environment.apiBaseUrl}/api/admin/auth/csrf`;
 
-  getSets(setNumber: string, page: number, size: number): Observable<BricksetSetPage> {
+  getSets(search: string, page: number, size: number): Observable<BricksetSetPage> {
     let params = new HttpParams().set('page', page).set('size', size);
-    if (setNumber.trim()) params = params.set('setNumber', setNumber.trim());
+    if (search.trim()) params = params.set('setNumber', search.trim());
     return this.http.get<BricksetSetPage>(this.setsUrl, { params, withCredentials: true });
   }
 

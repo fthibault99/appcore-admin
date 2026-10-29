@@ -45,8 +45,8 @@
     </details>
   </section>
   <section class="panel">
-    <form (ngSubmit)="search()" class="search">
-      <label>Set number<input [formControl]="setNumber" placeholder="75313" /></label>
+    <form [formGroup]="searchForm" (ngSubmit)="search()" class="search">
+      <label>Set, Brickset ID, name, EAN or UPC<input formControlName="query" placeholder="75313-1, Millennium Falcon, barcode…" /></label>
       <button type="submit">Search</button>
       <button type="button" class="secondary" (click)="reset()">Reset</button>
     </form>
@@ -65,7 +65,7 @@
         <span>{{ setPage.totalElements }} sets</span>
       </div>
       @if (setPage.content.length === 0) {
-        <p class="state">No cached set matches this set number.</p>
+        <p class="state">No cached set matches this search.</p>
       } @else {
         <div class="table-scroll">
           <table>

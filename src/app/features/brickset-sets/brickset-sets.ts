@@ -1,9 +1,9 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { forkJoin, finalize } from 'rxjs';
+import { forkJoin, finalize, Subscription } from 'rxjs';
 import { BricksetSetPage, BricksetSyncStatistics, BricksetOldestSet } from '../../core/brickset/admin-brickset.models';
 import { AdminBricksetService } from '../../core/brickset/admin-brickset.service';
 import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
@@ -15,12 +15,16 @@ import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
   styleUrl: './brickset-sets.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class BricksetSetsComponent implements OnInit {
+export class BricksetSetsComponent implements OnInit, OnDestroy {
   private readonly service = inject(AdminBricksetService);
   private readonly router = inject(Router);
   private pageNumber = 0;
   private readonly pageSize = 25;
-  readonly setNumber = new FormControl('', { nonNullable: true });
+  readonly searchForm = new FormGroup({
+    query: new FormControl('', { nonNullable: true }),
+  });
+  private activeSearch = '';
+  private setsRequest?: Subscription;
   readonly page = signal<BricksetSetPage | null>(null);
   readonly isLoading = signal(false);
   readonly hasError = signal(false);
@@ -69,12 +73,13 @@ export class BricksetSetsComponent implements OnInit {
   }
 
   search(): void {
+    this.activeSearch = this.searchForm.controls.query.value.trim();
     this.pageNumber = 0;
     this.load();
   }
 
   reset(): void {
-    this.setNumber.setValue('');
+    this.searchForm.controls.query.setValue('');
     this.search();
   }
 
@@ -100,12 +105,16 @@ export class BricksetSetsComponent implements OnInit {
     this.load();
   }
 
+  ngOnDestroy(): void {
+    this.setsRequest?.unsubscribe();
+  }
+
   private load(): void {
-    if (this.isLoading()) return;
+    this.setsRequest?.unsubscribe();
     this.hasError.set(false);
     this.isLoading.set(true);
-    this.service
-      .getSets(this.setNumber.value, this.pageNumber, this.pageSize)
+    this.setsRequest = this.service
+      .getSets(this.activeSearch, this.pageNumber, this.pageSize)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (page) => this.page.set(page),
