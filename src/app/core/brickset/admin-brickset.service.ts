@@ -8,6 +8,7 @@ import {
   AdminBricksetUsageSyncResponse,
   BrickSetDescriptionPage,
   BricksetSetPage,
+  BricksetListOptions,
   BricksetSyncConfiguration,
   BricksetSyncStatistics,
   BricksetOldestSet,
@@ -21,9 +22,10 @@ export class AdminBricksetService {
   private readonly descriptionsUrl = `${environment.apiBaseUrl}/api/admin/brickset/descriptions`;
   private readonly csrfUrl = `${environment.apiBaseUrl}/api/admin/auth/csrf`;
 
-  getSets(search: string, page: number, size: number): Observable<BricksetSetPage> {
+  getSets(search: string, page: number, size: number, options?: BricksetListOptions): Observable<BricksetSetPage> {
     let params = new HttpParams().set('page', page).set('size', size);
     if (search.trim()) params = params.set('setNumber', search.trim());
+    if (options) params = params.set('source', options.source).set('sortBy', options.sortBy).set('direction', options.direction);
     return this.http.get<BricksetSetPage>(this.setsUrl, { params, withCredentials: true });
   }
 

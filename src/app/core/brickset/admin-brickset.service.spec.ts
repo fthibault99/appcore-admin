@@ -116,4 +116,15 @@ describe('AdminBricksetService', () => {
     }
   });
 
+  it('sends the source filter and date ordering with the text search and pagination', () => {
+    service.getSets(' Falcon ', 2, 10, { source: 'AUTO_SYNC', sortBy: 'bricksetLastSyncedAt', direction: 'ASC' }).subscribe();
+    const request = http.expectOne(candidate => candidate.url === url);
+    expect(request.request.params.get('setNumber')).toBe('Falcon');
+    expect(request.request.params.get('source')).toBe('AUTO_SYNC');
+    expect(request.request.params.get('sortBy')).toBe('bricksetLastSyncedAt');
+    expect(request.request.params.get('direction')).toBe('ASC');
+    expect(request.request.params.get('page')).toBe('2');
+    request.flush({ content: [] });
+  });
+
 });

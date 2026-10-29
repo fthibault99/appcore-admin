@@ -47,6 +47,18 @@
   <section class="panel">
     <form [formGroup]="searchForm" (ngSubmit)="search()" class="search">
       <label>Set, Brickset ID, name, EAN or UPC<input formControlName="query" placeholder="75313-1, Millennium Falcon, barcode…" /></label>
+      <label>Source<select formControlName="source" (change)="search()">
+        <option value="ALL">All sources</option><option value="IOS_APP">IOS_APP</option>
+        <option value="AUTO_SYNC">AUTO_SYNC</option><option value="UNKNOWN">Unknown source</option>
+      </select></label>
+      <label>Sort by date<select formControlName="sortBy" (change)="search()">
+        <option value="updatedAt">Updated</option><option value="bricksetLastSyncedAt">Last synchronized</option>
+        <option value="fetchedAt">Fetched</option><option value="lastRequestedAt">Last called</option>
+        <option value="imagesFetchedAt">Images fetched</option><option value="instructionsFetchedAt">Instructions fetched</option>
+      </select></label>
+      <label>Order<select formControlName="direction" (change)="search()">
+        <option value="DESC">Newest first</option><option value="ASC">Oldest first</option>
+      </select></label>
       <button type="submit">Search</button>
       <button type="button" class="secondary" (click)="reset()">Reset</button>
     </form>

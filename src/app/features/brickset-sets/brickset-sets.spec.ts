@@ -10,6 +10,8 @@ import { BricksetSetsComponent } from './brickset-sets';
 @Component({ selector: 'app-admin-header', template: '' })
 class HeaderStub {}
 
+const defaultOptions = { source: 'ALL', sortBy: 'updatedAt', direction: 'DESC' };
+
 const emptyPage: BricksetSetPage = {
   content: [], totalElements: 0, totalPages: 0, number: 0, size: 25, first: true, last: true,
 };
@@ -53,7 +55,7 @@ describe('BricksetSetsComponent search', () => {
 
   it('submits the actual search form while the initial unfiltered request is pending', () => {
     submit(' 75313-1 ');
-    expect(service.getSets).toHaveBeenLastCalledWith('75313-1', 0, 25);
+    expect(service.getSets).toHaveBeenLastCalledWith('75313-1', 0, 25, defaultOptions);
     expect(fixture.componentInstance.page()).toEqual(emptyPage);
     initial.next({ ...emptyPage, totalElements: 3267 });
     expect(fixture.componentInstance.page()?.totalElements).toBe(0);
@@ -63,11 +65,11 @@ describe('BricksetSetsComponent search', () => {
   it('accepts names and barcodes and resets to an unfiltered first page', () => {
     for (const term of ['Millennium Falcon', '31235', '5702016913866', '673419340618']) {
       submit(term);
-      expect(service.getSets).toHaveBeenLastCalledWith(term, 0, 25);
+      expect(service.getSets).toHaveBeenLastCalledWith(term, 0, 25, defaultOptions);
     }
     const reset: HTMLButtonElement = fixture.nativeElement.querySelector('form.search button[type="button"]');
     reset.click();
-    expect(service.getSets).toHaveBeenLastCalledWith('', 0, 25);
+    expect(service.getSets).toHaveBeenLastCalledWith('', 0, 25, defaultOptions);
     expect(fixture.componentInstance.searchForm.controls.query.value).toBe('');
   });
 
@@ -76,8 +78,28 @@ describe('BricksetSetsComponent search', () => {
     submit('Falcon');
     fixture.componentInstance.searchForm.controls.query.setValue('unsubmitted edit');
     fixture.componentInstance.next();
-    expect(service.getSets).toHaveBeenLastCalledWith('Falcon', 1, 25);
+    expect(service.getSets).toHaveBeenLastCalledWith('Falcon', 1, 25, defaultOptions);
     submit('Eiffel');
-    expect(service.getSets).toHaveBeenLastCalledWith('Eiffel', 0, 25);
+    expect(service.getSets).toHaveBeenLastCalledWith('Eiffel', 0, 25, defaultOptions);
   });
+  it('combines source, search and date order and preserves them when paging', () => {
+    service.getSets.mockReturnValue(of({ ...emptyPage, last: false, totalElements: 60, totalPages: 3 }));
+    submit('Falcon');
+    for (const [name, value] of [['source', 'AUTO_SYNC'], ['sortBy', 'bricksetLastSyncedAt'], ['direction', 'ASC']]) {
+      const select: HTMLSelectElement = fixture.nativeElement.querySelector(`select[formControlName="${name}"]`);
+      select.value = value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      fixture.detectChanges();
+    }
+    const options = { source: 'AUTO_SYNC', sortBy: 'bricksetLastSyncedAt', direction: 'ASC' };
+    expect(service.getSets).toHaveBeenLastCalledWith('Falcon', 0, 25, options);
+    fixture.componentInstance.next();
+    expect(service.getSets).toHaveBeenLastCalledWith('Falcon', 1, 25, options);
+    fixture.componentInstance.reset();
+    expect(service.getSets).toHaveBeenLastCalledWith('', 0, 25, defaultOptions);
+    fixture.componentInstance.searchForm.controls.source.setValue('UNKNOWN');
+    fixture.componentInstance.search();
+    expect(service.getSets).toHaveBeenLastCalledWith('', 0, 25, { ...defaultOptions, source: 'UNKNOWN' });
+  });
+
 });

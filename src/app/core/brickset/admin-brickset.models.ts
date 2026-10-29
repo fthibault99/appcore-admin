@@ -102,3 +102,11 @@ export interface BricksetOldestSet {
   bricksetLastSyncedAt: string | null;
   bricksetSyncSource: string | null;
 }
+
+export type BricksetSourceFilter = 'ALL' | 'IOS_APP' | 'AUTO_SYNC' | 'UNKNOWN';
+export type BricksetDateSort = 'lastRequestedAt' | 'fetchedAt' | 'imagesFetchedAt' | 'instructionsFetchedAt' | 'bricksetLastSyncedAt' | 'updatedAt';
+export interface BricksetListOptions {
+  source: BricksetSourceFilter;
+  sortBy: BricksetDateSort;
+  direction: 'ASC' | 'DESC';
+}
