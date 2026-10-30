@@ -100,14 +100,15 @@ describe('AnalyticsEventsComponent', () => {
 
   afterEach(() => vi.useRealTimers());
 
-  it('defaults to one calendar month ago at local midnight for events and statistics', () => {
+  it('defaults to one calendar month ago and leaves statistics disabled', () => {
     fixture.detectChanges();
     expect(component.filterForm.controls.from.value).toBe('2026-09-18T00:00');
     expect(component.filterForm.controls.to.value).toBe('');
     expect(service.getEvents).toHaveBeenCalledWith(expect.objectContaining({ from: defaultFrom }));
-    expect(service.getStatistics).toHaveBeenCalledWith(
-      expect.objectContaining({ from: defaultFrom }),
-    );
+    expect(service.getStatistics).not.toHaveBeenCalled();
+    const checkbox = fixture.nativeElement.querySelector('input[type="checkbox"]');
+    expect(checkbox.checked).toBe(false);
+    expect(fixture.nativeElement.querySelector('#statistics-title')).toBeNull();
   });
 
   it.each([
@@ -139,6 +140,9 @@ describe('AnalyticsEventsComponent', () => {
 
   it('renders distinct statistics, missing data, and all three breakdowns', () => {
     fixture.detectChanges();
+    const checkbox = fixture.nativeElement.querySelector('input[type="checkbox"]');
+    checkbox.click();
+    fixture.detectChanges();
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Anonymous users');
     expect(text).toContain('2 events without a user ID');
@@ -150,6 +154,9 @@ describe('AnalyticsEventsComponent', () => {
   });
 
   it('passes applied language and region filters to statistics and resets them', () => {
+    fixture.detectChanges();
+    const checkbox = fixture.nativeElement.querySelector('input[type="checkbox"]');
+    checkbox.click();
     fixture.detectChanges();
     results.next(emptyPage());
     results.complete();
@@ -169,6 +176,9 @@ describe('AnalyticsEventsComponent', () => {
 
   it('shows statistics failures and clears stale values', () => {
     fixture.detectChanges();
+    const checkbox = fixture.nativeElement.querySelector('input[type="checkbox"]');
+    checkbox.click();
+    fixture.detectChanges();
     const pending = new Subject();
     service.getStatistics.mockReturnValue(pending);
     component.loadStatistics();
@@ -176,6 +186,42 @@ describe('AnalyticsEventsComponent', () => {
     pending.error(new HttpErrorResponse({ status: 500 }));
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Unable to load statistics');
+  });
+
+  it('skips statistics on search and reset while disabled', () => {
+    fixture.detectChanges();
+    results.next(emptyPage());
+    results.complete();
+    component.search();
+    component.reset();
+    component.loadStatistics();
+    expect(service.getStatistics).not.toHaveBeenCalled();
+  });
+
+  it('cancels statistics when unchecked and does not retain opt-in on reopening', () => {
+    fixture.detectChanges();
+    const pending = new Subject();
+    service.getStatistics.mockReturnValue(pending);
+    const checkbox = fixture.nativeElement.querySelector('input[type="checkbox"]');
+    checkbox.click();
+    expect(service.getStatistics).toHaveBeenCalledWith(
+      expect.objectContaining({ from: defaultFrom }),
+    );
+    expect(pending.observed).toBe(true);
+    checkbox.click();
+    fixture.detectChanges();
+    expect(pending.observed).toBe(false);
+    expect(component.statisticsLoading()).toBe(false);
+    expect(component.statistics()).toBeNull();
+    expect(fixture.nativeElement.querySelector('#statistics-title')).toBeNull();
+    checkbox.click();
+    fixture.destroy();
+    service.getStatistics.mockClear();
+    fixture = TestBed.createComponent(AnalyticsEventsComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    expect(component.statisticsEnabled()).toBe(false);
+    expect(service.getStatistics).not.toHaveBeenCalled();
   });
 
   it('loads the first page and exposes loading and empty states', () => {

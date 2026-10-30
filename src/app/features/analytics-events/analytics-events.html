@@ -86,6 +86,14 @@
       @if (filterForm.hasError('dateRange')) {
         <p class="validation-error">From date/time must not be after To date/time.</p>
       }
+      <label class="statistics-toggle">
+        <input
+          type="checkbox"
+          [checked]="statisticsEnabled()"
+          (change)="toggleStatistics($event)"
+        />
+        Calculate statistics
+      </label>
       <div class="actions">
         <button type="submit" [disabled]="isLoading()">Search</button
         ><button type="button" class="secondary" (click)="reset()" [disabled]="isLoading()">
@@ -95,83 +103,87 @@
     </form>
   </section>
 
-  <section class="panel" aria-labelledby="statistics-title" aria-live="polite">
-    <h2 id="statistics-title">Users and sessions</h2>
-    <p class="statistics-note">
-      Distinct anonymous identifiers within each client and application. Applications use their
-      configured ID across API keys. Region and language are reported by the app. Dates use event
-      receipt time; without dates, all recorded history is included.
-    </p>
-    @if (statisticsLoading()) {
-      <p class="state">Loading statistics…</p>
-    } @else if (statisticsError()) {
-      <div class="state error">
-        <p>Unable to load statistics.</p>
-        <button type="button" (click)="loadStatistics()">Retry statistics</button>
-      </div>
-    } @else if (statistics(); as stats) {
-      <div class="statistics-kpis">
-        <div>
-          <span>Events</span><strong>{{ stats.totals.events }}</strong>
-        </div>
-        <div>
-          <span>Anonymous users</span><strong>{{ stats.totals.users }}</strong>
-        </div>
-        <div>
-          <span>Sessions</span><strong>{{ stats.totals.sessions }}</strong>
-        </div>
-      </div>
+  @if (statisticsEnabled()) {
+    <section class="panel" aria-labelledby="statistics-title" aria-live="polite">
+      <h2 id="statistics-title">Users and sessions</h2>
       <p class="statistics-note">
-        {{ stats.totals.eventsWithoutUser }} events without a user ID ·
-        {{ stats.totals.eventsWithoutSession }} without a session ID. Missing IDs are excluded from
-        distinct counts. A user or session can appear in multiple regions or languages; rows are not
-        additive.
+        Distinct anonymous identifiers within each client and application. Applications use their
+        configured ID across API keys. Region and language are reported by the app. Dates use event
+        receipt time; without dates, all recorded history is included.
       </p>
-      @if (stats.totals.events === 0) {
-        <p class="state">No analytics statistics match the selected filters.</p>
-      } @else {
-        <div class="statistics-grid">
-          @for (
-            group of [
-              { title: 'Application', rows: stats.byApplication },
-              { title: 'Region', rows: stats.byRegion },
-              { title: 'Language', rows: stats.byLanguage },
-            ];
-            track group.title
-          ) {
-            <div class="table-scroll statistics-table">
-              <table>
-                <caption>
-                  By
-                  {{
-                    group.title.toLowerCase()
-                  }}
-                </caption>
-                <thead>
-                  <tr>
-                    <th>{{ group.title }}</th>
-                    <th>Events</th>
-                    <th>Users</th>
-                    <th>Sessions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (row of group.rows; track row.key) {
-                    <tr>
-                      <td [title]="row.key || 'Not provided'">{{ row.label || 'Not provided' }}</td>
-                      <td>{{ row.counts.events }}</td>
-                      <td>{{ row.counts.users }}</td>
-                      <td>{{ row.counts.sessions }}</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
+      @if (statisticsLoading()) {
+        <p class="state">Loading statistics…</p>
+      } @else if (statisticsError()) {
+        <div class="state error">
+          <p>Unable to load statistics.</p>
+          <button type="button" (click)="loadStatistics()">Retry statistics</button>
         </div>
+      } @else if (statistics(); as stats) {
+        <div class="statistics-kpis">
+          <div>
+            <span>Events</span><strong>{{ stats.totals.events }}</strong>
+          </div>
+          <div>
+            <span>Anonymous users</span><strong>{{ stats.totals.users }}</strong>
+          </div>
+          <div>
+            <span>Sessions</span><strong>{{ stats.totals.sessions }}</strong>
+          </div>
+        </div>
+        <p class="statistics-note">
+          {{ stats.totals.eventsWithoutUser }} events without a user ID ·
+          {{ stats.totals.eventsWithoutSession }} without a session ID. Missing IDs are excluded
+          from distinct counts. A user or session can appear in multiple regions or languages; rows
+          are not additive.
+        </p>
+        @if (stats.totals.events === 0) {
+          <p class="state">No analytics statistics match the selected filters.</p>
+        } @else {
+          <div class="statistics-grid">
+            @for (
+              group of [
+                { title: 'Application', rows: stats.byApplication },
+                { title: 'Region', rows: stats.byRegion },
+                { title: 'Language', rows: stats.byLanguage },
+              ];
+              track group.title
+            ) {
+              <div class="table-scroll statistics-table">
+                <table>
+                  <caption>
+                    By
+                    {{
+                      group.title.toLowerCase()
+                    }}
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th>{{ group.title }}</th>
+                      <th>Events</th>
+                      <th>Users</th>
+                      <th>Sessions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of group.rows; track row.key) {
+                      <tr>
+                        <td [title]="row.key || 'Not provided'">
+                          {{ row.label || 'Not provided' }}
+                        </td>
+                        <td>{{ row.counts.events }}</td>
+                        <td>{{ row.counts.users }}</td>
+                        <td>{{ row.counts.sessions }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        }
       }
-    }
-  </section>
+    </section>
+  }
 
   <section class="panel results" aria-labelledby="results-title" aria-live="polite">
     <div class="results-heading">

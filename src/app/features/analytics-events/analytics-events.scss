@@ -279,3 +279,14 @@ th {
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+.statistics-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.statistics-toggle input {
+  min-height: auto;
+  margin: 0;
+}

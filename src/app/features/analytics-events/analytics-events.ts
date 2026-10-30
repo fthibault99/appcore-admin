@@ -72,6 +72,7 @@ export class AnalyticsEventsComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private activeFilters: AnalyticsEventFilters = { page: 0, size: 25, sort: 'receivedAt,desc' };
 
+  readonly statisticsEnabled = signal(false);
   readonly statistics = signal<AnalyticsStatistics | null>(null);
   readonly statisticsLoading = signal(false);
   readonly statisticsError = signal(false);
@@ -307,7 +308,21 @@ export class AnalyticsEventsComponent implements OnInit, OnDestroy {
     );
   }
 
+  toggleStatistics(event: Event): void {
+    const enabled = (event.target as HTMLInputElement).checked;
+    this.statisticsEnabled.set(enabled);
+    if (enabled) {
+      this.loadStatistics();
+    } else {
+      this.statisticsRequest?.unsubscribe();
+      this.statistics.set(null);
+      this.statisticsLoading.set(false);
+      this.statisticsError.set(false);
+    }
+  }
+
   loadStatistics(): void {
+    if (!this.statisticsEnabled()) return;
     this.statisticsRequest?.unsubscribe();
     this.statistics.set(null);
     this.statisticsLoading.set(true);
