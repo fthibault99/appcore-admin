@@ -51,4 +51,17 @@ describe('BricksetSetDetailComponent manual refresh', () => {
     expect(fixture.componentInstance.isRefreshing()).toBe(false);
     expect(fixture.nativeElement.textContent).toContain('temporarily limited');
   });
+  it('marks responses with empty arrays as cached', () => {
+    fixture.componentInstance.detail.set({
+      ...current, instructionsRawJson: { status: 'success', instructions: [] },
+      additionalImagesRawJson: { status: 'success', additionalImages: [] },
+    });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Instructions cached');
+    expect(fixture.nativeElement.textContent).toContain('Images cached');
+    fixture.componentInstance.detail.set({ ...current, instructionsRawJson: null, additionalImagesRawJson: null });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('No instructions');
+    expect(fixture.nativeElement.textContent).toContain('No additional images');
+  });
 });

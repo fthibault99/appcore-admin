@@ -102,7 +102,7 @@ describe('BricksetSetsComponent search', () => {
     expect(service.getSets).toHaveBeenLastCalledWith('', 0, 25, { ...defaultOptions, source: 'UNKNOWN' });
   });
 
-  it('combines nonempty instructions and images with other filters and keeps them when paging', () => {
+  it('combines cached instructions and images with other filters and keeps them when paging', () => {
     service.getSets.mockReturnValue(of({ ...emptyPage, last: false }));
     submit('Falcon');
     fixture.componentInstance.searchForm.controls.source.setValue('AUTO_SYNC');
@@ -119,7 +119,7 @@ describe('BricksetSetsComponent search', () => {
     fixture.componentInstance.reset();
     expect(service.getSets).toHaveBeenLastCalledWith('', 0, 25, defaultOptions);
   });
-  it('combines without instructions and without images and clears both on reset', () => {
+  it('combines uncached instructions and uncached images and clears both on reset', () => {
     submit('Falcon');
     for (const name of ['hasInstructions', 'hasImages']) {
       const select: HTMLSelectElement = fixture.nativeElement.querySelector(`select[formControlName="${name}"]`);

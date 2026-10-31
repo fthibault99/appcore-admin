@@ -127,7 +127,7 @@ describe('AdminBricksetService', () => {
     request.flush({ content: [] });
   });
 
-  it('sends the nonempty content filters together with the existing filters', () => {
+  it('sends the cache-presence filters together with the existing filters', () => {
     service.getSets(' Falcon ', 1, 25, {
       source: 'AUTO_SYNC', sortBy: 'updatedAt', direction: 'DESC',
       hasInstructions: true, hasImages: true,
@@ -141,7 +141,7 @@ describe('AdminBricksetService', () => {
     request.flush({ content: [] });
   });
 
-  it('sends false for missing content and omits filters for all sets', () => {
+  it('sends false for missing cached responses and omits filters for all sets', () => {
     for (const value of [false, null]) {
       service.getSets('', 0, 25, {
         source: 'ALL', sortBy: 'updatedAt', direction: 'DESC',
