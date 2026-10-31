@@ -26,6 +26,7 @@ describe('AdminBarcodeService', () => {
     expect(request.request.params.get('query')).toBe('coffee');
     expect(request.request.params.get('domain')).toBe('FOOD');
     expect(request.request.params.get('page')).toBe('1');
+    expect(request.request.params.has('missingLegoSetNumber')).toBe(false);
     request.flush({
       content: [],
       totalElements: 0,
@@ -35,6 +36,17 @@ describe('AdminBarcodeService', () => {
       first: false,
       last: true,
     });
+  });
+
+  it('combines missing LEGO sets with domain, query and pagination', () => {
+    service.getBarcodes(' train ', 'LEGO', 1, 25, true).subscribe();
+    const request = http.expectOne((candidate) => candidate.url === url);
+    expect(request.request.params.get('missingLegoSetNumber')).toBe('true');
+    expect(request.request.params.get('domain')).toBe('LEGO');
+    expect(request.request.params.get('query')).toBe('train');
+    expect(request.request.params.get('page')).toBe('1');
+    expect(request.request.withCredentials).toBe(true);
+    request.flush({ content: [] });
   });
 
   it('gets CSRF before updating editable fields', () => {

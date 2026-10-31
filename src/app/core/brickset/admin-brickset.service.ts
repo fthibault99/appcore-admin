@@ -35,6 +35,11 @@ export class AdminBricksetService {
     });
   }
 
+  refreshSet(id: number): Observable<AdminBricksetSetDetail> {
+    return this.csrfHeaders().pipe(switchMap(headers =>
+      this.http.post<AdminBricksetSetDetail>(`${this.setsUrl}/${id}/refresh`, null, { headers, withCredentials: true })));
+  }
+
   getDescriptions(setNum: string, page: number, size: number): Observable<BrickSetDescriptionPage> {
     let params = new HttpParams().set('page', page).set('size', size);
     if (setNum.trim()) params = params.set('setNum', setNum.trim());

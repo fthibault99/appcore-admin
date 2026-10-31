@@ -127,4 +127,14 @@ describe('AdminBricksetService', () => {
     request.flush({ content: [] });
   });
 
+  it('refreshes all set parts with an administrator CSRF token', () => {
+    service.refreshSet(7).subscribe();
+    http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`).flush('', { headers: { 'X-XSRF-TOKEN': 'refresh-token' } });
+    const request = http.expectOne(`${url}/7/refresh`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.withCredentials).toBe(true);
+    expect(request.request.headers.get('X-XSRF-TOKEN')).toBe('refresh-token');
+    request.flush({ id: 7, bricksetSyncSource: 'ADMIN_MANUAL' });
+  });
+
 });

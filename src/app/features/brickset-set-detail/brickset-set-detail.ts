@@ -22,6 +22,30 @@ export class BricksetSetDetailComponent implements OnInit {
   readonly isLoading = signal(false);
   readonly hasError = signal(false);
 
+  readonly isRefreshing = signal(false);
+  readonly refreshMessage = signal('');
+
+  refresh(): void {
+    const current = this.detail();
+    if (!current || this.isRefreshing()) return;
+    this.isRefreshing.set(true);
+    this.refreshMessage.set('');
+    this.service.refreshSet(current.id).pipe(finalize(() => this.isRefreshing.set(false)))
+      .subscribe({ next: detail => {
+        this.detail.set(detail);
+        this.refreshMessage.set('Details, images and instructions updated.');
+      }, error: (error: unknown) => {
+        if (error instanceof HttpErrorResponse && (error.status === 401 || error.status === 403)) {
+          void this.router.navigate(['/login']); return;
+        }
+        this.refreshMessage.set(error instanceof HttpErrorResponse && error.status === 409
+          ? 'The set changed or another synchronization is running. Reload the page and retry.'
+          : error instanceof HttpErrorResponse && error.status === 429
+          ? 'Brickset refresh is temporarily limited. Please retry later.'
+          : 'Unable to refresh this set. The previous cached data was preserved.');
+      } });
+  }
+
   ngOnInit(): void {
     this.load();
   }

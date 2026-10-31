@@ -23,6 +23,7 @@ export class BarcodesComponent implements OnInit {
   readonly filterForm = new FormGroup({
     query: new FormControl('', { nonNullable: true }),
     domain: new FormControl<BarcodeDomain | ''>('', { nonNullable: true }),
+    missingLegoSetNumber: new FormControl(false, { nonNullable: true }),
   });
   readonly page = signal<BarcodePage | null>(null);
   readonly isLoading = signal(false);
@@ -63,7 +64,13 @@ export class BarcodesComponent implements OnInit {
     this.hasError.set(false);
     this.isLoading.set(true);
     this.service
-      .getBarcodes(filters.query, filters.domain, this.pageNumber, this.pageSize)
+      .getBarcodes(
+        filters.query,
+        filters.domain,
+        this.pageNumber,
+        this.pageSize,
+        filters.missingLegoSetNumber,
+      )
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (page) => this.page.set(page),

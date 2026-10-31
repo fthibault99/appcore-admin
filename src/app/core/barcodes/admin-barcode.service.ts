@@ -20,9 +20,11 @@ export class AdminBarcodeService {
     domain: BarcodeDomain | '',
     page: number,
     size: number,
+    missingLegoSetNumber = false,
   ): Observable<BarcodePage> {
     let params = new HttpParams().set('page', page).set('size', size).set('sort', 'updatedAt,desc');
     if (query.trim()) params = params.set('query', query.trim());
+    if (missingLegoSetNumber) params = params.set('missingLegoSetNumber', true);
     if (domain) params = params.set('domain', domain);
     return this.http.get<BarcodePage>(this.barcodesUrl, { params, withCredentials: true });
   }

@@ -19,6 +19,12 @@
         <span class="badge" [class.available]="data.instructionsRawJson">{{ data.instructionsRawJson ? 'Instructions cached' : 'No instructions' }}</span>
       </div>
     </header>
+    <section class="card refresh-actions">
+      <button type="button" (click)="refresh()" [disabled]="isRefreshing()">
+        {{ isRefreshing() ? 'Refreshing…' : 'Refresh details, images and instructions' }}
+      </button>
+      <p role="status" aria-live="polite">{{ refreshMessage() }}</p>
+    </section>
     <section class="card metadata">
       <dl>
         <div><dt>Set number</dt><dd>{{ data.setNumber }}-{{ data.numberVariant }}</dd></div>
@@ -26,6 +32,8 @@
         <div><dt>Name</dt><dd>{{ data.setName || '—' }}</dd></div>
         <div><dt>EAN</dt><dd>{{ data.ean || '—' }}</dd></div>
         <div><dt>UPC</dt><dd>{{ data.upc || '—' }}</dd></div>
+        <div><dt>Last synchronized</dt><dd>{{ data.bricksetLastSyncedAt ? (data.bricksetLastSyncedAt | date: 'medium') : 'Unknown' }}</dd></div>
+        <div><dt>Synchronization source</dt><dd>{{ data.bricksetSyncSource || 'Unknown' }}</dd></div>
         <div><dt>Set fetched</dt><dd>{{ data.fetchedAt | date: 'medium' }}</dd></div>
         <div><dt>Images fetched</dt><dd>{{ data.imagesFetchedAt ? (data.imagesFetchedAt | date: 'medium') : '—' }}</dd></div>
         <div><dt>Instructions fetched</dt><dd>{{ data.instructionsFetchedAt ? (data.instructionsFetchedAt | date: 'medium') : '—' }}</dd></div>

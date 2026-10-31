@@ -14,7 +14,7 @@ export interface AdminBricksetSetSummary {
   imagesFetchedAt: string | null;
   instructionsFetchedAt: string | null;
   bricksetLastSyncedAt: string | null;
-  bricksetSyncSource: 'IOS_APP' | 'AUTO_SYNC' | null;
+  bricksetSyncSource: 'IOS_APP' | 'AUTO_SYNC' | 'ADMIN_MANUAL' | null;
   updatedAt: string;
 }
 
@@ -32,7 +32,7 @@ export interface AdminBricksetSetDetail {
   imagesFetchedAt: string | null;
   instructionsFetchedAt: string | null;
   bricksetLastSyncedAt: string | null;
-  bricksetSyncSource: 'IOS_APP' | 'AUTO_SYNC' | null;
+  bricksetSyncSource: 'IOS_APP' | 'AUTO_SYNC' | 'ADMIN_MANUAL' | null;
   updatedAt: string;
   rawJson: unknown;
   additionalImagesRawJson: unknown | null;
@@ -90,6 +90,8 @@ export interface BricksetSyncStatistics {
   neverSynced: number;
   staleSets: number;
   iosAppSets: number;
+  manualSyncSets: number;
+  manualCallsToday: number;
   autoSyncSets: number;
   callsToday: number;
   remainingBudget: number;
@@ -103,7 +105,7 @@ export interface BricksetOldestSet {
   bricksetSyncSource: string | null;
 }
 
-export type BricksetSourceFilter = 'ALL' | 'IOS_APP' | 'AUTO_SYNC' | 'UNKNOWN';
+export type BricksetSourceFilter = 'ALL' | 'IOS_APP' | 'AUTO_SYNC' | 'ADMIN_MANUAL' | 'UNKNOWN';
 export type BricksetDateSort = 'lastRequestedAt' | 'fetchedAt' | 'imagesFetchedAt' | 'instructionsFetchedAt' | 'bricksetLastSyncedAt' | 'updatedAt';
 export interface BricksetListOptions {
   source: BricksetSourceFilter;

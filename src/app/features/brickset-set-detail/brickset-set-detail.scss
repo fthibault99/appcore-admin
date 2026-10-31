@@ -47,3 +47,7 @@ pre {
     grid-template-columns: 1fr;
   }
 }
+
+.refresh-actions { margin-block: 1rem; }
+.refresh-actions button { padding: .7rem 1rem; border-radius: .4rem; cursor: pointer; }
+.refresh-actions button:disabled { cursor: wait; opacity: .65; }

@@ -29,6 +29,8 @@
         <div><dt>Unknown synchronization date</dt><dd>{{ stats.neverSynced }}</dd></div>
         <div><dt>Older than threshold</dt><dd>{{ stats.staleSets }}</dd></div>
         <div><dt>Last updated by iOS</dt><dd>{{ stats.iosAppSets }}</dd></div>
+        <div><dt>Last updated manually</dt><dd>{{ stats.manualSyncSets }}</dd></div>
+        <div><dt>Manual calls reserved today</dt><dd>{{ stats.manualCallsToday }}</dd></div>
         <div><dt>Last updated automatically</dt><dd>{{ stats.autoSyncSets }}</dd></div>
         <div><dt>Calls reserved today / remaining</dt><dd>{{ stats.callsToday }} / {{ stats.remainingBudget }}</dd></div>
         <div><dt>Last worker check</dt><dd>{{ stats.lastRunAt ? (stats.lastRunAt | date: 'medium') : 'Never' }}</dd></div>
@@ -49,7 +51,7 @@
       <label>Set, Brickset ID, name, EAN or UPC<input formControlName="query" placeholder="75313-1, Millennium Falcon, barcode…" /></label>
       <label>Source<select formControlName="source" (change)="search()">
         <option value="ALL">All sources</option><option value="IOS_APP">IOS_APP</option>
-        <option value="AUTO_SYNC">AUTO_SYNC</option><option value="UNKNOWN">Unknown source</option>
+        <option value="AUTO_SYNC">AUTO_SYNC</option><option value="ADMIN_MANUAL">ADMIN_MANUAL</option><option value="UNKNOWN">Unknown source</option>
       </select></label>
       <label>Sort by date<select formControlName="sortBy" (change)="search()">
         <option value="updatedAt">Updated</option><option value="bricksetLastSyncedAt">Last synchronized</option>
