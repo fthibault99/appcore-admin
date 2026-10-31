@@ -49,6 +49,19 @@ describe('AdminBarcodeService', () => {
     request.flush({ content: [] });
   });
 
+  it('gets CSRF before enriching a missing-set batch and sends the cursor', () => {
+    service.enrichMissingLegoSets(123).subscribe();
+    http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`).flush(null, {
+      status: 204, statusText: 'No Content', headers: { 'X-XSRF-TOKEN': 'token' },
+    });
+    const request = http.expectOne((candidate) => candidate.url === `${url}/enrich-missing-lego-sets`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.params.get('afterId')).toBe('123');
+    expect(request.request.headers.get('X-XSRF-TOKEN')).toBe('token');
+    expect(request.request.withCredentials).toBe(true);
+    request.flush({ processed: 0, updated: 0, notFound: 0, skipped: 0, nextAfterId: 123, hasMore: false });
+  });
+
   it('gets CSRF before updating editable fields', () => {
     const update: UpdateAdminBarcode = {
       expectedVersion: 2,

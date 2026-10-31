@@ -24,6 +24,19 @@
     </form>
   </section>
   <section class="panel" aria-live="polite">
+    <h2>Complete missing LEGO sets</h2>
+    <p>Check all LEGO barcodes without a set number against the cached Brickset catalog, regardless of the filters above. Manual corrections are skipped.</p>
+    <button type="button" (click)="enrichMissingLegoSets()" [disabled]="isEnriching() || isLoading()">
+      {{ isEnriching() ? 'Checking Brickset…' : 'Fill missing LEGO sets from Brickset' }}
+    </button>
+    @if (enrichment(); as result) {
+      <p>{{ isEnriching() ? 'In progress:' : enrichmentError() ? 'Partial result:' : 'Completed:' }}
+        {{ result.processed }} checked, {{ result.updated }} updated,
+        {{ result.notFound }} without a match, {{ result.skipped }} manual corrections skipped.</p>
+    }
+    @if (enrichmentError()) { <p class="error">{{ enrichmentError() }}</p> }
+  </section>
+  <section class="panel" aria-live="polite">
     @if (isLoading()) {
       <p class="state">Loading barcodes…</p>
     } @else if (hasError()) {

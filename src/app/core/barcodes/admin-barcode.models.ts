@@ -43,3 +43,12 @@ export interface UpdateAdminBarcode {
   ingredients: string | null;
   legoSetNumber: string | null;
 }
+
+export interface BarcodeEnrichmentResult {
+  processed: number;
+  updated: number;
+  notFound: number;
+  skipped: number;
+  nextAfterId: number;
+  hasMore: boolean;
+}

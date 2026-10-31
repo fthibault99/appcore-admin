@@ -1,10 +1,11 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
-import { BarcodeDomain, BarcodePage } from '../../core/barcodes/admin-barcode.models';
+import { EMPTY, expand, finalize } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { BarcodeDomain, BarcodeEnrichmentResult, BarcodePage } from '../../core/barcodes/admin-barcode.models';
 import { AdminBarcodeService } from '../../core/barcodes/admin-barcode.service';
 import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
 
@@ -19,6 +20,7 @@ const barcodesStateKey = 'appcore-admin.barcodes.filters';
 })
 export class BarcodesComponent implements OnInit {
   private readonly service = inject(AdminBarcodeService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private pageNumber = 0;
   private readonly pageSize = 25;
@@ -30,6 +32,9 @@ export class BarcodesComponent implements OnInit {
   readonly page = signal<BarcodePage | null>(null);
   readonly isLoading = signal(false);
   readonly hasError = signal(false);
+  readonly isEnriching = signal(false);
+  readonly enrichment = signal<BarcodeEnrichmentResult | null>(null);
+  readonly enrichmentError = signal('');
 
   ngOnInit(): void {
     this.restoreState();
@@ -60,6 +65,42 @@ export class BarcodesComponent implements OnInit {
   }
   retry(): void {
     this.load();
+  }
+  enrichMissingLegoSets(): void {
+    if (this.isEnriching() || this.isLoading()) return;
+    this.isEnriching.set(true);
+    this.enrichment.set(null);
+    this.enrichmentError.set('');
+    this.service.enrichMissingLegoSets().pipe(
+      expand((batch) => batch.hasMore
+        ? this.service.enrichMissingLegoSets(batch.nextAfterId) : EMPTY, 1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.isEnriching.set(false)),
+    ).subscribe({
+      next: (batch) => {
+        const previous = this.enrichment();
+        this.enrichment.set({
+          ...batch,
+          processed: (previous?.processed ?? 0) + batch.processed,
+          updated: (previous?.updated ?? 0) + batch.updated,
+          notFound: (previous?.notFound ?? 0) + batch.notFound,
+          skipped: (previous?.skipped ?? 0) + batch.skipped,
+        });
+        if (!batch.hasMore) this.search();
+      },
+      error: (error: unknown) => {
+        if (error instanceof HttpErrorResponse && (error.status === 401 || error.status === 403)) {
+          void this.router.navigate(['/login']);
+          return;
+        }
+        this.enrichmentError.set(
+          error instanceof HttpErrorResponse && error.status === 409
+            ? 'A barcode changed during processing. Previous batches were saved. Run again to continue.'
+            : 'Unable to complete enrichment. Previous batches were saved. Run again to retry.',
+        );
+        this.search();
+      },
+    });
   }
   private restoreState(): void {
     try {

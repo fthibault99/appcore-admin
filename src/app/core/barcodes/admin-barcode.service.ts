@@ -6,6 +6,7 @@ import {
   AdminBarcodeDetail,
   BarcodeDomain,
   BarcodePage,
+  BarcodeEnrichmentResult,
   UpdateAdminBarcode,
 } from './admin-barcode.models';
 
@@ -27,6 +28,13 @@ export class AdminBarcodeService {
     if (missingLegoSetNumber) params = params.set('missingLegoSetNumber', true);
     if (domain) params = params.set('domain', domain);
     return this.http.get<BarcodePage>(this.barcodesUrl, { params, withCredentials: true });
+  }
+
+  enrichMissingLegoSets(afterId = 0): Observable<BarcodeEnrichmentResult> {
+    return this.withCsrf((headers) => this.http.post<BarcodeEnrichmentResult>(
+      `${this.barcodesUrl}/enrich-missing-lego-sets`, null,
+      { headers, params: new HttpParams().set('afterId', afterId), withCredentials: true },
+    ));
   }
 
   getBarcode(id: number): Observable<AdminBarcodeDetail> {
