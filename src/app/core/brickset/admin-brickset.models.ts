@@ -108,6 +108,8 @@ export interface BricksetOldestSet {
 export type BricksetSourceFilter = 'ALL' | 'IOS_APP' | 'AUTO_SYNC' | 'ADMIN_MANUAL' | 'UNKNOWN';
 export type BricksetDateSort = 'lastRequestedAt' | 'fetchedAt' | 'imagesFetchedAt' | 'instructionsFetchedAt' | 'bricksetLastSyncedAt' | 'updatedAt';
 export interface BricksetListOptions {
+  hasInstructions?: boolean;
+  hasImages?: boolean;
   source: BricksetSourceFilter;
   sortBy: BricksetDateSort;
   direction: 'ASC' | 'DESC';

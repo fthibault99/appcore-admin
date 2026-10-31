@@ -53,6 +53,12 @@
         <option value="ALL">All sources</option><option value="IOS_APP">IOS_APP</option>
         <option value="AUTO_SYNC">AUTO_SYNC</option><option value="ADMIN_MANUAL">ADMIN_MANUAL</option><option value="UNKNOWN">Unknown source</option>
       </select></label>
+      <label>Instructions<select formControlName="hasInstructions" (change)="search()">
+        <option [ngValue]="false">All sets</option><option [ngValue]="true">With instructions</option>
+      </select></label>
+      <label>Additional images<select formControlName="hasImages" (change)="search()">
+        <option [ngValue]="false">All sets</option><option [ngValue]="true">With additional images</option>
+      </select></label>
       <label>Sort by date<select formControlName="sortBy" (change)="search()">
         <option value="updatedAt">Updated</option><option value="bricksetLastSyncedAt">Last synchronized</option>
         <option value="fetchedAt">Fetched</option><option value="lastRequestedAt">Last called</option>

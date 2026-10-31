@@ -10,7 +10,7 @@ import { BricksetSetsComponent } from './brickset-sets';
 @Component({ selector: 'app-admin-header', template: '' })
 class HeaderStub {}
 
-const defaultOptions = { source: 'ALL', sortBy: 'updatedAt', direction: 'DESC' };
+const defaultOptions = { source: 'ALL', sortBy: 'updatedAt', direction: 'DESC', hasInstructions: false, hasImages: false };
 
 const emptyPage: BricksetSetPage = {
   content: [], totalElements: 0, totalPages: 0, number: 0, size: 25, first: true, last: true,
@@ -91,7 +91,7 @@ describe('BricksetSetsComponent search', () => {
       select.dispatchEvent(new Event('change', { bubbles: true }));
       fixture.detectChanges();
     }
-    const options = { source: 'AUTO_SYNC', sortBy: 'bricksetLastSyncedAt', direction: 'ASC' };
+    const options = { ...defaultOptions, source: 'AUTO_SYNC', sortBy: 'bricksetLastSyncedAt', direction: 'ASC' };
     expect(service.getSets).toHaveBeenLastCalledWith('Falcon', 0, 25, options);
     fixture.componentInstance.next();
     expect(service.getSets).toHaveBeenLastCalledWith('Falcon', 1, 25, options);
@@ -100,6 +100,24 @@ describe('BricksetSetsComponent search', () => {
     fixture.componentInstance.searchForm.controls.source.setValue('UNKNOWN');
     fixture.componentInstance.search();
     expect(service.getSets).toHaveBeenLastCalledWith('', 0, 25, { ...defaultOptions, source: 'UNKNOWN' });
+  });
+
+  it('combines nonempty instructions and images with other filters and keeps them when paging', () => {
+    service.getSets.mockReturnValue(of({ ...emptyPage, last: false }));
+    submit('Falcon');
+    fixture.componentInstance.searchForm.controls.source.setValue('AUTO_SYNC');
+    for (const name of ['hasInstructions', 'hasImages']) {
+      const select: HTMLSelectElement = fixture.nativeElement.querySelector(`select[formControlName="${name}"]`);
+      select.selectedIndex = 1;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      fixture.detectChanges();
+    }
+    const options = { ...defaultOptions, source: 'AUTO_SYNC', hasInstructions: true, hasImages: true };
+    expect(service.getSets).toHaveBeenLastCalledWith('Falcon', 0, 25, options);
+    fixture.componentInstance.next();
+    expect(service.getSets).toHaveBeenLastCalledWith('Falcon', 1, 25, options);
+    fixture.componentInstance.reset();
+    expect(service.getSets).toHaveBeenLastCalledWith('', 0, 25, defaultOptions);
   });
 
 });

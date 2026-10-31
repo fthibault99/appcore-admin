@@ -127,6 +127,20 @@ describe('AdminBricksetService', () => {
     request.flush({ content: [] });
   });
 
+  it('sends the nonempty content filters together with the existing filters', () => {
+    service.getSets(' Falcon ', 1, 25, {
+      source: 'AUTO_SYNC', sortBy: 'updatedAt', direction: 'DESC',
+      hasInstructions: true, hasImages: true,
+    }).subscribe();
+    const request = http.expectOne(candidate => candidate.url === url);
+    expect(request.request.params.get('hasInstructions')).toBe('true');
+    expect(request.request.params.get('hasImages')).toBe('true');
+    expect(request.request.params.get('setNumber')).toBe('Falcon');
+    expect(request.request.params.get('source')).toBe('AUTO_SYNC');
+    expect(request.request.params.get('page')).toBe('1');
+    request.flush({ content: [] });
+  });
+
   it('refreshes all set parts with an administrator CSRF token', () => {
     service.refreshSet(7).subscribe();
     http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`).flush('', { headers: { 'X-XSRF-TOKEN': 'refresh-token' } });
