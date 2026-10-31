@@ -8,6 +8,8 @@ import { BarcodeDomain, BarcodePage } from '../../core/barcodes/admin-barcode.mo
 import { AdminBarcodeService } from '../../core/barcodes/admin-barcode.service';
 import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
 
+const barcodesStateKey = 'appcore-admin.barcodes.filters';
+
 @Component({
   selector: 'app-barcodes',
   imports: [DatePipe, ReactiveFormsModule, AdminHeaderComponent],
@@ -30,6 +32,7 @@ export class BarcodesComponent implements OnInit {
   readonly hasError = signal(false);
 
   ngOnInit(): void {
+    this.restoreState();
     this.load();
   }
   search(): void {
@@ -58,9 +61,42 @@ export class BarcodesComponent implements OnInit {
   retry(): void {
     this.load();
   }
+  private restoreState(): void {
+    try {
+      const stored = sessionStorage.getItem(barcodesStateKey);
+      if (!stored) return;
+      const state = JSON.parse(stored);
+      if (
+        !state ||
+        typeof state.query !== 'string' ||
+        !['', 'FOOD', 'LEGO', 'WINE'].includes(state.domain) ||
+        typeof state.missingLegoSetNumber !== 'boolean' ||
+        !Number.isSafeInteger(state.page) || state.page < 0
+      ) return;
+      this.filterForm.setValue({
+        query: state.query,
+        domain: state.domain,
+        missingLegoSetNumber: state.missingLegoSetNumber,
+      });
+      this.pageNumber = state.page;
+    } catch {
+      // Keep the list usable if session storage is unavailable or invalid.
+    }
+  }
+  private persistState(): void {
+    try {
+      sessionStorage.setItem(barcodesStateKey, JSON.stringify({
+        ...this.filterForm.getRawValue(),
+        page: this.pageNumber,
+      }));
+    } catch {
+      // Keep the list usable if browser storage is unavailable.
+    }
+  }
   private load(): void {
     if (this.isLoading()) return;
     const filters = this.filterForm.getRawValue();
+    this.persistState();
     this.hasError.set(false);
     this.isLoading.set(true);
     this.service
