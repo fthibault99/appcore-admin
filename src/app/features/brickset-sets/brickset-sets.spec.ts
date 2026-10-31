@@ -27,6 +27,7 @@ describe('BricksetSetsComponent search', () => {
   };
 
   beforeEach(async () => {
+    sessionStorage.removeItem('appcore-admin.brickset.filters');
     initial = new Subject<BricksetSetPage>();
     service = {
       getSets: vi.fn().mockReturnValueOnce(initial).mockReturnValue(of(emptyPage)),
@@ -43,6 +44,8 @@ describe('BricksetSetsComponent search', () => {
     fixture = TestBed.createComponent(BricksetSetsComponent);
     fixture.detectChanges();
   });
+
+  afterEach(() => sessionStorage.removeItem('appcore-admin.brickset.filters'));
 
   function submit(term: string): void {
     const input: HTMLInputElement = fixture.nativeElement.querySelector('input[formControlName="query"]');
@@ -130,6 +133,42 @@ describe('BricksetSetsComponent search', () => {
       ...defaultOptions, hasInstructions: false, hasImages: false,
     });
     fixture.componentInstance.reset();
+    expect(service.getSets).toHaveBeenLastCalledWith('', 0, 25, defaultOptions);
+  });
+
+  it('restores the submitted filters, sorting and page after returning from a detail or reloading', () => {
+    service.getSets.mockReturnValue(of({ ...emptyPage, last: false }));
+    fixture.componentInstance.searchForm.setValue({
+      query: ' Falcon ', source: 'AUTO_SYNC', sortBy: 'imagesFetchedAt',
+      direction: 'ASC', hasInstructions: false, hasImages: true,
+    });
+    fixture.componentInstance.search();
+    fixture.componentInstance.next();
+    // An unsubmitted search edit must not replace the active search on return.
+    fixture.componentInstance.searchForm.controls.query.setValue('unsubmitted');
+    fixture.destroy();
+    fixture = TestBed.createComponent(BricksetSetsComponent);
+    fixture.detectChanges();
+    const options = { source: 'AUTO_SYNC', sortBy: 'imagesFetchedAt', direction: 'ASC', hasInstructions: false, hasImages: true };
+    expect(service.getSets).toHaveBeenLastCalledWith('Falcon', 1, 25, options);
+    expect(fixture.componentInstance.searchForm.getRawValue()).toEqual({ query: 'Falcon', ...options });
+
+    fixture.componentInstance.reset();
+    fixture.destroy();
+    fixture = TestBed.createComponent(BricksetSetsComponent);
+    fixture.detectChanges();
+    expect(service.getSets).toHaveBeenLastCalledWith('', 0, 25, defaultOptions);
+    expect(fixture.componentInstance.searchForm.getRawValue()).toEqual({ query: '', ...defaultOptions });
+  });
+
+  it.each(['{', 'null', JSON.stringify({ query: '', options: { ...defaultOptions, source: 'INVALID' }, page: 0 }),
+    JSON.stringify({ query: '', options: defaultOptions, page: -1 }),
+    JSON.stringify({ query: '', options: { ...defaultOptions, hasImages: 'false' }, page: 0 }),
+  ])('ignores invalid session state: %s', stored => {
+    fixture.destroy();
+    sessionStorage.setItem('appcore-admin.brickset.filters', stored);
+    fixture = TestBed.createComponent(BricksetSetsComponent);
+    fixture.detectChanges();
     expect(service.getSets).toHaveBeenLastCalledWith('', 0, 25, defaultOptions);
   });
 

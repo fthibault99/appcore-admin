@@ -8,6 +8,8 @@ import { BricksetDateSort, BricksetSourceFilter, BricksetListOptions, BricksetSe
 import { AdminBricksetService } from '../../core/brickset/admin-brickset.service';
 import { AdminHeaderComponent } from '../../shared/admin-header/admin-header';
 
+const bricksetStateKey = 'appcore-admin.brickset.filters';
+
 @Component({
   selector: 'app-brickset-sets',
   imports: [DatePipe, ReactiveFormsModule, RouterLink, AdminHeaderComponent],
@@ -74,6 +76,7 @@ export class BricksetSetsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.restoreState();
     this.load();
     this.loadSync();
   }
@@ -117,8 +120,50 @@ export class BricksetSetsComponent implements OnInit, OnDestroy {
     this.setsRequest?.unsubscribe();
   }
 
+  private restoreState(): void {
+    try {
+      const stored = sessionStorage.getItem(bricksetStateKey);
+      if (!stored) return;
+      const state = JSON.parse(stored);
+      const options = state?.options;
+      if (
+        typeof state?.query !== 'string' || !options ||
+        !Number.isSafeInteger(state.page) || state.page < 0 ||
+        !['ALL', 'IOS_APP', 'AUTO_SYNC', 'ADMIN_MANUAL', 'UNKNOWN'].includes(options.source) ||
+        !['updatedAt', 'bricksetLastSyncedAt', 'fetchedAt', 'lastRequestedAt', 'imagesFetchedAt', 'instructionsFetchedAt'].includes(options.sortBy) ||
+        !['ASC', 'DESC'].includes(options.direction) ||
+        ![null, true, false].includes(options.hasInstructions) ||
+        ![null, true, false].includes(options.hasImages)
+      ) return;
+      this.activeSearch = state.query;
+      this.activeOptions = {
+        source: options.source, sortBy: options.sortBy, direction: options.direction,
+        hasInstructions: options.hasInstructions, hasImages: options.hasImages,
+      };
+      this.pageNumber = state.page;
+      this.searchForm.setValue({
+        query: state.query, source: options.source, sortBy: options.sortBy,
+        direction: options.direction, hasInstructions: options.hasInstructions,
+        hasImages: options.hasImages,
+      });
+    } catch {
+      // Keep the list usable if session storage is unavailable or invalid.
+    }
+  }
+
+  private persistState(): void {
+    try {
+      sessionStorage.setItem(bricksetStateKey, JSON.stringify({
+        query: this.activeSearch, options: this.activeOptions, page: this.pageNumber,
+      }));
+    } catch {
+      // Keep the list usable if browser storage is unavailable.
+    }
+  }
+
   private load(): void {
     this.setsRequest?.unsubscribe();
+    this.persistState();
     this.hasError.set(false);
     this.isLoading.set(true);
     this.setsRequest = this.service
