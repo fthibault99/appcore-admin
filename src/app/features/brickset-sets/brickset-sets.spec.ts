@@ -10,7 +10,7 @@ import { BricksetSetsComponent } from './brickset-sets';
 @Component({ selector: 'app-admin-header', template: '' })
 class HeaderStub {}
 
-const defaultOptions = { source: 'ALL', sortBy: 'updatedAt', direction: 'DESC', hasInstructions: false, hasImages: false };
+const defaultOptions = { source: 'ALL', sortBy: 'updatedAt', direction: 'DESC', hasInstructions: null, hasImages: null };
 
 const emptyPage: BricksetSetPage = {
   content: [], totalElements: 0, totalPages: 0, number: 0, size: 25, first: true, last: true,
@@ -116,6 +116,19 @@ describe('BricksetSetsComponent search', () => {
     expect(service.getSets).toHaveBeenLastCalledWith('Falcon', 0, 25, options);
     fixture.componentInstance.next();
     expect(service.getSets).toHaveBeenLastCalledWith('Falcon', 1, 25, options);
+    fixture.componentInstance.reset();
+    expect(service.getSets).toHaveBeenLastCalledWith('', 0, 25, defaultOptions);
+  });
+  it('combines without instructions and without images and clears both on reset', () => {
+    submit('Falcon');
+    for (const name of ['hasInstructions', 'hasImages']) {
+      const select: HTMLSelectElement = fixture.nativeElement.querySelector(`select[formControlName="${name}"]`);
+      select.selectedIndex = 2;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    expect(service.getSets).toHaveBeenLastCalledWith('Falcon', 0, 25, {
+      ...defaultOptions, hasInstructions: false, hasImages: false,
+    });
     fixture.componentInstance.reset();
     expect(service.getSets).toHaveBeenLastCalledWith('', 0, 25, defaultOptions);
   });

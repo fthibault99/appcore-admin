@@ -26,8 +26,8 @@ export class AdminBricksetService {
     let params = new HttpParams().set('page', page).set('size', size);
     if (search.trim()) params = params.set('setNumber', search.trim());
     if (options) params = params.set('source', options.source).set('sortBy', options.sortBy).set('direction', options.direction);
-    if (options?.hasInstructions) params = params.set('hasInstructions', true);
-    if (options?.hasImages) params = params.set('hasImages', true);
+    if (options?.hasInstructions != null) params = params.set('hasInstructions', options.hasInstructions);
+    if (options?.hasImages != null) params = params.set('hasImages', options.hasImages);
     return this.http.get<BricksetSetPage>(this.setsUrl, { params, withCredentials: true });
   }
 

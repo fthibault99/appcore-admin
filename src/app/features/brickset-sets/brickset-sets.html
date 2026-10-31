@@ -54,10 +54,12 @@
         <option value="AUTO_SYNC">AUTO_SYNC</option><option value="ADMIN_MANUAL">ADMIN_MANUAL</option><option value="UNKNOWN">Unknown source</option>
       </select></label>
       <label>Instructions<select formControlName="hasInstructions" (change)="search()">
-        <option [ngValue]="false">All sets</option><option [ngValue]="true">With instructions</option>
+        <option [ngValue]="null">All sets</option><option [ngValue]="true">With instructions</option>
+        <option [ngValue]="false">Without instructions</option>
       </select></label>
       <label>Additional images<select formControlName="hasImages" (change)="search()">
-        <option [ngValue]="false">All sets</option><option [ngValue]="true">With additional images</option>
+        <option [ngValue]="null">All sets</option><option [ngValue]="true">With additional images</option>
+        <option [ngValue]="false">Without additional images</option>
       </select></label>
       <label>Sort by date<select formControlName="sortBy" (change)="search()">
         <option value="updatedAt">Updated</option><option value="bricksetLastSyncedAt">Last synchronized</option>

@@ -141,6 +141,19 @@ describe('AdminBricksetService', () => {
     request.flush({ content: [] });
   });
 
+  it('sends false for missing content and omits filters for all sets', () => {
+    for (const value of [false, null]) {
+      service.getSets('', 0, 25, {
+        source: 'ALL', sortBy: 'updatedAt', direction: 'DESC',
+        hasInstructions: value, hasImages: value,
+      }).subscribe();
+      const request = http.expectOne(candidate => candidate.url === url);
+      expect(request.request.params.get('hasInstructions')).toBe(value === false ? 'false' : null);
+      expect(request.request.params.get('hasImages')).toBe(value === false ? 'false' : null);
+      request.flush({ content: [] });
+    }
+  });
+
   it('refreshes all set parts with an administrator CSRF token', () => {
     service.refreshSet(7).subscribe();
     http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`).flush('', { headers: { 'X-XSRF-TOKEN': 'refresh-token' } });

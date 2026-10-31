@@ -22,14 +22,14 @@ export class BricksetSetsComponent implements OnInit, OnDestroy {
   private readonly pageSize = 25;
   readonly searchForm = new FormGroup({
     query: new FormControl('', { nonNullable: true }),
-    hasInstructions: new FormControl(false, { nonNullable: true }),
-    hasImages: new FormControl(false, { nonNullable: true }),
+    hasInstructions: new FormControl<boolean | null>(null),
+    hasImages: new FormControl<boolean | null>(null),
     source: new FormControl<BricksetSourceFilter>('ALL', { nonNullable: true }),
     sortBy: new FormControl<BricksetDateSort>('updatedAt', { nonNullable: true }),
     direction: new FormControl<'ASC' | 'DESC'>('DESC', { nonNullable: true }),
   });
   private activeSearch = '';
-  private activeOptions: BricksetListOptions = { source: 'ALL', sortBy: 'updatedAt', direction: 'DESC', hasInstructions: false, hasImages: false };
+  private activeOptions: BricksetListOptions = { source: 'ALL', sortBy: 'updatedAt', direction: 'DESC', hasInstructions: null, hasImages: null };
   private setsRequest?: Subscription;
   readonly page = signal<BricksetSetPage | null>(null);
   readonly isLoading = signal(false);
@@ -87,7 +87,7 @@ export class BricksetSetsComponent implements OnInit, OnDestroy {
   }
 
   reset(): void {
-    this.searchForm.reset({ query: '', source: 'ALL', sortBy: 'updatedAt', direction: 'DESC', hasInstructions: false, hasImages: false });
+    this.searchForm.reset({ query: '', source: 'ALL', sortBy: 'updatedAt', direction: 'DESC', hasInstructions: null, hasImages: null });
     this.search();
   }
 
