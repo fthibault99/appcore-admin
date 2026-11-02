@@ -38,16 +38,17 @@ describe('AppStoreNotificationsComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('loads production notifications by default', () => {
+  it('loads purchased production notifications by default', () => {
     fixture.detectChanges();
 
     expect(component.filterForm.controls.environment.value).toBe('Production');
+    expect(component.filterForm.controls.inAppOwnershipType.value).toBe('PURCHASED');
     expect(service.getNotifications).toHaveBeenCalledWith({
-      environment: 'Production', page: 0, size: 50, sort: 'receivedAt,desc',
+      environment: 'Production', inAppOwnershipType: 'PURCHASED', page: 0, size: 50, sort: 'receivedAt,desc',
     });
   });
 
-  it('restores production when filters are reset', () => {
+  it('restores production and purchased ownership when filters are reset', () => {
     fixture.detectChanges();
     component.filterForm.patchValue({
       environment: 'Sandbox', notificationType: 'TEST', inAppOwnershipType: 'FAMILY_SHARED',
@@ -56,8 +57,9 @@ describe('AppStoreNotificationsComponent', () => {
     component.reset();
 
     expect(component.filterForm.controls.environment.value).toBe('Production');
+    expect(component.filterForm.controls.inAppOwnershipType.value).toBe('PURCHASED');
     expect(service.getNotifications).toHaveBeenLastCalledWith({
-      environment: 'Production', page: 0, size: 50, sort: 'receivedAt,desc',
+      environment: 'Production', inAppOwnershipType: 'PURCHASED', page: 0, size: 50, sort: 'receivedAt,desc',
     });
   });
 });

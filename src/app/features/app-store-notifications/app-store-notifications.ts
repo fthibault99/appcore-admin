@@ -25,6 +25,7 @@ export class AppStoreNotificationsComponent implements OnInit {
   private readonly router = inject(Router);
   private filters: AppStoreNotificationFilters = {
     environment: 'Production',
+    inAppOwnershipType: 'PURCHASED',
     page: 0,
     size: 50,
     sort: 'receivedAt,desc',
@@ -39,7 +40,7 @@ export class AppStoreNotificationsComponent implements OnInit {
     applicationKey: new FormControl('', { nonNullable: true }),
     environment: new FormControl('Production', { nonNullable: true }),
     notificationType: new FormControl('', { nonNullable: true }),
-    inAppOwnershipType: new FormControl('', { nonNullable: true }),
+    inAppOwnershipType: new FormControl('PURCHASED', { nonNullable: true }),
   });
 
   ngOnInit(): void {
@@ -64,10 +65,11 @@ export class AppStoreNotificationsComponent implements OnInit {
 
   reset(): void {
     this.filterForm.reset({
-      applicationKey: '', environment: 'Production', notificationType: '', inAppOwnershipType: '',
+      applicationKey: '', environment: 'Production', notificationType: '', inAppOwnershipType: 'PURCHASED',
     });
     this.filters = {
       environment: 'Production',
+      inAppOwnershipType: 'PURCHASED',
       page: 0,
       size: this.filters.size,
       sort: 'receivedAt,desc',
