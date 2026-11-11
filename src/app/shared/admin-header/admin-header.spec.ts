@@ -23,6 +23,7 @@ describe('AdminHeaderComponent', () => {
       fixture.nativeElement.querySelectorAll('nav a') as NodeListOf<HTMLAnchorElement>,
     );
     expect(links.map((link) => link.textContent?.trim())).toEqual([
+      'ASO',
       'Dashboard',
       'Analytics',
       'App Store',
@@ -35,6 +36,7 @@ describe('AdminHeaderComponent', () => {
       'Recipes',
       'Extraction Domains',
       'Barcodes',
+      'Shared Albums',
       'Brickset',
       'OpenAI',
       'Research',
@@ -43,6 +45,7 @@ describe('AdminHeaderComponent', () => {
       'Dish Recreation',
       'Recipe Discovery',
     ]);
+    expect(links.find((link) => link.textContent?.trim() === 'ASO')?.getAttribute('href')).toBe('/aso');
     const brand = fixture.nativeElement.querySelector('.brand') as HTMLAnchorElement;
     expect(brand.textContent?.trim()).toBe('App Core Admin');
     expect((brand.querySelector('img') as HTMLImageElement).getAttribute('src')).toBe(

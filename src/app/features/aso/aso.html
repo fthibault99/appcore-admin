@@ -1,0 +1,257 @@
+<app-admin-header />
+<main class="page-shell">
+  <header class="page-heading">
+    <h1>ASO</h1>
+    <p>Mots-clés suivis et popularité Apple Ads</p>
+  </header>
+  @if (error()) {
+    <p role="alert">{{ error() }}</p>
+  }
+  @if (message()) {
+    <p role="status">{{ message() }}</p>
+  }
+  <section class="panel">
+    <h2>Ajouter un mot-clé</h2>
+    <form [formGroup]="form" (ngSubmit)="add()">
+      <label>Mot-clé <input formControlName="searchTerm" required /></label>
+      <label
+        >Pays
+        <select formControlName="countryOrRegion" required>
+          @for (country of options().countries; track country) {
+            <option [value]="country">{{ country === 'CA' ? 'Canada (CA)' : country }}</option>
+          }
+        </select></label
+      >
+      <label
+        >Catégorie Apple Ads
+        <select formControlName="genre" required>
+          <option value="">Choisir une catégorie</option>
+          @for (genre of options().genres; track genre) {
+            <option [value]="genre">{{ genre }}</option>
+          }
+        </select></label
+      >
+      <button type="submit" [disabled]="saving() || !options().genres.length">
+        {{ saving() ? 'Ajout…' : 'Ajouter' }}
+      </button>
+      @if (form.touched && form.invalid) {
+        <p role="alert">Le mot-clé, le pays et la catégorie sont obligatoires.</p>
+      }
+    </form>
+  </section>
+  <section class="panel">
+    <h2>Mots-clés</h2>
+    <label
+      >Semaine interrogée (UTC)
+      <select
+        [value]="weekStart()"
+        (change)="changeWeek($event)"
+        [disabled]="!options().weeks.length || collecting().size > 0 || diagnosticLoading()"
+      >
+        @for (week of options().weeks; track week.start) {
+          <option [value]="week.start">{{ week.start }} – {{ week.end }}</option>
+        }
+      </select>
+    </label>
+    <p class="muted">
+      Le calendrier de publication ne garantit pas la présence des données. La collecte utilise
+      uniquement la semaine choisie. Les colonnes ci-dessous montrent la dernière mesure
+      enregistrée.
+    </p>
+    <div class="toolbar">
+      <label
+        >Trier par
+        <select [value]="sortBy" (change)="sort($event)">
+          <option value="searchTerm">Mot-clé</option>
+          <option value="countryOrRegion">Pays</option>
+          <option value="genre">Catégorie</option>
+        </select></label
+      ><button (click)="reverse()">{{ direction === 'ASC' ? 'Croissant' : 'Décroissant' }}</button
+      ><button (click)="load(rows()?.number ?? 0)" [disabled]="loading()">Recharger</button>
+    </div>
+    @if (loading()) {
+      <p role="status">Chargement…</p>
+    }
+    @if (rows(); as result) {
+      @if (!result.content.length && !loading()) {
+        <p>Aucun mot-clé suivi.</p>
+      }
+      @if (result.content.length) {
+        <div class="table-scroll" tabindex="0" aria-label="Mots-clés suivis">
+          <table>
+            <thead>
+              <tr>
+                <th>Mot-clé</th>
+                <th>Pays</th>
+                <th>Catégorie</th>
+                <th>Popularité /100</th>
+                <th>Rang catégorie</th>
+                <th>Période mesurée</th>
+                <th>Dernière collecte enregistrée</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of result.content; track row.id) {
+                <tr>
+                  <th>
+                    <button class="link" (click)="showHistory(row)">{{ row.searchTerm }}</button>
+                  </th>
+                  <td>{{ row.countryOrRegion }}</td>
+                  <td>{{ row.genre }}</td>
+                  <td>{{ row.latest?.popularity100 ?? '—' }}</td>
+                  <td>{{ row.latest?.rankInGenre ?? '—' }}</td>
+                  <td>
+                    @if (row.latest; as latest) {
+                      {{ latest.periodStart }} – {{ latest.periodEnd }}
+                    } @else {
+                      —
+                    }
+                  </td>
+                  <td>{{ row.latest ? (row.latest.collectedAt | date: 'medium') : '—' }}</td>
+                  <td>
+                    <button
+                      (click)="collect(row)"
+                      [disabled]="collecting().has(row.id) || diagnosticLoading() || !weekStart()"
+                    >
+                      {{ collecting().has(row.id) ? 'Collecte…' : 'Actualiser' }}
+                    </button>
+                    <button
+                      (click)="availableTerms(row)"
+                      [disabled]="diagnosticLoading() || collecting().size > 0 || !weekStart()"
+                    >
+                      Voir les termes disponibles
+                    </button>
+                    @if (rowMessages()[row.id]) {
+                      <p role="status">{{ rowMessages()[row.id] }}</p>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <div class="toolbar">
+        <button (click)="load(result.number - 1)" [disabled]="loading() || result.number === 0">
+          Précédent</button
+        ><span
+          >Page {{ result.number + 1 }} / {{ result.totalPages || 1 }} ·
+          {{ result.totalElements }} mots-clés</span
+        ><button
+          (click)="load(result.number + 1)"
+          [disabled]="loading() || result.number + 1 >= result.totalPages"
+        >
+          Suivant
+        </button>
+      </div>
+    }
+  </section>
+  @if (diagnosticLoading()) {
+    <p role="status">Chargement des termes disponibles…</p>
+  }
+  @if (diagnosticError()) {
+    <p role="alert">{{ diagnosticError() }}</p>
+  }
+  @if (diagnostic(); as data) {
+    <section class="panel">
+      <h2>Termes disponibles : {{ data.countryOrRegion }} / {{ data.genre }}</h2>
+      <p>
+        Du {{ data.periodStart }} au {{ data.periodEnd }} (UTC) · Sans filtre de mot-clé ·
+        {{ data.terms.length }} termes disponibles · Triés par rang de popularité croissant. Aucun
+        résultat ajouté à l’historique.
+      </p>
+      @if (!data.terms.length) {
+        <p>
+          Aucune donnée retournée par Apple pour ce pays, cette catégorie et cette semaine, même
+          sans filtre de mot-clé.
+        </p>
+      } @else {
+        <div class="table-scroll" tabindex="0" aria-label="Termes disponibles">
+          <table>
+            <thead>
+              <tr>
+                <th>Mot-clé</th>
+                <th>Popularité /100</th>
+                <th>Rang catégorie</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (term of data.terms; track $index) {
+                <tr>
+                  <th>{{ term.searchTerm }}</th>
+                  <td>{{ term.popularity100 ?? '—' }}</td>
+                  <td>{{ term.rankInGenre ?? '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+  @if (selected(); as keyword) {
+    <section class="panel">
+      <h2>
+        Historique : {{ keyword.searchTerm }} · {{ keyword.countryOrRegion }} · {{ keyword.genre }}
+      </h2>
+      @if (historyLoading()) {
+        <p role="status">Chargement de l’historique…</p>
+      }
+      @if (historyError()) {
+        <p role="alert">{{ historyError() }}</p>
+        <button (click)="showHistory(keyword)">Réessayer</button>
+      }
+      @if (history(); as result) {
+        @if (!result.content.length) {
+          <p>Aucune donnée enregistrée pour ce mot-clé.</p>
+        } @else {
+          <div class="table-scroll" tabindex="0" aria-label="Historique de popularité">
+            <table>
+              <thead>
+                <tr>
+                  <th>Période Apple</th>
+                  <th>/100</th>
+                  <th>/5</th>
+                  <th>Popularité catégorie</th>
+                  <th>Rang catégorie</th>
+                  <th>Collecté le</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (m of result.content; track m.periodType + m.periodStart) {
+                  <tr>
+                    <td>{{ m.periodStart }} – {{ m.periodEnd }} ({{ m.periodType }})</td>
+                    <td>{{ m.popularity100 ?? '—' }}</td>
+                    <td>{{ m.popularity5 ?? '—' }}</td>
+                    <td>{{ m.popularityInGenre ?? '—' }}</td>
+                    <td>{{ m.rankInGenre ?? '—' }}</td>
+                    <td>{{ m.collectedAt | date: 'medium' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        <div class="toolbar">
+          <button
+            (click)="showHistory(keyword, result.number - 1)"
+            [disabled]="result.number === 0"
+          >
+            Précédent</button
+          ><span>Page {{ result.number + 1 }} / {{ result.totalPages || 1 }}</span
+          ><button
+            (click)="showHistory(keyword, result.number + 1)"
+            [disabled]="result.number + 1 >= result.totalPages"
+          >
+            Suivant
+          </button>
+        </div>
+      }
+    </section>
+  }
+  <p class="muted">
+    — : mesure indisponible. Le rang concerne les mots-clés de la catégorie, pas le classement
+    organique d’une application. Une collecte vide conserve les mesures historiques.
+  </p>
+</main>
