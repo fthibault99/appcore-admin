@@ -55,7 +55,7 @@
     </div>
     <form [formGroup]="filterForm" (ngSubmit)="search()">
       <div class="filter-grid">
-        <label>Event type<input formControlName="eventType" /></label>
+        <label>Event type<input #eventTypeInput id="event-type-filter" formControlName="eventType" /></label>
         <label
           >Client Name
           <select formControlName="clientId">
@@ -78,7 +78,7 @@
         <label>Region<input formControlName="region" placeholder="e.g. CA" /></label>
         <label>Platform<input formControlName="platform" /></label>
         <label>App version<input formControlName="appVersion" /></label>
-        <label>Anonymous user ID<input #anonymousUserInput formControlName="anonymousUserId" /></label>
+        <label>Anonymous user ID<input #anonymousUserInput id="anonymous-user-filter" formControlName="anonymousUserId" /></label>
         <label>Session ID<input formControlName="sessionId" /></label>
         <label>From date/time<input type="datetime-local" formControlName="from" /></label>
         <label>To date/time<input type="datetime-local" formControlName="to" /></label>
@@ -225,7 +225,14 @@
                 <tr>
                   <td [title]="event.receivedAt">{{ event.receivedAt | date: 'medium' }}</td>
                   <td class="identifier" [title]="event.apiKeyName">{{ event.apiKeyName }}</td>
-                  <td class="identifier" [title]="event.eventType">{{ event.eventType }}</td>
+                  <td class="identifier" [title]="event.eventType">
+                    <a
+                      class="filter-link"
+                      href="#event-type-filter"
+                      [attr.aria-label]="'Use event type ' + event.eventType + ' in search'"
+                      (click)="$event.preventDefault(); filterForm.controls.eventType.setValue(event.eventType); eventTypeInput.focus()"
+                    >{{ event.eventType }}</a>
+                  </td>
                   <td [title]="propertyInfo(event.properties)">
                     {{ propertyInfoPreview(event.properties) }}
                   </td>
@@ -235,14 +242,12 @@
                   <td>{{ event.region || '—' }}</td>
                   <td class="identifier" [title]="event.anonymousUserId || ''">
                     @if (event.anonymousUserId; as userId) {
-                      <button
-                        type="button"
-                        class="link-button"
+                      <a
+                        class="filter-link"
+                        href="#anonymous-user-filter"
                         [attr.aria-label]="'Use anonymous user ID ' + userId + ' in search'"
-                        (click)="filterForm.controls.anonymousUserId.setValue(userId); anonymousUserInput.focus()"
-                      >
-                        {{ userId }}
-                      </button>
+                        (click)="$event.preventDefault(); filterForm.controls.anonymousUserId.setValue(userId); anonymousUserInput.focus()"
+                      >{{ userId }}</a>
                     } @else {
                       —
                     }

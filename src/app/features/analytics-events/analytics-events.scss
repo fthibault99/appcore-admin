@@ -201,6 +201,11 @@ th {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.filter-link {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
 .link-button {
   min-height: auto;
   padding: 0.3rem 0.55rem;
