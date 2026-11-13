@@ -78,7 +78,7 @@
         <label>Region<input formControlName="region" placeholder="e.g. CA" /></label>
         <label>Platform<input formControlName="platform" /></label>
         <label>App version<input formControlName="appVersion" /></label>
-        <label>Anonymous user ID<input formControlName="anonymousUserId" /></label>
+        <label>Anonymous user ID<input #anonymousUserInput formControlName="anonymousUserId" /></label>
         <label>Session ID<input formControlName="sessionId" /></label>
         <label>From date/time<input type="datetime-local" formControlName="from" /></label>
         <label>To date/time<input type="datetime-local" formControlName="to" /></label>
@@ -234,7 +234,18 @@
                   <td>{{ event.language || '—' }}</td>
                   <td>{{ event.region || '—' }}</td>
                   <td class="identifier" [title]="event.anonymousUserId || ''">
-                    {{ event.anonymousUserId || '—' }}
+                    @if (event.anonymousUserId; as userId) {
+                      <button
+                        type="button"
+                        class="link-button"
+                        [attr.aria-label]="'Use anonymous user ID ' + userId + ' in search'"
+                        (click)="filterForm.controls.anonymousUserId.setValue(userId); anonymousUserInput.focus()"
+                      >
+                        {{ userId }}
+                      </button>
+                    } @else {
+                      —
+                    }
                   </td>
                   <td class="identifier" [title]="event.sessionId || ''">
                     {{ event.sessionId || '—' }}
