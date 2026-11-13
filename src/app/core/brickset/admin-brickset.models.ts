@@ -84,11 +84,15 @@ export interface BricksetSyncConfiguration {
   dailyCallLimit: number;
   checkIntervalMinutes: number;
   concurrency: number;
+  batchSize: number;
 }
 export interface BricksetSyncStatistics {
   totalSets: number;
   neverSynced: number;
   staleSets: number;
+  descriptionSetsNotCached: number;
+  imagesNotCached: number;
+  instructionsNotCached: number;
   iosAppSets: number;
   manualSyncSets: number;
   manualCallsToday: number;

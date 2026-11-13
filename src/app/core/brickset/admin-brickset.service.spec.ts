@@ -94,7 +94,7 @@ describe('AdminBricksetService', () => {
     request.flush({ daysSynchronized: 30 });
   });
   it('saves persistent synchronization configuration using the administrator CSRF token', () => {
-    const config = { enabled: false, minimumAgeDays: 90, dailyCallLimit: 20, checkIntervalMinutes: 60, concurrency: 1 };
+    const config = { enabled: false, minimumAgeDays: 90, dailyCallLimit: 20, checkIntervalMinutes: 60, concurrency: 1, batchSize: 10 };
     service.saveSyncConfiguration(config).subscribe(result => expect(result).toEqual(config));
     const csrf = http.expectOne(`${environment.apiBaseUrl}/api/admin/auth/csrf`);
     csrf.flush('', { headers: { 'X-XSRF-TOKEN': 'sync-token' } });

@@ -12,9 +12,11 @@
   </header>
   <section class="panel sync-panel" aria-labelledby="sync-heading">
     <h2 id="sync-heading">Automatic catalog synchronization</h2>
-    <p>Up to 10 sets per call, spread across the day. Daily automatic budget uses UTC; direct iOS calls are excluded.</p>
+    <p>Up to {{ syncForm.controls.batchSize.value }} sets per call, spread across the day. Daily automatic budget uses UTC; direct iOS calls are excluded.</p>
+    <p>Missing images or instructions are synchronized regardless of minimum age, after sets with an unknown synchronization date and missing sets from generated descriptions.</p>
     <form [formGroup]="syncForm" (ngSubmit)="saveSync()" class="sync-settings">
       <label class="checkbox"><input type="checkbox" formControlName="enabled" /> Enabled</label>
+      <label>Sets per batch<input type="number" formControlName="batchSize" min="1" max="100" step="1" required /></label>
       <label>Minimum age (days)<input type="number" formControlName="minimumAgeDays" min="1" max="3650" step="1" required /></label>
       <label>Maximum calls per day<input type="number" formControlName="dailyCallLimit" min="1" max="100" step="1" required /></label>
       <label>Check interval (minutes)<input type="number" formControlName="checkIntervalMinutes" min="1" max="1440" step="1" required /></label>
@@ -27,6 +29,9 @@
       <dl class="sync-statistics">
         <div><dt>Total sets</dt><dd>{{ stats.totalSets }}</dd></div>
         <div><dt>Unknown synchronization date</dt><dd>{{ stats.neverSynced }}</dd></div>
+        <div><dt>Described sets not cached</dt><dd>{{ stats.descriptionSetsNotCached }}</dd></div>
+        <div><dt>Additional images not cached</dt><dd>{{ stats.imagesNotCached }}</dd></div>
+        <div><dt>Instructions not cached</dt><dd>{{ stats.instructionsNotCached }}</dd></div>
         <div><dt>Older than threshold</dt><dd>{{ stats.staleSets }}</dd></div>
         <div><dt>Last updated by iOS</dt><dd>{{ stats.iosAppSets }}</dd></div>
         <div><dt>Last updated manually</dt><dd>{{ stats.manualSyncSets }}</dd></div>

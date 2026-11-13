@@ -23,6 +23,7 @@ describe('BricksetSetsComponent search', () => {
     getSets: ReturnType<typeof vi.fn>;
     getSyncConfiguration: ReturnType<typeof vi.fn>;
     getSyncStatistics: ReturnType<typeof vi.fn>;
+    saveSyncConfiguration: ReturnType<typeof vi.fn>;
     getOldestSets: ReturnType<typeof vi.fn>;
   };
 
@@ -31,8 +32,9 @@ describe('BricksetSetsComponent search', () => {
     initial = new Subject<BricksetSetPage>();
     service = {
       getSets: vi.fn().mockReturnValueOnce(initial).mockReturnValue(of(emptyPage)),
-      getSyncConfiguration: vi.fn(() => of({ enabled: true, minimumAgeDays: 90, dailyCallLimit: 20, checkIntervalMinutes: 60, concurrency: 1 })),
+      getSyncConfiguration: vi.fn(() => of({ enabled: true, minimumAgeDays: 90, dailyCallLimit: 20, checkIntervalMinutes: 60, concurrency: 1, batchSize: 10 })),
       getSyncStatistics: vi.fn(() => of(null)),
+      saveSyncConfiguration: vi.fn(config => of(config)),
       getOldestSets: vi.fn(() => of([])),
     };
     await TestBed.configureTestingModule({
@@ -55,6 +57,47 @@ describe('BricksetSetsComponent search', () => {
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     fixture.detectChanges();
   }
+
+  it('validates and saves the configurable batch size', () => {
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('input[formControlName="batchSize"]');
+    const form: HTMLFormElement = fixture.nativeElement.querySelector('form.sync-settings');
+    expect(input.value).toBe('10');
+    for (const invalid of ['0', '101', '2.5', '']) {
+      input.value = invalid;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      form.dispatchEvent(new Event('submit'));
+      expect(service.saveSyncConfiguration).not.toHaveBeenCalled();
+    }
+    input.value = '25';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    form.dispatchEvent(new Event('submit'));
+    fixture.detectChanges();
+    expect(service.saveSyncConfiguration).toHaveBeenCalledWith(expect.objectContaining({ batchSize: 25 }));
+    expect(fixture.nativeElement.textContent).toContain('Up to 25 sets per call');
+  });
+
+  it('refreshes missing cache counters independently of synchronization age', () => {
+    const stats = {
+      descriptionSetsNotCached: 5, totalSets: 4, neverSynced: 0, staleSets: 0, imagesNotCached: 2, instructionsNotCached: 3,
+      iosAppSets: 4, manualSyncSets: 0, manualCallsToday: 0, autoSyncSets: 0,
+      callsToday: 0, remainingBudget: 20, lastRunAt: null, lastResult: null,
+    };
+    service.getSyncStatistics.mockReturnValue(of(stats));
+    fixture.componentInstance.loadSync();
+    fixture.detectChanges();
+    const counters = () => Array.from(fixture.nativeElement.querySelectorAll('.sync-statistics div') as NodeListOf<HTMLElement>)
+      .map(row => [row.querySelector('dt')?.textContent, row.querySelector('dd')?.textContent]);
+    expect(counters()).toContainEqual(['Described sets not cached', '5']);
+    expect(counters()).toContainEqual(['Additional images not cached', '2']);
+    expect(counters()).toContainEqual(['Instructions not cached', '3']);
+    service.getSyncStatistics.mockReturnValue(of({ ...stats, imagesNotCached: 0, instructionsNotCached: 1 }));
+    const refresh = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
+      .find(button => button.textContent?.trim() === 'Refresh')!;
+    refresh.click();
+    fixture.detectChanges();
+    expect(counters()).toContainEqual(['Additional images not cached', '0']);
+    expect(counters()).toContainEqual(['Instructions not cached', '1']);
+  });
 
   it('submits the actual search form while the initial unfiltered request is pending', () => {
     submit(' 75313-1 ');

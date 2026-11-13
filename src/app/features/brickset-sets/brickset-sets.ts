@@ -42,6 +42,7 @@ export class BricksetSetsComponent implements OnInit, OnDestroy {
     minimumAgeDays: new FormControl(90, { nonNullable: true, validators: [Validators.required, Validators.min(1), Validators.max(3650)] }),
     dailyCallLimit: new FormControl(20, { nonNullable: true, validators: [Validators.required, Validators.min(1), Validators.max(100)] }),
     checkIntervalMinutes: new FormControl(60, { nonNullable: true, validators: [Validators.required, Validators.min(1), Validators.max(1440)] }),
+    batchSize: new FormControl(10, { nonNullable: true, validators: [Validators.required, Validators.min(1), Validators.max(100), Validators.pattern(/^[0-9]+$/)] }),
     concurrency: new FormControl(1, { nonNullable: true }),
   });
   readonly syncStats = signal<BricksetSyncStatistics | null>(null);
