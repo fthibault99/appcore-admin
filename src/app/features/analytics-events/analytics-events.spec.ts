@@ -319,34 +319,59 @@ describe('AnalyticsEventsComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/analytics/events', 'event-1']);
   });
 
+  const resultPage = () =>
+    emptyPage({
+      content: [
+        {
+          id: 'event-1',
+          appClientId: 'client-1',
+          appClientName: 'AppCore',
+          apiKeyId: 'key-1',
+          apiKeyName: 'AppCore Live',
+          eventType: 'app.opened',
+          occurredAt: '2026-08-01T12:00:00Z',
+          receivedAt: '2026-08-01T12:00:01Z',
+          anonymousUserId: 'user-42',
+          sessionId: null,
+          platform: 'ios',
+          appVersion: '1',
+          language: 'fr',
+          region: 'CA',
+          subscriptionStatus: null,
+          purchased: false,
+          properties: { info: 'Opened from widget' },
+        },
+      ],
+      totalElements: 1,
+    });
+
+  it.each([
+    ['anonymousUserId', 'anonymous-user-filter', 'user-42'],
+    ['eventType', 'event-type-filter', 'app.opened'],
+  ] as const)('searches immediately using only the clicked %s', (field, inputId, value) => {
+    fixture.detectChanges();
+    results.next(resultPage());
+    results.complete();
+    fixture.detectChanges();
+    component.filterForm.patchValue({ region: 'CA', eventType: 'old', anonymousUserId: 'old' });
+    fixture.nativeElement.querySelector(`a[href="#${inputId}"]`).click();
+
+    expect(service.getEvents).toHaveBeenCalledTimes(2);
+    expect(service.getEvents).toHaveBeenLastCalledWith({
+      [field]: value,
+      page: 0,
+      size: 25,
+      sort: 'receivedAt,desc',
+    });
+    expect(Object.entries(component.filterForm.getRawValue()).filter(([, v]) => v !== '')).toEqual([
+      [field, value],
+    ]);
+    expect(document.activeElement?.id).toBe(inputId);
+  });
+
   it('orders application before event type and displays the info property', () => {
     fixture.detectChanges();
-    results.next(
-      emptyPage({
-        content: [
-          {
-            id: 'event-1',
-            appClientId: 'client-1',
-            appClientName: 'AppCore',
-            apiKeyId: 'key-1',
-            apiKeyName: 'AppCore Live',
-            eventType: 'app.opened',
-            occurredAt: '2026-08-01T12:00:00Z',
-            receivedAt: '2026-08-01T12:00:01Z',
-            anonymousUserId: null,
-            sessionId: null,
-            platform: 'ios',
-            appVersion: '1',
-            language: 'fr',
-            region: 'CA',
-            subscriptionStatus: null,
-            purchased: false,
-            properties: { info: 'Opened from widget' },
-          },
-        ],
-        totalElements: 1,
-      }),
-    );
+    results.next(resultPage());
     results.complete();
     fixture.detectChanges();
 

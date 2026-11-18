@@ -230,7 +230,7 @@
                       class="filter-link"
                       href="#event-type-filter"
                       [attr.aria-label]="'Use event type ' + event.eventType + ' in search'"
-                      (click)="$event.preventDefault(); filterForm.controls.eventType.setValue(event.eventType); eventTypeInput.focus()"
+                      (click)="$event.preventDefault(); searchByResult('eventType', event.eventType); eventTypeInput.focus()"
                     >{{ event.eventType }}</a>
                   </td>
                   <td [title]="propertyInfo(event.properties)">
@@ -246,7 +246,7 @@
                         class="filter-link"
                         href="#anonymous-user-filter"
                         [attr.aria-label]="'Use anonymous user ID ' + userId + ' in search'"
-                        (click)="$event.preventDefault(); filterForm.controls.anonymousUserId.setValue(userId); anonymousUserInput.focus()"
+                        (click)="$event.preventDefault(); searchByResult('anonymousUserId', userId); anonymousUserInput.focus()"
                       >{{ userId }}</a>
                     } @else {
                       —

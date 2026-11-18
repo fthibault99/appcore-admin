@@ -129,6 +129,11 @@ export class AnalyticsEventsComponent implements OnInit, OnDestroy {
     this.loadStatistics();
   }
 
+  searchByResult(field: 'anonymousUserId' | 'eventType', value: string): void {
+    this.filterForm.reset({ [field]: value });
+    this.search();
+  }
+
   reset(): void {
     this.applyDefaultFilters();
     this.persistState();
